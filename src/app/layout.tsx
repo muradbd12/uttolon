@@ -2,11 +2,32 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { SITE_URL } from "@/lib/site";
+
+const title = "উত্তোলন | Uttolon Learning System";
+const description =
+  "শুধু পড়ানো নয়, শেখার একটি সম্পূর্ণ ব্যবস্থা। Concept, Practice, Assessment, Recovery ও Result-ভিত্তিক শিক্ষা ব্যবস্থা — উত্তোলন।";
 
 export const metadata: Metadata = {
-  title: "উত্তোলন | Uttolon Learning System",
-  description:
-    "শুধু পড়ানো নয়, শেখার একটি সম্পূর্ণ ব্যবস্থা। Concept, Practice, Assessment, Recovery ও Result-ভিত্তিক শিক্ষা ব্যবস্থা — উত্তোলন।",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: title,
+    template: "%s",
+  },
+  description,
+  openGraph: {
+    title,
+    description,
+    url: SITE_URL,
+    siteName: "Uttolon",
+    locale: "bn_BD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({

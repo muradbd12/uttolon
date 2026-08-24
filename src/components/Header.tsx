@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, ArrowUpRight, Lock } from "lucide-react";
+import { Menu, X, ArrowUpRight, User2 } from "lucide-react";
 
 const navLinks = [
   { label: "হোম", href: "/" },
@@ -50,22 +50,20 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <button
-            type="button"
-            title="শীঘ্রই আসছে"
-            className="flex cursor-not-allowed items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-ink-soft/70"
+          <Link
+            href="/student/login"
+            className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
           >
-            <Lock size={13} />
+            <User2 size={13} />
             স্টুডেন্ট লগইন
-          </button>
-          <button
-            type="button"
-            title="শীঘ্রই আসছে"
-            className="flex cursor-not-allowed items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-ink-soft/70"
+          </Link>
+          <Link
+            href="/guardian/login"
+            className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
           >
-            <Lock size={13} />
+            <User2 size={13} />
             গার্ডিয়ান লগইন
-          </button>
+          </Link>
           <Link
             href="/admission"
             className="group ml-1 flex items-center gap-1.5 rounded-sm bg-ink px-4 py-2.5 text-sm font-medium text-paper transition-colors hover:bg-gold-deep"
@@ -102,20 +100,20 @@ export default function Header() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
-            <button
-              type="button"
-              title="শীঘ্রই আসছে"
-              className="flex cursor-not-allowed items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft/70"
+            <Link
+              href="/student/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:text-ink"
             >
-              <Lock size={13} /> স্টুডেন্ট লগইন (শীঘ্রই)
-            </button>
-            <button
-              type="button"
-              title="শীঘ্রই আসছে"
-              className="flex cursor-not-allowed items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft/70"
+              <User2 size={13} /> স্টুডেন্ট লগইন
+            </Link>
+            <Link
+              href="/guardian/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:text-ink"
             >
-              <Lock size={13} /> গার্ডিয়ান লগইন (শীঘ্রই)
-            </button>
+              <User2 size={13} /> গার্ডিয়ান লগইন
+            </Link>
             <Link
               href="/admission"
               onClick={() => setOpen(false)}

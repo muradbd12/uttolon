@@ -42,11 +42,11 @@ export default function Footer() {
         </div>
 
         <div>
-          <h3 className="font-label text-xs uppercase tracking-[0.15em] text-paper/50">Student</h3>
+          <h3 className="font-label text-xs uppercase tracking-[0.15em] text-paper/50">Student &amp; Guardian</h3>
           <ul className="mt-4 space-y-2.5 text-sm text-paper/75">
-            <li><span className="cursor-not-allowed text-paper/40">স্টুডেন্ট লগইন (শীঘ্রই)</span></li>
+            <li><Link href="/student/login" className="hover:text-gold">স্টুডেন্ট লগইন</Link></li>
+            <li><Link href="/guardian/login" className="hover:text-gold">গার্ডিয়ান লগইন</Link></li>
             <li><span className="cursor-not-allowed text-paper/40">রিসোর্স (শীঘ্রই)</span></li>
-            <li><span className="cursor-not-allowed text-paper/40">ফলাফল (শীঘ্রই)</span></li>
           </ul>
         </div>
 

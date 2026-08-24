@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------
+   Uttolon design tokens
+   Ink   -> deep navy, academic/trust, dark sections + text
+   Paper -> cool chalky off-white background (not warm cream)
+   Gold  -> "elevation" accent — achievement, the lift itself
+   Teal  -> recovery / growth / correctness accent
+   Clay  -> used sparingly for "problem" states only
+--------------------------------------------------------- */
+:root {
+  --ink: #14213b;
+  --ink-soft: #4b5566;
+  --paper: #f3f4ef;
+  --paper-raised: #fbfbf7;
+  --line: #dcddd2;
+
+  --gold: #c9932e;
+  --gold-soft: #efe0bc;
+  --gold-deep: #96691c;
+
+  --teal: #1e6b58;
+  --teal-soft: #dbe9e3;
+  --teal-deep: #123f33;
+
+  --clay: #b4483a;
+  --clay-soft: #f1ded9;
+
+  --font-display-bn: "Tiro Bangla", "Noto Serif Bengali", serif;
+  --font-display-en: "Fraunces", serif;
+  --font-body: "Hind Siliguri", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-line: var(--line);
+
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-deep: var(--gold-deep);
+
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-teal-deep: var(--teal-deep);
+
+  --color-clay: var(--clay);
+  --color-clay-soft: var(--clay-soft);
+
+  --font-display-bn: var(--font-display-bn);
+  --font-display-en: var(--font-display-en);
+  --font-body: var(--font-body);
+  --font-label: var(--font-label);
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold-deep);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Elevation line — the signature ascending device used in the hero
+   and as a section-progress rail. Kept as a reusable utility. */
+.elevation-rail {
+  background-image: linear-gradient(to top, var(--line) 1px, transparent 1px);
+  background-size: 100% 3px;
+}

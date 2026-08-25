@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   Sparkles,
   Users,
@@ -37,6 +38,11 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   "ফলাফল ও Success Story": Trophy,
   "রিসোর্স লাইব্রেরি": FolderOpen,
   "ওয়েবসাইট কনটেন্ট": LayoutDashboard,
+};
+
+// এই কয়টা বিভাগ এখন সত্যিকারের পেজে যুক্ত — বাকিগুলো এখনো "শীঘ্রই"
+const liveLinks: Record<string, string> = {
+  "ভর্তি আবেদন": "/admin/admissions",
 };
 
 export default function AdminDashboardPage() {
@@ -81,6 +87,7 @@ export default function AdminDashboardPage() {
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {demoManagementAreas.map((area) => {
                 const Icon = iconMap[area.title] ?? LayoutDashboard;
+                const href = liveLinks[area.title];
                 return (
                   <div
                     key={area.title}
@@ -91,13 +98,22 @@ export default function AdminDashboardPage() {
                     <p className="mt-1.5 flex-1 text-sm leading-relaxed text-ink-soft">
                       {area.desc}
                     </p>
-                    <button
-                      type="button"
-                      disabled
-                      className="mt-4 flex w-fit cursor-not-allowed items-center gap-1.5 text-xs text-ink-soft/50"
-                    >
-                      পরিচালনা করুন (শীঘ্রই) <ArrowUpRight size={12} />
-                    </button>
+                    {href ? (
+                      <Link
+                        href={href}
+                        className="mt-4 flex w-fit items-center gap-1.5 text-xs font-medium text-ink hover:text-gold-deep"
+                      >
+                        পরিচালনা করুন <ArrowUpRight size={12} />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        className="mt-4 flex w-fit cursor-not-allowed items-center gap-1.5 text-xs text-ink-soft/50"
+                      >
+                        পরিচালনা করুন (শীঘ্রই) <ArrowUpRight size={12} />
+                      </button>
+                    )}
                   </div>
                 );
               })}

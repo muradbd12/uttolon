@@ -1,57 +1,47 @@
 =========================================================
-ধাপ ১ — Firebase Console-এ Email/Password চালু করুন
+ধাপ ১ — Firestore Database চালু করুন
 =========================================================
-1. console.firebase.google.com -এ গিয়ে আপনার "uttolon" প্রজেক্টে ঢুকুন
-2. বাম পাশে Authentication -এ ক্লিক করুন
-3. "Sign-in method" ট্যাবে যান
-4. "Email/Password" -এ ক্লিক করে Enable করে Save করুন
+1. console.firebase.google.com -এ uttolon প্রজেক্টে ঢুকুন
+2. বাম পাশে Build -> Firestore Database
+3. "Create database" চাপুন
+4. Location হিসেবে যেকোনো কাছাকাছি region বেছে "Next"
+5. "Start in production mode" বেছে "Create" চাপুন
 
 =========================================================
-ধাপ ২ — নিজের জন্য একটা অ্যাডমিন ইউজার বানান
+ধাপ ২ — Security Rules বসান (জরুরি — নইলে সব বন্ধ থাকবে)
 =========================================================
-1. একই Authentication পেজে "Users" ট্যাবে যান
-2. "Add user" চাপুন
-3. একটা ইমেইল (যেকোনো, যেমন admin@uttolon.com) ও পাসওয়ার্ড দিন
-4. এই ইমেইল+পাসওয়ার্ড দিয়েই পরে /admin/login এ লগইন করবেন
+Firestore Database পেজে "Rules" ট্যাবে যান, সব মুছে এটা বসিয়ে Publish করুন:
 
-=========================================================
-ধাপ ৩ — Vercel-এ Environment Variables যোগ করুন (জরুরি)
-=========================================================
-আপনার .env.local ফাইলে যে ৬টা Firebase ভ্যালু + NEXT_PUBLIC_SITE_URL আছে,
-ঠিক সেগুলোই Vercel-এ যোগ করতে হবে (এখন শুধু আপনার কম্পিউটারে আছে, Vercel
-জানে না) —
-1. vercel.com -এ uttolon প্রজেক্টে ঢুকুন
-2. Settings -> Environment Variables
-3. .env.local এর প্রতিটা লাইন Key/Value আকারে বসান, "Production" টিক
-   দিয়ে Save করুন
-এই ধাপ বাদ দিলে অ্যাডমিন লগইন কাজ করবে না (তবে এবার অন্তত পুরো সাইট
-ভেঙে পড়বে না — একটা স্পষ্ট বার্তা দেখাবে)।
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /admissions/{applicationId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}
+
+এর মানে: যে কেউ আবেদন জমা দিতে (create) পারবে, কিন্তু শুধু লগইন করা
+অ্যাডমিনই আবেদনগুলো দেখতে/এডিট করতে পারবে।
 
 =========================================================
 ফাইল বসানো (Merge/Replace)
 =========================================================
 নতুন:
-  src/app/teacher/login/page.tsx
-  src/app/teacher/dashboard/page.tsx
-  src/app/admin/login/page.tsx
-  src/app/admin/dashboard/page.tsx
-  src/content/teacher-demo.ts
-  src/content/admin-demo.ts
-  src/components/AdminLoginForm.tsx
-  src/components/RequireAdminAuth.tsx
+  src/components/AdminAdmissionsList.tsx
+  src/app/admin/admissions/page.tsx
 
-পরিবর্তিত (আগে দেওয়া থাকলে ওভাররাইট করুন):
+পরিবর্তিত (ওভাররাইট করুন):
   src/lib/firebase.ts
-  src/app/robots.ts
+  src/components/AdmissionForm.tsx
+  src/app/admin/dashboard/page.tsx
 
 =========================================================
 টেস্ট করবেন যেভাবে
 =========================================================
-সব বসিয়ে + Vercel env variable যোগ করে + GitHub push করার পর:
-/admin/login এ গিয়ে ধাপ ২-এ বানানো ইমেইল/পাসওয়ার্ড দিন — সফল হলে
-/admin/dashboard এ ঢুকে যাবে। ভুল দিলে লাল এরর মেসেজ দেখাবে। env
-variable যোগ করতে ভুলে গেলে একটা স্পষ্ট "Firebase কনফিগারেশন সমস্যা"
-বার্তা দেখাবে, সাইট ক্র্যাশ করবে না।
-
-/teacher/dashboard ও /teacher/login মেনুতে লিংক করা নেই ইচ্ছাকৃতভাবে,
-সরাসরি লিংকে গিয়ে দেখতে হবে — এখনো demo/preview।
+1. সব বসিয়ে + উপরের ২ ধাপ Firebase-এ করে + GitHub push করুন
+2. লাইভ সাইটে /admission -এ গিয়ে একটা টেস্ট আবেদন জমা দিন — এবার
+   সত্যিকারের সফলতার বার্তা ও একটা Application ID দেখাবে
+3. /admin/login দিয়ে লগইন করে /admin/dashboard -এ "ভর্তি আবেদন" কার্ডে
+   "পরিচালনা করুন" চাপুন — জমা দেওয়া আবেদনটা তালিকায় দেখা উচিত

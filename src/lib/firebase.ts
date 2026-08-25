@@ -2,6 +2,7 @@
 // sign-in method চালু ও একটা ইউজার তৈরি করার পরই এটা কাজ করবে।
 import { initializeApp, getApps, type FirebaseOptions } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -27,4 +28,15 @@ export function getFirebaseAuth(): Auth {
     authInstance = getAuth(firebaseApp);
   }
   return authInstance;
+}
+
+let dbInstance: Firestore | null = null;
+
+// একই কারণে (build-time crash এড়াতে) Firestore-ও lazy রাখা হলো — শুধু
+// client component-এর ভেতরে getFirebaseDb() দিয়ে ডাকতে হবে।
+export function getFirebaseDb(): Firestore {
+  if (!dbInstance) {
+    dbInstance = getFirestore(firebaseApp);
+  }
+  return dbInstance;
 }

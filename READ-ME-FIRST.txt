@@ -1,13 +1,57 @@
-এই zip-এ ৩টা নতুন ফাইল আছে (কোনো পুরনো ফাইল বদলায়নি) —
+=========================================================
+ধাপ ১ — Firebase Console-এ Email/Password চালু করুন
+=========================================================
+1. console.firebase.google.com -এ গিয়ে আপনার "uttolon" প্রজেক্টে ঢুকুন
+2. বাম পাশে Authentication -এ ক্লিক করুন
+3. "Sign-in method" ট্যাবে যান
+4. "Email/Password" -এ ক্লিক করে Enable করে Save করুন
 
-src/app/teacher/login/page.tsx
-src/app/teacher/dashboard/page.tsx
-src/content/teacher-demo.ts
+=========================================================
+ধাপ ২ — নিজের জন্য একটা অ্যাডমিন ইউজার বানান
+=========================================================
+1. একই Authentication পেজে "Users" ট্যাবে যান
+2. "Add user" চাপুন
+3. একটা ইমেইল (যেকোনো, যেমন admin@uttolon.com) ও পাসওয়ার্ড দিন
+4. এই ইমেইল+পাসওয়ার্ড দিয়েই পরে /admin/login এ লগইন করবেন
 
-Merge করে বসিয়ে দিন, তারপর যেভাবে করতেন GitHub-এ push করুন।
+=========================================================
+ধাপ ৩ — Vercel-এ Environment Variables যোগ করুন (জরুরি)
+=========================================================
+আপনার .env.local ফাইলে যে ৬টা Firebase ভ্যালু + NEXT_PUBLIC_SITE_URL আছে,
+ঠিক সেগুলোই Vercel-এ যোগ করতে হবে (এখন শুধু আপনার কম্পিউটারে আছে, Vercel
+জানে না) —
+1. vercel.com -এ uttolon প্রজেক্টে ঢুকুন
+2. Settings -> Environment Variables
+3. .env.local এর প্রতিটা লাইন Key/Value আকারে বসান, "Production" টিক
+   দিয়ে Save করুন
+এই ধাপ বাদ দিলে অ্যাডমিন লগইন কাজ করবে না (তবে এবার অন্তত পুরো সাইট
+ভেঙে পড়বে না — একটা স্পষ্ট বার্তা দেখাবে)।
 
-দেখতে সরাসরি যান:
-/teacher/dashboard
+=========================================================
+ফাইল বসানো (Merge/Replace)
+=========================================================
+নতুন:
+  src/app/teacher/login/page.tsx
+  src/app/teacher/dashboard/page.tsx
+  src/app/admin/login/page.tsx
+  src/app/admin/dashboard/page.tsx
+  src/content/teacher-demo.ts
+  src/content/admin-demo.ts
+  src/components/AdminLoginForm.tsx
+  src/components/RequireAdminAuth.tsx
 
-এটাও মেনুতে লিংক করা নেই ইচ্ছাকৃতভাবে, উপরে ডিজাইন প্রিভিউ ব্যানার আছে —
-আগের দুটোর মতোই।
+পরিবর্তিত (আগে দেওয়া থাকলে ওভাররাইট করুন):
+  src/lib/firebase.ts
+  src/app/robots.ts
+
+=========================================================
+টেস্ট করবেন যেভাবে
+=========================================================
+সব বসিয়ে + Vercel env variable যোগ করে + GitHub push করার পর:
+/admin/login এ গিয়ে ধাপ ২-এ বানানো ইমেইল/পাসওয়ার্ড দিন — সফল হলে
+/admin/dashboard এ ঢুকে যাবে। ভুল দিলে লাল এরর মেসেজ দেখাবে। env
+variable যোগ করতে ভুলে গেলে একটা স্পষ্ট "Firebase কনফিগারেশন সমস্যা"
+বার্তা দেখাবে, সাইট ক্র্যাশ করবে না।
+
+/teacher/dashboard ও /teacher/login মেনুতে লিংক করা নেই ইচ্ছাকৃতভাবে,
+সরাসরি লিংকে গিয়ে দেখতে হবে — এখনো demo/preview।

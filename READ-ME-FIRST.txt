@@ -1,17 +1,13 @@
-এই zip-এ আছে:
+এই zip-এ ৩টা নতুন ফাইল আছে (কোনো পুরনো ফাইল বদলায়নি) —
 
-নতুন ফাইল:
-  src/app/guardian/dashboard/page.tsx
-  src/content/guardian-demo.ts
-  src/components/ProgressRow.tsx
+src/app/teacher/login/page.tsx
+src/app/teacher/dashboard/page.tsx
+src/content/teacher-demo.ts
 
-পরিবর্তিত ফাইল (আগের student dashboard-টা একটু গুছিয়েছি, কাজ একই আছে):
-  src/app/student/dashboard/page.tsx
+Merge করে বসিয়ে দিন, তারপর যেভাবে করতেন GitHub-এ push করুন।
 
-সব ফাইল Merge/Replace করে বসিয়ে দিন, তারপর GitHub-এ push করুন।
+দেখতে সরাসরি যান:
+/teacher/dashboard
 
-গার্ডিয়ান ড্যাশবোর্ড দেখতে সরাসরি এই লিংকে যান:
-/guardian/dashboard
-
-এটাও ইচ্ছাকৃতভাবে মেনুতে লিংক করা নেই, এবং উপরে ডিজাইন প্রিভিউ ব্যানার
-আছে — আগের student dashboard-এর মতোই।
+এটাও মেনুতে লিংক করা নেই ইচ্ছাকৃতভাবে, উপরে ডিজাইন প্রিভিউ ব্যানার আছে —
+আগের দুটোর মতোই।

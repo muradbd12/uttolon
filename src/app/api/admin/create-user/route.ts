@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, role, identifier, password, guardianMobile, className, subject } = body as {
+    const { name, role, identifier, password, guardianMobile, className, subject, linkedStudentUid } = body as {
       name?: string;
       role?: "student" | "guardian" | "teacher";
       identifier?: string;
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       guardianMobile?: string;
       className?: string;
       subject?: string;
+      linkedStudentUid?: string;
     };
 
     if (!name || !role || !identifier || !password) {
@@ -44,6 +45,9 @@ export async function POST(req: NextRequest) {
     }
     if (role === "student" && !guardianMobile) {
       return NextResponse.json({ error: "guardian_mobile_required" }, { status: 400 });
+    }
+    if (role === "guardian" && !linkedStudentUid) {
+      return NextResponse.json({ error: "linked_student_required" }, { status: 400 });
     }
     if (!["student", "guardian", "teacher"].includes(role)) {
       return NextResponse.json({ error: "invalid_role" }, { status: 400 });
@@ -70,6 +74,7 @@ export async function POST(req: NextRequest) {
         guardianMobile: guardianMobile || null,
         className: className || null,
         subject: subject || null,
+        linkedStudentUid: linkedStudentUid || null,
         createdAt: new Date().toISOString(),
       });
 

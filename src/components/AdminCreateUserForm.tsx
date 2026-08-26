@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 const inputClass =
@@ -11,11 +12,14 @@ const errorMessages: Record<string, string> = {
   missing_fields: "সব প্রয়োজনীয় ফিল্ড পূরণ করুন।",
   weak_password: "পাসওয়ার্ড অন্তত ৬ ক্যারেক্টার হতে হবে।",
   guardian_mobile_required: "শিক্ষার্থীর জন্য গার্ডিয়ানের মোবাইল নম্বর আবশ্যক।",
+  linked_student_required: "গার্ডিয়ানের জন্য একজন শিক্ষার্থী নির্বাচন করা আবশ্যক।",
   already_exists: "এই ইমেইল/নম্বর দিয়ে ইতিমধ্যে একটা অ্যাকাউন্ট আছে।",
   unauthorized: "লগইন সেশন শেষ হয়ে গেছে — আবার লগইন করুন।",
   forbidden: "এই কাজের অনুমতি নেই।",
   server_error: "কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন।",
 };
+
+type StudentOption = { uid: string; name: string; identifier: string };
 
 export default function AdminCreateUserForm() {
   const [role, setRole] = useState<"student" | "guardian" | "teacher">("student");
@@ -23,6 +27,28 @@ export default function AdminCreateUserForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [created, setCreated] = useState<{ identifier: string; password: string } | null>(null);
+  const [students, setStudents] = useState<StudentOption[] | null>(null);
+
+  useEffect(() => {
+    if (role !== "guardian" || students !== null) return;
+    async function loadStudents() {
+      try {
+        const db = getFirebaseDb();
+        const q = query(collection(db, "users"), where("role", "==", "student"));
+        const snapshot = await getDocs(q);
+        setStudents(
+          snapshot.docs.map((d) => ({
+            uid: d.id,
+            name: (d.data().name as string) || "নাম নেই",
+            identifier: (d.data().identifier as string) || "",
+          }))
+        );
+      } catch {
+        setStudents([]);
+      }
+    }
+    loadStudents();
+  }, [role, students]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,6 +79,7 @@ export default function AdminCreateUserForm() {
           guardianMobile: form.get("guardianMobile") || undefined,
           className: form.get("className") || undefined,
           subject: form.get("subject") || undefined,
+          linkedStudentUid: role === "guardian" ? form.get("linkedStudentUid") || undefined : undefined,
         }),
       });
 
@@ -169,6 +196,29 @@ export default function AdminCreateUserForm() {
         <span className="text-sm font-medium text-ink">পাসওয়ার্ড (অন্তত ৬ ক্যারেক্টার)</span>
         <input required name="password" type="text" minLength={6} className={`mt-1.5 ${inputClass}`} />
       </label>
+
+      {role === "guardian" && (
+        <label className="block">
+          <span className="text-sm font-medium text-ink">
+            কোন শিক্ষার্থীর সাথে যুক্ত <span className="text-clay">*</span>
+          </span>
+          <select required name="linkedStudentUid" className={`mt-1.5 ${inputClass}`} defaultValue="">
+            <option value="" disabled>
+              {students === null ? "লোড হচ্ছে..." : students.length === 0 ? "কোনো শিক্ষার্থী পাওয়া যায়নি" : "নির্বাচন করুন"}
+            </option>
+            {students?.map((s) => (
+              <option key={s.uid} value={s.uid}>
+                {s.name} ({s.identifier})
+              </option>
+            ))}
+          </select>
+          {students !== null && students.length === 0 && (
+            <p className="mt-1.5 text-xs text-ink-soft/60">
+              আগে অন্তত একজন শিক্ষার্থীর অ্যাকাউন্ট তৈরি করুন, তারপর তার গার্ডিয়ান যুক্ত করুন।
+            </p>
+          )}
+        </label>
+      )}
 
       {role === "student" && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

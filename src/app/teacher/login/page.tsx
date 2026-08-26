@@ -16,7 +16,7 @@ export default function TeacherLoginPage() {
           ক্লাস, উপস্থিতি, মূল্যায়ন ও হোমওয়ার্ক পরিচালনা করতে লগইন করুন।
         </p>
         <div className="mt-9">
-          <AuthForm idLabel="শিক্ষক আইডি / মোবাইল নম্বর" idPlaceholder="01XXXXXXXXX" />
+          <AuthForm role="teacher" idLabel="মোবাইল নম্বর অথবা ইমেইল" idPlaceholder="01XXXXXXXXX" />
         </div>
       </div>
     </section>

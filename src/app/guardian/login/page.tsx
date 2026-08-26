@@ -16,7 +16,7 @@ export default function GuardianLoginPage() {
           সন্তানের উপস্থিতি, অগ্রগতি ও নোটিশ দেখতে লগইন করুন।
         </p>
         <div className="mt-9">
-          <AuthForm idLabel="রেজিস্টার্ড মোবাইল নম্বর" idPlaceholder="01XXXXXXXXX" />
+          <AuthForm role="guardian" idLabel="মোবাইল নম্বর অথবা ইমেইল" idPlaceholder="01XXXXXXXXX" />
         </div>
       </div>
     </section>

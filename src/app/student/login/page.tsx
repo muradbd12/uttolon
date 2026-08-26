@@ -16,7 +16,7 @@ export default function StudentLoginPage() {
           ক্লাস, হোমওয়ার্ক, মূল্যায়ন ও রেজাল্ট দেখতে লগইন করুন।
         </p>
         <div className="mt-9">
-          <AuthForm idLabel="স্টুডেন্ট আইডি / মোবাইল নম্বর" idPlaceholder="যেমন: UTL-2026-001" />
+          <AuthForm role="student" idLabel="মোবাইল নম্বর অথবা ইমেইল" idPlaceholder="01XXXXXXXXX" />
         </div>
       </div>
     </section>

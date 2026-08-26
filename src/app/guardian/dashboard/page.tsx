@@ -9,6 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 import ProgressRow from "@/components/ProgressRow";
+import RequireRoleAuth from "@/components/RequireRoleAuth";
 import {
   demoGuardian,
   demoAttendance,
@@ -25,6 +26,7 @@ export const metadata: Metadata = {
 
 export default function GuardianDashboardPage() {
   return (
+    <RequireRoleAuth role="guardian" loginPath="/guardian/login">
     <section className="bg-paper-raised">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         {/* Preview notice — this is not a live feature yet */}
@@ -32,9 +34,8 @@ export default function GuardianDashboardPage() {
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
             এটি Guardian Dashboard-এর একটি <span className="font-medium">ডিজাইন প্রিভিউ</span> —
-            নিচের সব তথ্য নমুনা (demo) ডেটা, কোনো বাস্তব শিক্ষার্থী বা অভিভাবকের তথ্য
-            নয়। লগইন সিস্টেম ও আসল ডেটাবেস যুক্ত হওয়ার পরই এই পাতাটি নিরাপত্তার সাথে
-            সত্যিকারের তথ্য দেখাবে।
+            লগইন এখন real, কিন্তু নিচের সব তথ্য এখনো নমুনা (demo) ডেটা, আপনার
+            সন্তানের প্রকৃত তথ্য নয়। এই অংশটুকু real ডেটার সাথে যুক্ত হওয়া বাকি আছে।
           </p>
         </div>
 
@@ -171,5 +172,6 @@ export default function GuardianDashboardPage() {
         </div>
       </div>
     </section>
+    </RequireRoleAuth>
   );
 }

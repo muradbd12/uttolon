@@ -18,7 +18,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { demoStats, demoManagementAreas, demoPendingActions } from "@/content/admin-demo";
-import RequireAdminAuth from "@/components/RequireAdminAuth";
+import RequireRoleAuth from "@/components/RequireRoleAuth";
 
 export const metadata: Metadata = {
   title: "অ্যাডমিন ড্যাশবোর্ড | Uttolon",
@@ -43,11 +43,14 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 // এই কয়টা বিভাগ এখন সত্যিকারের পেজে যুক্ত — বাকিগুলো এখনো "শীঘ্রই"
 const liveLinks: Record<string, string> = {
   "ভর্তি আবেদন": "/admin/admissions",
+  "নোটিশ": "/admin/notices",
+  "শিক্ষার্থী": "/admin/users",
+  "শিক্ষক": "/admin/users",
 };
 
 export default function AdminDashboardPage() {
   return (
-    <RequireAdminAuth>
+    <RequireRoleAuth role="admin" loginPath="/admin/login">
     <section className="bg-paper-raised">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         {/* Preview notice — login is real now, data below is still demo */}
@@ -142,6 +145,6 @@ export default function AdminDashboardPage() {
         </div>
       </div>
     </section>
-    </RequireAdminAuth>
+    </RequireRoleAuth>
   );
 }

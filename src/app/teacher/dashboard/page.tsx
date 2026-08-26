@@ -15,6 +15,7 @@ import {
   demoHomeworkAssigned,
   demoNotices,
 } from "@/content/teacher-demo";
+import RequireRoleAuth from "@/components/RequireRoleAuth";
 
 export const metadata: Metadata = {
   title: "শিক্ষক ড্যাশবোর্ড | Uttolon",
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
 
 export default function TeacherDashboardPage() {
   return (
+    <RequireRoleAuth role="teacher" loginPath="/teacher/login">
     <section className="bg-paper-raised">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         {/* Preview notice — this is not a live feature yet */}
@@ -30,9 +32,8 @@ export default function TeacherDashboardPage() {
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
             এটি Teacher Dashboard-এর একটি <span className="font-medium">ডিজাইন প্রিভিউ</span> —
-            নিচের সব তথ্য নমুনা (demo) ডেটা, কোনো বাস্তব শিক্ষক বা শিক্ষার্থীর তথ্য নয়।
-            লগইন সিস্টেম ও আসল ডেটাবেস যুক্ত হওয়ার পরই এই পাতাটি নিরাপত্তার সাথে
-            সত্যিকারের তথ্য দেখাবে।
+            লগইন এখন real, কিন্তু নিচের সব তথ্য এখনো নমুনা (demo) ডেটা, প্রকৃত
+            শিক্ষার্থীর তথ্য নয়। এই অংশটুকু real ডেটার সাথে যুক্ত হওয়া বাকি আছে।
           </p>
         </div>
 
@@ -161,5 +162,6 @@ export default function TeacherDashboardPage() {
         </div>
       </div>
     </section>
+    </RequireRoleAuth>
   );
 }

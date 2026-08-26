@@ -117,7 +117,7 @@ export default function AdmissionForm() {
             <input required name="mobile" type="tel" className={inputClass} placeholder="01XXXXXXXXX" />
           </Field>
           <Field label="গার্ডিয়ানের নম্বর">
-            <input name="guardianMobile" type="tel" className={inputClass} placeholder="01XXXXXXXXX" />
+            <input required name="guardianMobile" type="tel" className={inputClass} placeholder="01XXXXXXXXX" />
           </Field>
         </div>
         <Field label="ঠিকানা">

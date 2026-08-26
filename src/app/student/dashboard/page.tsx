@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import ProgressRow from "@/components/ProgressRow";
+import RequireRoleAuth from "@/components/RequireRoleAuth";
 import {
   demoStudent,
   demoAttendance,
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
 
 export default function StudentDashboardPage() {
   return (
+    <RequireRoleAuth role="student" loginPath="/student/login">
     <section className="bg-paper-raised">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         {/* Preview notice — this is not a live feature yet */}
@@ -31,9 +33,9 @@ export default function StudentDashboardPage() {
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
             এটি Student Dashboard-এর একটি <span className="font-medium">ডিজাইন প্রিভিউ</span> —
-            নিচের সব তথ্য নমুনা (demo) ডেটা, কোনো বাস্তব শিক্ষার্থীর তথ্য নয়। লগইন
-            সিস্টেম ও আসল ডেটাবেস যুক্ত হওয়ার পরই এই পাতাটি নিরাপত্তার সাথে সত্যিকারের
-            তথ্য দেখাবে।
+            লগইন এখন real, কিন্তু নিচের সব তথ্য এখনো নমুনা (demo) ডেটা, আপনার
+            প্রকৃত ক্লাস/মূল্যায়ন/হোমওয়ার্ক নয়। এই অংশটুকু real ডেটার সাথে যুক্ত
+            হওয়া বাকি আছে।
           </p>
         </div>
 
@@ -164,5 +166,6 @@ export default function StudentDashboardPage() {
         </div>
       </div>
     </section>
+    </RequireRoleAuth>
   );
 }

@@ -1,47 +1,111 @@
-=========================================================
-ধাপ ১ — Firestore Database চালু করুন
-=========================================================
-1. console.firebase.google.com -এ uttolon প্রজেক্টে ঢুকুন
-2. বাম পাশে Build -> Firestore Database
-3. "Create database" চাপুন
-4. Location হিসেবে যেকোনো কাছাকাছি region বেছে "Next"
-5. "Start in production mode" বেছে "Create" চাপুন
+এটা একটা বড় আপডেট — নিচের ধাপগুলো ক্রমানুসারে, ভালোভাবে করুন।
 
 =========================================================
-ধাপ ২ — Security Rules বসান (জরুরি — নইলে সব বন্ধ থাকবে)
+ধাপ ১ — Service Account Key বানান (নতুন, গুরুত্বপূর্ণ)
 =========================================================
-Firestore Database পেজে "Rules" ট্যাবে যান, সব মুছে এটা বসিয়ে Publish করুন:
+1. console.firebase.google.com -এ uttolon প্রজেক্টে ঢুকুন
+2. উপরে বাম পাশে গিয়ার আইকন (⚙) -> "Project settings"
+3. "Service accounts" ট্যাবে যান
+4. "Generate new private key" চাপুন -> "Generate key" চাপুন
+5. একটা .json ফাইল ডাউনলোড হবে — এটা খুবই স্পর্শকাতর, কারো সাথে শেয়ার
+   করবেন না, GitHub-এ কখনো আপলোড করবেন না
+
+=========================================================
+ধাপ ২ — Vercel-এ ২টা নতুন Environment Variable যোগ করুন
+=========================================================
+Vercel -> uttolon প্রজেক্ট -> Settings -> Environment Variables:
+
+1. Key: FIREBASE_SERVICE_ACCOUNT_KEY
+   Value: ধাপ ১-এ ডাউনলোড হওয়া .json ফাইলটা নোটপ্যাডে খুলুন, পুরো
+   কনটেন্ট (শুরুর { থেকে শেষের } পর্যন্ত) কপি করে এখানে পেস্ট করুন
+
+2. Key: ADMIN_EMAILS
+   Value: আপনি Firebase-এ যে ইমেইল দিয়ে অ্যাডমিন অ্যাকাউন্ট বানিয়েছিলেন,
+   ঠিক সেই ইমেইলটা (যেমন admin@uttolon.com)
+
+⚠️ এই দুটোর নামের শুরুতে NEXT_PUBLIC_ লিখবেন না — এই দুটো server-only
+থাকা জরুরি, নইলে নিরাপত্তা ঝুঁকি তৈরি হবে।
+
+=========================================================
+ধাপ ৩ — নিজের অ্যাডমিন অ্যাকাউন্টকে "admin" হিসেবে চিহ্নিত করুন
+=========================================================
+1. Firebase Console -> Authentication -> Users ট্যাবে যান
+2. আপনার অ্যাডমিন ইমেইলের পাশে UID কলামের মান কপি করুন (লম্বা একটা কোড)
+3. Firestore Database -> Data ট্যাবে যান
+4. "Start collection" (বা + আইকন) চাপুন, Collection ID: users
+5. Document ID-তে ধাপ ২-এর UID-টা বসান (auto-generate না করে নিজে বসাবেন)
+6. একটা field যোগ করুন: field নাম role, type: string, value: admin
+7. Save করুন
+
+=========================================================
+ধাপ ৪ — Security Rules সম্পূর্ণ বদলে দিন
+=========================================================
+Firestore Database -> Rules -এ গিয়ে সব মুছে এটা বসিয়ে Publish করুন:
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     match /admissions/{applicationId} {
       allow create: if true;
-      allow read, update, delete: if request.auth != null;
+      allow read, update, delete: if isAdmin();
+    }
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
     }
   }
 }
 
-এর মানে: যে কেউ আবেদন জমা দিতে (create) পারবে, কিন্তু শুধু লগইন করা
-অ্যাডমিনই আবেদনগুলো দেখতে/এডিট করতে পারবে।
+(আগে admissions/notices-এ "request.auth != null" ছিল, মানে যেকোনো
+লগইন করা মানুষ — এখন থেকে student/guardian/teacher-এর নিজস্ব লগইন
+চালু হচ্ছে বলে এটা বদলে "শুধু admin" করা জরুরি ছিল, নইলে একজন
+শিক্ষার্থী অন্য সবার ভর্তি আবেদন দেখে ফেলতে পারতো।)
 
 =========================================================
-ফাইল বসানো (Merge/Replace)
+ধাপ ৫ — টার্মিনালে একবার
 =========================================================
-নতুন:
-  src/components/AdminAdmissionsList.tsx
-  src/app/admin/admissions/page.tsx
+npm install firebase-admin
 
-পরিবর্তিত (ওভাররাইট করুন):
-  src/lib/firebase.ts
-  src/components/AdmissionForm.tsx
-  src/app/admin/dashboard/page.tsx
+=========================================================
+ধাপ ৬ — ফাইল বসানো
+=========================================================
+ডিলিট করুন:
+  src/components/RequireAdminAuth.tsx  (নতুন RequireRoleAuth.tsx এটার
+  জায়গা নিয়েছে, সব পেজ থেকে বদলে দেওয়া হয়েছে)
+
+বাকি সব ফাইল (এই zip-এ যা আছে) Merge/Replace করে বসিয়ে দিন — নতুন ও
+পরিবর্তিত মিলিয়ে ১৬টা ফাইল।
+
+=========================================================
+এখন যা যা কাজ করবে
+=========================================================
+- Admin লগইন আগের মতোই, তবে এখন সত্যিকারের role-check হচ্ছে
+- Admin Dashboard -> "শিক্ষার্থী" বা "শিক্ষক" কার্ডে "পরিচালনা করুন"
+  চাপলে নতুন Student/Guardian/Teacher অ্যাকাউন্ট তৈরি করা যাবে
+  (ইমেইল অথবা মোবাইল নম্বর, দুটোর যেকোনো একটা দিয়ে)
+- শিক্ষার্থীর অ্যাকাউন্ট তৈরির সময় গার্ডিয়ানের নম্বর আবশ্যক
+- Student/Guardian/Teacher লগইন পেজে এখন সত্যিকারের লগইন কাজ করবে,
+  ড্যাশবোর্ডে ঢুকবে (তবে ড্যাশবোর্ডের ভেতরের তথ্য এখনো demo — পরের
+  ধাপে real করা হবে)
+- Admission ফর্মে গার্ডিয়ানের নম্বর এখন আবশ্যক ফিল্ড
 
 =========================================================
 টেস্ট করবেন যেভাবে
 =========================================================
-1. সব বসিয়ে + উপরের ২ ধাপ Firebase-এ করে + GitHub push করুন
-2. লাইভ সাইটে /admission -এ গিয়ে একটা টেস্ট আবেদন জমা দিন — এবার
-   সত্যিকারের সফলতার বার্তা ও একটা Application ID দেখাবে
-3. /admin/login দিয়ে লগইন করে /admin/dashboard -এ "ভর্তি আবেদন" কার্ডে
-   "পরিচালনা করুন" চাপুন — জমা দেওয়া আবেদনটা তালিকায় দেখা উচিত
+1. উপরের সব ধাপ শেষ করে push করুন
+2. /admin/login -এ লগইন করুন (আগের মতোই)
+3. /admin/users -এ গিয়ে একটা টেস্ট Student অ্যাকাউন্ট বানান (মোবাইল
+   নম্বর দিয়ে, একটা পাসওয়ার্ড দিয়ে, গার্ডিয়ানের নম্বর দিয়ে)
+4. লগ আউট করুন
+5. /student/login -এ গিয়ে সেই নম্বর+পাসওয়ার্ড দিয়ে লগইন করুন —
+   /student/dashboard-এ ঢুকে যাওয়া উচিত

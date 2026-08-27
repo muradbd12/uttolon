@@ -8,7 +8,6 @@ import {
   Sparkles,
   MessageSquareText,
   CalendarClock,
-  Wallet,
 } from "lucide-react";
 import ProgressRow from "@/components/ProgressRow";
 import { useUserProfile } from "@/lib/useUserProfile";
@@ -16,6 +15,7 @@ import { useAttendanceSummary } from "@/lib/useAttendanceSummary";
 import { useAssessments } from "@/lib/useAssessments";
 import { getFirebaseDb } from "@/lib/firebase";
 import RecentNotices from "@/components/dashboard/RecentNotices";
+import FeeSummary from "@/components/dashboard/FeeSummary";
 import { demoUpcomingExams } from "@/content/guardian-demo";
 
 type ChildProfile = { name?: string; className?: string; identifier?: string };
@@ -46,7 +46,7 @@ export default function GuardianDashboardContent() {
         <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
-            লগইন, প্রোফাইল, উপস্থিতি ও Assessment এখন <span className="font-medium">real</span> —
+            লগইন, প্রোফাইল, উপস্থিতি, Assessment ও ফি এখন <span className="font-medium">real</span> —
             শুধু আসন্ন পরীক্ষার তথ্য এখনো নমুনা (demo) ডেটা।
           </p>
         </div>
@@ -176,16 +176,8 @@ export default function GuardianDashboardContent() {
               )}
             </div>
 
-            {/* Fees */}
-            <div className="rounded-sm border border-line bg-paper p-6">
-              <div className="flex items-center gap-2">
-                <Wallet size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">ফি</h2>
-              </div>
-              <p className="mt-3 text-sm text-ink-soft/60">
-                ফি ব্যবস্থাপনা সিস্টেম শীঘ্রই যুক্ত হবে।
-              </p>
-            </div>
+            {/* Fees — real */}
+            <FeeSummary studentUid={profile?.linkedStudentUid} />
 
             <RecentNotices />
           </div>

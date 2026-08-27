@@ -15,10 +15,11 @@ import {
   FolderOpen,
   LayoutDashboard,
   ArrowUpRight,
-  Inbox,
 } from "lucide-react";
-import { demoStats, demoManagementAreas, demoPendingActions } from "@/content/admin-demo";
+import { demoManagementAreas } from "@/content/admin-demo";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
+import AdminStats from "@/components/dashboard/AdminStats";
+import AdminPendingActions from "@/components/dashboard/AdminPendingActions";
 
 export const metadata: Metadata = {
   title: "অ্যাডমিন ড্যাশবোর্ড | Uttolon",
@@ -54,13 +55,12 @@ export default function AdminDashboardPage() {
     <RequireRoleAuth role="admin" loginPath="/admin/login">
     <section className="bg-paper-raised">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        {/* Preview notice — login is real now, data below is still demo */}
+        {/* Preview notice */}
         <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
-            লগইন এখন <span className="font-medium">সত্যিকারের Firebase Authentication</span> দিয়ে
-            সুরক্ষিত। তবে নিচের সংখ্যা ও তালিকা এখনো demo — real database (Firestore)
-            যুক্ত হওয়ার পর প্রতিটা বিভাগ বাস্তব ডেটা দিয়ে কাজ করবে।
+            লগইন <span className="font-medium">Firebase Authentication</span> দিয়ে সুরক্ষিত, আর
+            নিচের সংখ্যাগুলো এখন সত্যিকারের ডেটাবেস থেকে হিসাব করা।
           </p>
         </div>
 
@@ -74,15 +74,8 @@ export default function AdminDashboardPage() {
           </h1>
         </div>
 
-        {/* Stats row */}
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {demoStats.map((s) => (
-            <div key={s.label} className="rounded-sm border border-line bg-paper p-4">
-              <p className="font-display-en text-2xl text-ink">—</p>
-              <p className="mt-1 text-xs leading-snug text-ink-soft">{s.label}</p>
-            </div>
-          ))}
-        </div>
+        {/* Stats row — real */}
+        <AdminStats />
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Management areas */}
@@ -128,19 +121,7 @@ export default function AdminDashboardPage() {
           <div>
             <h2 className="font-display-bn text-lg text-ink">পেন্ডিং অ্যাকশন</h2>
             <div className="mt-4 rounded-sm border border-line bg-paper p-5">
-              <div className="space-y-4">
-                {demoPendingActions.map((p) => (
-                  <div key={p.label} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Inbox size={15} className="shrink-0 text-ink-soft/50" />
-                      <p className="text-sm text-ink-soft">{p.label}</p>
-                    </div>
-                    <span className="rounded-sm bg-line px-2 py-0.5 text-xs font-medium text-ink-soft">
-                      {p.count}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <AdminPendingActions />
             </div>
           </div>
         </div>

@@ -1,105 +1,15 @@
-এই আপডেটে ফি ব্যবস্থাপনা সিস্টেম যোগ হলো।
+এই আপডেটে Security Rules বদলানোর দরকার নেই — শুধু কোড।
 
-*** গুরুত্বপূর্ণ, প্রথমেই বুঝে নিন ***
-এটা কোনো পেমেন্ট গেটওয়ে না — এখান থেকে সরাসরি কেউ bKash/Card দিয়ে
-টাকা পাঠাতে পারবে না, আর সাইট নিজে কোনো টাকা নাড়াচাড়া করে না। এটা
-শুধু হিসাব রাখার খাতা — ছাত্র/অভিভাবক নগদ, bKash বা Nagad-এ যেভাবেই
-টাকা দিক না কেন (সরাসরি আপনাকে বা আপনার হাতে), আপনি সেটা যাচাই করে
-এখানে Admin থেকে ম্যানুয়ালি এন্ট্রি দেবেন। এতে "সবকিছু ফ্রি" রাখার
-শর্তও ঠিক থাকে (কোনো পেমেন্ট গেটওয়ে ফি লাগে না), আর real টাকার
-নিরাপত্তা-ঝুঁকিও থাকে না।
+যা করলাম:
+১) Admin Dashboard-এর উপরের ৬টা সংখ্যা (মোট শিক্ষার্থী, মোট শিক্ষক,
+   এই মাসে নতুন ভর্তি, গড় উপস্থিতি, Recovery-তে থাকা শিক্ষার্থী, এই
+   মাসের ফি সংগ্রহ) এখন real — ডেটাবেস থেকে হিসাব করে দেখায়
+২) "পেন্ডিং অ্যাকশন"-এ "ভর্তি আবেদন" সংখ্যাটা এখন real (status=new
+   এমন আবেদন গোনে)। বৃত্তি/Testimonial এখনো ০-তে স্থির আছে, কারণ ওই
+   দুটো সিস্টেম এখনো তৈরি হয়নি।
+৩) আপনার প্রশ্নের উত্তরে — Student নিজের Dashboard-এও এখন ফি দেখা
+   যাবে (আগে শুধু Guardian-এ ছিল)
 
-=========================================================
-ধাপ ১ — Security Rules-এ আরেকটা collection যোগ করুন
-=========================================================
-আগেরটার সাথে শুধু "fees" ব্লক নতুন — সব মুছে এটা দিয়ে Publish করুন:
-
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-
-    function isAdmin() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    function isTeacher() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
-    }
-
-    function isGuardianOf(studentUid) {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUid == studentUid;
-    }
-
-    match /admissions/{applicationId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /notices/{noticeId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /users/{userId} {
-      allow read: if (request.auth != null && request.auth.uid == userId)
-        || isAdmin()
-        || (isTeacher() && resource.data.role == 'student')
-        || isGuardianOf(userId);
-      allow write: if false;
-    }
-
-    match /attendance/{attendanceId} {
-      allow create, update: if isAdmin() || isTeacher();
-      allow read: if isAdmin() || isTeacher()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /assessments/{assessmentId} {
-      allow create, update: if isAdmin() || isTeacher();
-      allow read: if isAdmin() || isTeacher()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /homework/{homeworkId} {
-      allow create, update, delete: if isAdmin() || isTeacher();
-      allow read: if request.auth != null;
-    }
-
-    match /fees/{feeId} {
-      allow create, update, delete: if isAdmin();
-      allow read: if isAdmin()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-  }
-}
-
-(লক্ষ করুন: fees-এ isTeacher() নেই ইচ্ছাকৃতভাবে — ফি শুধু Admin
-দেখবেন/লিখবেন, শিক্ষকের এখানে দরকার নেই বলে বাদ রাখা হয়েছে।)
-
-=========================================================
-ধাপ ২ — ফাইল বসান
-=========================================================
-এই zip-এর সব ফাইল (৬টা) Merge/Replace করে বসান।
-
-=========================================================
-কীভাবে ব্যবহার করবেন
-=========================================================
-- Admin -> Dashboard -> "ফি ব্যবস্থাপনা" কার্ডে "পরিচালনা করুন" চাপুন
-- একজন শিক্ষার্থী বেছে নিয়ে মাস, বকেয়া, ছাড়, জরিমানা, পরিশোধিত
-  পরিমাণ ও পেমেন্ট পদ্ধতি দিয়ে সংরক্ষণ করুন — অবস্থা (পরিশোধিত/আংশিক/
-  বাকি) নিজে থেকেই হিসাব হয়ে যাবে
-- সেই শিক্ষার্থীর Guardian লগইন করলে dashboard-এ এই তথ্য real দেখবেন,
-  আগের মাসগুলোর ইতিহাসও দেখা যাবে
-
-স্টুডেন্ট নিজের ড্যাশবোর্ডে ফি দেখাইনি (মূল স্পেসিফিকেশনে এটা শুধু
-Guardian-এর জন্য বলা ছিল) — চাইলে স্টুডেন্ট ড্যাশবোর্ডেও একই কার্ড
-যোগ করে দিতে পারি, বললেই হবে।
+ফাইল বসান (৪টা), push করুন। কিছুক্ষণ ডেটা থাকলে (কিছু শিক্ষার্থী,
+উপস্থিতি, ফি রেকর্ড ইত্যাদি যোগ করা থাকলে) Admin Dashboard-এ ঢুকে
+সংখ্যাগুলো মিলিয়ে দেখুন বাস্তবের সাথে ঠিক আছে কিনা।

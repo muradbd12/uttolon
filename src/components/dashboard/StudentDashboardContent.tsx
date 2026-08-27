@@ -13,6 +13,7 @@ import { useAttendanceSummary } from "@/lib/useAttendanceSummary";
 import { useAssessments } from "@/lib/useAssessments";
 import { useHomework } from "@/lib/useHomework";
 import RecentNotices from "@/components/dashboard/RecentNotices";
+import FeeSummary from "@/components/dashboard/FeeSummary";
 import { demoClassesToday } from "@/content/student-demo";
 
 export default function StudentDashboardContent() {
@@ -156,6 +157,8 @@ export default function StudentDashboardContent() {
                 </>
               )}
             </div>
+
+            <FeeSummary studentUid={profile?.uid} />
 
             <RecentNotices />
           </div>

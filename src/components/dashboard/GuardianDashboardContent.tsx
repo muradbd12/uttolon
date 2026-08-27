@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import {
   ClipboardList,
-  Bell,
   UserRound,
   Sparkles,
   MessageSquareText,
@@ -16,11 +15,8 @@ import { useUserProfile } from "@/lib/useUserProfile";
 import { useAttendanceSummary } from "@/lib/useAttendanceSummary";
 import { useAssessments } from "@/lib/useAssessments";
 import { getFirebaseDb } from "@/lib/firebase";
-import {
-  demoTeacherComments,
-  demoUpcomingExams,
-  demoNotices,
-} from "@/content/guardian-demo";
+import RecentNotices from "@/components/dashboard/RecentNotices";
+import { demoUpcomingExams } from "@/content/guardian-demo";
 
 type ChildProfile = { name?: string; className?: string; identifier?: string };
 
@@ -51,7 +47,7 @@ export default function GuardianDashboardContent() {
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
             লগইন, প্রোফাইল, উপস্থিতি ও Assessment এখন <span className="font-medium">real</span> —
-            শিক্ষকের মন্তব্য/পরীক্ষার তথ্য এখনো নমুনা (demo) ডেটা, পরের ধাপে real হবে।
+            শুধু আসন্ন পরীক্ষার তথ্য এখনো নমুনা (demo) ডেটা।
           </p>
         </div>
 
@@ -112,22 +108,33 @@ export default function GuardianDashboardContent() {
               )}
             </div>
 
-            {/* Teacher comments */}
+            {/* Teacher comments — real (from assessment entries with a comment) */}
             <div className="rounded-sm border border-line bg-paper p-6">
               <div className="flex items-center gap-2">
                 <MessageSquareText size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">শিক্ষকের মন্তব্য (নমুনা)</h2>
+                <h2 className="font-display-bn text-lg text-ink">শিক্ষকের মন্তব্য</h2>
               </div>
-              <div className="mt-4 space-y-4">
-                {demoTeacherComments.map((c) => (
-                  <div key={c.subject} className="border-b border-line pb-4 last:border-0 last:pb-0">
-                    <p className="font-label text-[11px] uppercase tracking-wide text-ink-soft/60">
-                      {c.subject}
-                    </p>
-                    <p className="mt-1.5 text-[15px] leading-relaxed text-ink">{c.comment}</p>
+              {(() => {
+                const withComments = (assessments || []).filter((a) => a.comment);
+                if (assessments === null) {
+                  return <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>;
+                }
+                if (withComments.length === 0) {
+                  return <p className="mt-4 text-sm text-ink-soft/60">এখনো কোনো মন্তব্য যোগ করা হয়নি।</p>;
+                }
+                return (
+                  <div className="mt-4 space-y-4">
+                    {withComments.map((c) => (
+                      <div key={c.subject} className="border-b border-line pb-4 last:border-0 last:pb-0">
+                        <p className="font-label text-[11px] uppercase tracking-wide text-ink-soft/60">
+                          {c.subject}
+                        </p>
+                        <p className="mt-1.5 text-[15px] leading-relaxed text-ink">{c.comment}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </div>
 
             {/* Upcoming exams */}
@@ -180,21 +187,7 @@ export default function GuardianDashboardContent() {
               </p>
             </div>
 
-            {/* Notices */}
-            <div className="rounded-sm border border-line bg-paper p-6">
-              <div className="flex items-center gap-2">
-                <Bell size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">নোটিশ (নমুনা)</h2>
-              </div>
-              <div className="mt-4 space-y-3">
-                {demoNotices.map((n) => (
-                  <div key={n.title} className="border-b border-line pb-3 last:border-0 last:pb-0">
-                    <p className="text-sm text-ink">{n.title}</p>
-                    <p className="mt-1 text-xs text-ink-soft/60">{n.category}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <RecentNotices />
           </div>
         </div>
       </div>

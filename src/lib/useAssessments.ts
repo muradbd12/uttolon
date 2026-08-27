@@ -10,6 +10,7 @@ export type AssessmentEntry = {
   practice: number;
   assessment: number;
   recoveryActive: boolean;
+  comment?: string;
 };
 
 // একজন শিক্ষার্থীর সব বিষয়ের সর্বশেষ মূল্যায়ন — Student নিজের জন্য,

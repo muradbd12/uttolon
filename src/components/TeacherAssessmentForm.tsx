@@ -20,6 +20,7 @@ type AssessmentEntry = {
   practice: number;
   assessment: number;
   recoveryActive: boolean;
+  comment?: string;
 };
 
 const inputClass =
@@ -86,13 +87,17 @@ export default function TeacherAssessmentForm() {
     try {
       const authInstance = getFirebaseAuth();
       const db = getFirebaseDb();
+      const student = students?.find((s) => s.uid === selectedUid);
       await setDoc(doc(db, "assessments", `${selectedUid}_${slugify(subject)}`), {
         studentUid: selectedUid,
+        studentName: student?.name || null,
+        studentClassName: student?.className || null,
         subject,
         concept: Number(form.get("concept")) || 0,
         practice: Number(form.get("practice")) || 0,
         assessment: Number(form.get("assessment")) || 0,
         recoveryActive: form.get("recoveryActive") === "on",
+        comment: (form.get("comment") as string)?.trim() || "",
         enteredBy: authInstance.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       });
@@ -192,6 +197,16 @@ export default function TeacherAssessmentForm() {
             <label className="flex items-center gap-2 text-sm text-ink">
               <input name="recoveryActive" type="checkbox" className="h-4 w-4" />
               Recovery Active (এই বিষয়ে দুর্বলতা আছে)
+            </label>
+
+            <label className="block">
+              <span className="text-xs text-ink-soft">গার্ডিয়ানের জন্য মন্তব্য (ঐচ্ছিক)</span>
+              <textarea
+                name="comment"
+                rows={2}
+                placeholder="যেমন: ত্রিকোণমিতিতে আরও অনুশীলন দরকার"
+                className={`mt-1 ${inputClass}`}
+              />
             </label>
 
             <button

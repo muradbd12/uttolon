@@ -1,25 +1,67 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
 import {
   CalendarDays,
   ClipboardList,
-  Bell,
   UserRound,
   Sparkles,
   CheckSquare,
   AlertTriangle,
 } from "lucide-react";
 import { useUserProfile } from "@/lib/useUserProfile";
+import { getFirebaseDb } from "@/lib/firebase";
+import RecentNotices from "@/components/dashboard/RecentNotices";
 import {
   demoClassesToday,
-  demoRecoveryStudents,
-  demoHomeworkAssigned,
-  demoNotices,
 } from "@/content/teacher-demo";
+
+type RecoveryItem = { studentName: string; subject: string; studentClassName?: string };
+type HomeworkItem = { title: string; subject: string; className: string; dueDate: string };
 
 export default function TeacherDashboardContent() {
   const profile = useUserProfile();
+  const [recoveryList, setRecoveryList] = useState<RecoveryItem[] | null>(null);
+  const [homework, setHomework] = useState<HomeworkItem[] | null>(null);
+
+  useEffect(() => {
+    async function loadRecovery() {
+      try {
+        const db = getFirebaseDb();
+        const q = query(collection(db, "assessments"), where("recoveryActive", "==", true));
+        const snapshot = await getDocs(q);
+        setRecoveryList(
+          snapshot.docs.map((d) => ({
+            studentName: d.data().studentName || "নাম নেই",
+            subject: d.data().subject || "",
+            studentClassName: d.data().studentClassName || undefined,
+          }))
+        );
+      } catch {
+        setRecoveryList([]);
+      }
+    }
+    async function loadHomework() {
+      try {
+        const db = getFirebaseDb();
+        const q = query(collection(db, "homework"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        setHomework(snapshot.docs.slice(0, 5).map((d) => d.data() as HomeworkItem));
+      } catch {
+        setHomework([]);
+      }
+    }
+    loadRecovery();
+    loadHomework();
+  }, []);
 
   return (
     <section className="bg-paper-raised">
@@ -28,9 +70,9 @@ export default function TeacherDashboardContent() {
         <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
-            লগইন ও প্রোফাইল এখন <span className="font-medium">real</span> — উপস্থিতিও এখন
-            সত্যিকারের ডেটাবেসে সংরক্ষিত হয়। Recovery/হোমওয়ার্ক অংশ এখনো নমুনা (demo)
-            ডেটা, পরের ধাপে real হবে।
+            লগইন, প্রোফাইল, উপস্থিতি, Assessment ও Recovery তালিকা এখন
+            <span className="font-medium"> real</span> — শুধু আজকের ক্লাস ও নোটিশ অংশ
+            এখনো নমুনা (demo) ডেটা।
           </p>
         </div>
 
@@ -90,76 +132,75 @@ export default function TeacherDashboardContent() {
               </div>
             </div>
 
-            {/* Students needing recovery attention */}
+            {/* Students needing recovery attention — real */}
             <div className="rounded-sm border border-line bg-paper p-6">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={17} className="text-clay" />
-                <h2 className="font-display-bn text-lg text-ink">Recovery প্রয়োজন এমন শিক্ষার্থী (নমুনা)</h2>
+                <h2 className="font-display-bn text-lg text-ink">Recovery প্রয়োজন এমন শিক্ষার্থী</h2>
               </div>
-              <div className="mt-4 space-y-3">
-                {demoRecoveryStudents.map((s) => (
-                  <div
-                    key={s.studentId}
-                    className="flex items-center justify-between rounded-sm border border-line px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-[15px] text-ink">{s.studentId}</p>
-                      <p className="text-xs text-ink-soft/70">{s.subject} — {s.weakArea}</p>
+              {recoveryList === null ? (
+                <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
+              ) : recoveryList.length === 0 ? (
+                <p className="mt-4 text-sm text-ink-soft/60">এই মুহূর্তে Recovery প্রয়োজন এমন কেউ নেই।</p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {recoveryList.map((s, i) => (
+                    <div
+                      key={`${s.studentName}-${s.subject}-${i}`}
+                      className="flex items-center justify-between rounded-sm border border-line px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-[15px] text-ink">{s.studentName}</p>
+                        <p className="text-xs text-ink-soft/70">
+                          {s.subject} {s.studentClassName ? `— ${s.studentClassName}` : ""}
+                        </p>
+                      </div>
+                      <span className="rounded-sm bg-teal-soft px-2 py-0.5 text-xs font-medium text-teal-deep">
+                        Recovery: Active
+                      </span>
                     </div>
-                    <span className="rounded-sm bg-teal-soft px-2 py-0.5 text-xs font-medium text-teal-deep">
-                      Recovery: Active
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Homework assigned */}
+            {/* Homework assigned — real */}
             <div className="rounded-sm border border-line bg-paper p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ClipboardList size={17} className="text-gold-deep" />
-                  <h2 className="font-display-bn text-lg text-ink">সাম্প্রতিক হোমওয়ার্ক (নমুনা)</h2>
+                  <h2 className="font-display-bn text-lg text-ink">সাম্প্রতিক হোমওয়ার্ক</h2>
                 </div>
-                <button
-                  type="button"
-                  disabled
-                  className="cursor-not-allowed rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft/50"
+                <Link
+                  href="/teacher/homework"
+                  className="rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
                 >
-                  নতুন হোমওয়ার্ক দিন (শীঘ্রই)
-                </button>
+                  নতুন হোমওয়ার্ক দিন
+                </Link>
               </div>
-              <div className="mt-4 space-y-3">
-                {demoHomeworkAssigned.map((h) => (
-                  <div key={h.title} className="rounded-sm border border-line px-4 py-3">
-                    <p className="font-label text-[11px] uppercase tracking-wide text-ink-soft/60">
-                      {h.batch}
-                    </p>
-                    <p className="mt-1 text-[15px] text-ink">{h.title}</p>
-                    <p className="mt-1 text-xs text-ink-soft/60">দেওয়া হয়েছে: {h.assignedOn}</p>
-                  </div>
-                ))}
-              </div>
+              {homework === null ? (
+                <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
+              ) : homework.length === 0 ? (
+                <p className="mt-4 text-sm text-ink-soft/60">এখনো কোনো হোমওয়ার্ক দেওয়া হয়নি।</p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {homework.map((h, i) => (
+                    <div key={`${h.title}-${i}`} className="rounded-sm border border-line px-4 py-3">
+                      <p className="font-label text-[11px] uppercase tracking-wide text-ink-soft/60">
+                        {h.className} — {h.subject}
+                      </p>
+                      <p className="mt-1 text-[15px] text-ink">{h.title}</p>
+                      <p className="mt-1 text-xs text-ink-soft/60">জমার সময়সীমা: {h.dueDate}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Right column */}
           <div className="space-y-6">
-            {/* Notices */}
-            <div className="rounded-sm border border-line bg-paper p-6">
-              <div className="flex items-center gap-2">
-                <Bell size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">নোটিশ (নমুনা)</h2>
-              </div>
-              <div className="mt-4 space-y-3">
-                {demoNotices.map((n) => (
-                  <div key={n.title} className="border-b border-line pb-3 last:border-0 last:pb-0">
-                    <p className="text-sm text-ink">{n.title}</p>
-                    <p className="mt-1 text-xs text-ink-soft/60">{n.category}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <RecentNotices />
           </div>
         </div>
       </div>

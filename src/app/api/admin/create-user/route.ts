@@ -6,6 +6,14 @@ import { identifierToEmail } from "@/lib/identifier";
 // Firebase ID token যাচাই করা হয়, এবং token-এর ইমেইল অবশ্যই
 // ADMIN_EMAILS env variable-এ থাকা তালিকার সাথে মিলতে হবে।
 export async function POST(req: NextRequest) {
+  let adminAuth;
+  try {
+    adminAuth = getAdminAuth();
+  } catch (err) {
+    console.error("[create-user] Firebase Admin init failed:", err);
+    return NextResponse.json({ error: "server_config_error" }, { status: 500 });
+  }
+
   try {
     const authHeader = req.headers.get("authorization") || "";
     const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
@@ -13,13 +21,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const adminAuth = getAdminAuth();
-    const decoded = await adminAuth.verifyIdToken(idToken);
+    let decoded;
+    try {
+      decoded = await adminAuth.verifyIdToken(idToken);
+    } catch (err) {
+      console.error("[create-user] verifyIdToken failed:", err);
+      return NextResponse.json({ error: "server_config_error" }, { status: 500 });
+    }
 
     const allowedAdmins = (process.env.ADMIN_EMAILS || "")
       .split(",")
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
+
+    if (allowedAdmins.length === 0) {
+      console.error("[create-user] ADMIN_EMAILS env variable is empty/missing");
+      return NextResponse.json({ error: "server_config_error" }, { status: 500 });
+    }
 
     if (!decoded.email || !allowedAdmins.includes(decoded.email.toLowerCase())) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -80,6 +98,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ uid: userRecord.uid, email });
   } catch (err: unknown) {
+    console.error("[create-user] unexpected error:", err);
     const code = (err as { errorInfo?: { code?: string }; code?: string })?.errorInfo?.code
       ?? (err as { code?: string })?.code;
     if (code === "auth/email-already-exists") {

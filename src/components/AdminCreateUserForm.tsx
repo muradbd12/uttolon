@@ -16,6 +16,7 @@ const errorMessages: Record<string, string> = {
   already_exists: "এই ইমেইল/নম্বর দিয়ে ইতিমধ্যে একটা অ্যাকাউন্ট আছে।",
   unauthorized: "লগইন সেশন শেষ হয়ে গেছে — আবার লগইন করুন।",
   forbidden: "এই কাজের অনুমতি নেই।",
+  server_config_error: "সার্ভার কনফিগারেশন সমস্যা — Vercel-এ FIREBASE_SERVICE_ACCOUNT_KEY ও ADMIN_EMAILS ঠিকভাবে যোগ করা আছে কিনা যাচাই করুন।",
   server_error: "কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন।",
 };
 

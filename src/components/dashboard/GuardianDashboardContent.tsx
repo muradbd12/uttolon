@@ -14,9 +14,9 @@ import {
 import ProgressRow from "@/components/ProgressRow";
 import { useUserProfile } from "@/lib/useUserProfile";
 import { useAttendanceSummary } from "@/lib/useAttendanceSummary";
+import { useAssessments } from "@/lib/useAssessments";
 import { getFirebaseDb } from "@/lib/firebase";
 import {
-  demoAssessmentSummary,
   demoTeacherComments,
   demoUpcomingExams,
   demoNotices,
@@ -28,6 +28,7 @@ export default function GuardianDashboardContent() {
   const profile = useUserProfile();
   const [child, setChild] = useState<ChildProfile | null>(null);
   const attendance = useAttendanceSummary(profile?.linkedStudentUid);
+  const assessments = useAssessments(profile?.linkedStudentUid);
 
   useEffect(() => {
     if (!profile?.linkedStudentUid) return;
@@ -49,8 +50,8 @@ export default function GuardianDashboardContent() {
         <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
-            লগইন, প্রোফাইল ও উপস্থিতি এখন <span className="font-medium">real</span> —
-            অগ্রগতি/শিক্ষকের মন্তব্য/পরীক্ষার তথ্য এখনো নমুনা (demo) ডেটা, পরের ধাপে real হবে।
+            লগইন, প্রোফাইল, উপস্থিতি ও Assessment এখন <span className="font-medium">real</span> —
+            শিক্ষকের মন্তব্য/পরীক্ষার তথ্য এখনো নমুনা (demo) ডেটা, পরের ধাপে real হবে।
           </p>
         </div>
 
@@ -76,33 +77,39 @@ export default function GuardianDashboardContent() {
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left column */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Assessment summary */}
+            {/* Assessment summary — real */}
             <div className="rounded-sm border border-line bg-paper p-6">
               <div className="flex items-center gap-2">
                 <ClipboardList size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">অগ্রগতি সারাংশ (নমুনা)</h2>
+                <h2 className="font-display-bn text-lg text-ink">অগ্রগতি সারাংশ</h2>
               </div>
-              <div className="mt-5 space-y-5">
-                {demoAssessmentSummary.map((a) => (
-                  <div key={a.subject}>
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-[15px] font-medium text-ink">{a.subject}</h3>
-                      {a.recoveryActive ? (
-                        <span className="rounded-sm bg-teal-soft px-2 py-0.5 text-xs font-medium text-teal-deep">
-                          Recovery: Active
-                        </span>
-                      ) : (
-                        <span className="rounded-sm bg-line px-2 py-0.5 text-xs text-ink-soft">
-                          On Track
-                        </span>
-                      )}
+              {assessments === null ? (
+                <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
+              ) : assessments.length === 0 ? (
+                <p className="mt-4 text-sm text-ink-soft/60">এখনো কোনো মূল্যায়ন যোগ করা হয়নি।</p>
+              ) : (
+                <div className="mt-5 space-y-5">
+                  {assessments.map((a) => (
+                    <div key={a.subject}>
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-[15px] font-medium text-ink">{a.subject}</h3>
+                        {a.recoveryActive ? (
+                          <span className="rounded-sm bg-teal-soft px-2 py-0.5 text-xs font-medium text-teal-deep">
+                            Recovery: Active
+                          </span>
+                        ) : (
+                          <span className="rounded-sm bg-line px-2 py-0.5 text-xs text-ink-soft">
+                            On Track
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2.5">
+                        <ProgressRow label="সর্বশেষ মূল্যায়ন" value={a.assessment} />
+                      </div>
                     </div>
-                    <div className="mt-2.5">
-                      <ProgressRow label="সর্বশেষ মূল্যায়ন" value={a.assessment} />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Teacher comments */}

@@ -74,12 +74,20 @@ export default function TeacherDashboardContent() {
                   </div>
                 ))}
               </div>
-              <Link
-                href="/teacher/attendance"
-                className="mt-4 flex w-fit items-center gap-1.5 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep"
-              >
-                <CheckSquare size={14} /> উপস্থিতি নিন
-              </Link>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/teacher/attendance"
+                  className="flex w-fit items-center gap-1.5 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep"
+                >
+                  <CheckSquare size={14} /> উপস্থিতি নিন
+                </Link>
+                <Link
+                  href="/teacher/assessments"
+                  className="flex w-fit items-center gap-1.5 rounded-sm border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-paper-raised"
+                >
+                  <ClipboardList size={14} /> মূল্যায়ন দিন
+                </Link>
+              </div>
             </div>
 
             {/* Students needing recovery attention */}

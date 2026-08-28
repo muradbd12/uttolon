@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
@@ -25,8 +25,10 @@ type StudentOption = { uid: string; name: string; identifier: string };
 export default function AdminCreateUserForm() {
   const [role, setRole] = useState<"student" | "guardian" | "teacher">("student");
   const [idType, setIdType] = useState<"email" | "phone">("phone");
+  const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [errorCode, setErrorCode] = useState("");
   const [created, setCreated] = useState<{ identifier: string; password: string } | null>(null);
   const [students, setStudents] = useState<StudentOption[] | null>(null);
 
@@ -55,6 +57,7 @@ export default function AdminCreateUserForm() {
     e.preventDefault();
     setStatus("loading");
     setErrorMsg("");
+    setErrorCode("");
 
     const form = new FormData(e.currentTarget);
     const identifier = form.get("identifier") as string;
@@ -66,6 +69,7 @@ export default function AdminCreateUserForm() {
       if (!token) {
         setStatus("error");
         setErrorMsg(errorMessages.unauthorized);
+        setErrorCode("unauthorized");
         return;
       }
 
@@ -88,6 +92,7 @@ export default function AdminCreateUserForm() {
       if (!res.ok) {
         setStatus("error");
         setErrorMsg(errorMessages[data.error] || errorMessages.server_error);
+        setErrorCode(data.error || `http_${res.status}`);
         return;
       }
 
@@ -97,6 +102,7 @@ export default function AdminCreateUserForm() {
     } catch {
       setStatus("error");
       setErrorMsg(errorMessages.server_error);
+      setErrorCode("network_or_client_error");
     }
   }
 
@@ -130,8 +136,14 @@ export default function AdminCreateUserForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 rounded-sm border border-line bg-paper p-6">
       {status === "error" && (
-        <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
-          <AlertCircle size={14} /> {errorMsg}
+        <div className="flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
+          <AlertCircle size={14} className="mt-0.5 shrink-0" />
+          <span>
+            {errorMsg}
+            {errorCode && (
+              <span className="mt-1 block text-xs opacity-70">(কোড: {errorCode})</span>
+            )}
+          </span>
         </div>
       )}
 
@@ -195,7 +207,23 @@ export default function AdminCreateUserForm() {
 
       <label className="block">
         <span className="text-sm font-medium text-ink">পাসওয়ার্ড (অন্তত ৬ ক্যারেক্টার)</span>
-        <input required name="password" type="text" minLength={6} className={`mt-1.5 ${inputClass}`} />
+        <div className="relative mt-1.5">
+          <input
+            required
+            name="password"
+            type={showPassword ? "text" : "password"}
+            minLength={6}
+            className={`${inputClass} pr-11`}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "পাসওয়ার্ড লুকান" : "পাসওয়ার্ড দেখান"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink"
+          >
+            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        </div>
       </label>
 
       {role === "guardian" && (

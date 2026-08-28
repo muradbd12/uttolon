@@ -49,6 +49,7 @@ const liveLinks: Record<string, string> = {
   "শিক্ষক": "/admin/users",
   "ফি ব্যবস্থাপনা": "/admin/fees",
   "প্রোগ্রাম ও ব্যাচ": "/admin/schedule",
+  "ফলাফল ও Success Story": "/admin/success-stories",
 };
 
 export default function AdminDashboardPage() {

@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
     adminAuth = getAdminAuth();
   } catch (err) {
     console.error("[create-user] Firebase Admin init failed:", err);
-    return NextResponse.json({ error: "server_config_error" }, { status: 500 });
+    const details = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: "server_config_error", details }, { status: 500 });
   }
 
   try {
@@ -26,7 +27,8 @@ export async function POST(req: NextRequest) {
       decoded = await adminAuth.verifyIdToken(idToken);
     } catch (err) {
       console.error("[create-user] verifyIdToken failed:", err);
-      return NextResponse.json({ error: "server_config_error" }, { status: 500 });
+      const details = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ error: "server_config_error", details }, { status: 500 });
     }
 
     const allowedAdmins = (process.env.ADMIN_EMAILS || "")
@@ -104,6 +106,11 @@ export async function POST(req: NextRequest) {
     if (code === "auth/email-already-exists") {
       return NextResponse.json({ error: "already_exists" }, { status: 409 });
     }
-    return NextResponse.json({ error: "server_error" }, { status: 500 });
+    // এখানে আসল কারণটা সরাসরি response-এ পাঠানো হচ্ছে, যাতে Vercel-এর
+    // Logs খুঁজতে না হয় — শুধু লগইন করা admin-ই এটা দেখেন, তাই এটা
+    // নিরাপদ। error() কল থেকেও message বের করার চেষ্টা করা হলো।
+    const details =
+      code || (err instanceof Error ? err.message : typeof err === "string" ? err : JSON.stringify(err));
+    return NextResponse.json({ error: "server_error", details }, { status: 500 });
   }
 }

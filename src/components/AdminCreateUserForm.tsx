@@ -29,6 +29,7 @@ export default function AdminCreateUserForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [errorCode, setErrorCode] = useState("");
+  const [errorDetails, setErrorDetails] = useState("");
   const [created, setCreated] = useState<{ identifier: string; password: string } | null>(null);
   const [students, setStudents] = useState<StudentOption[] | null>(null);
 
@@ -58,6 +59,7 @@ export default function AdminCreateUserForm() {
     setStatus("loading");
     setErrorMsg("");
     setErrorCode("");
+    setErrorDetails("");
 
     const form = new FormData(e.currentTarget);
     const identifier = form.get("identifier") as string;
@@ -93,6 +95,7 @@ export default function AdminCreateUserForm() {
         setStatus("error");
         setErrorMsg(errorMessages[data.error] || errorMessages.server_error);
         setErrorCode(data.error || `http_${res.status}`);
+        setErrorDetails(data.details || "");
         return;
       }
 
@@ -142,6 +145,11 @@ export default function AdminCreateUserForm() {
             {errorMsg}
             {errorCode && (
               <span className="mt-1 block text-xs opacity-70">(কোড: {errorCode})</span>
+            )}
+            {errorDetails && (
+              <span className="mt-2 block select-all rounded-sm bg-paper px-2 py-1.5 font-mono text-xs text-ink">
+                {errorDetails}
+              </span>
             )}
           </span>
         </div>

@@ -18,17 +18,16 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useUserProfile } from "@/lib/useUserProfile";
+import { useTodaySchedule } from "@/lib/useTodaySchedule";
 import { getFirebaseDb } from "@/lib/firebase";
 import RecentNotices from "@/components/dashboard/RecentNotices";
-import {
-  demoClassesToday,
-} from "@/content/teacher-demo";
 
 type RecoveryItem = { studentName: string; subject: string; studentClassName?: string };
 type HomeworkItem = { title: string; subject: string; className: string; dueDate: string };
 
 export default function TeacherDashboardContent() {
   const profile = useUserProfile();
+  const todaySchedule = useTodaySchedule({ field: "teacherUid", value: profile?.uid });
   const [recoveryList, setRecoveryList] = useState<RecoveryItem[] | null>(null);
   const [homework, setHomework] = useState<HomeworkItem[] | null>(null);
 
@@ -70,9 +69,8 @@ export default function TeacherDashboardContent() {
         <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
-            লগইন, প্রোফাইল, উপস্থিতি, Assessment ও Recovery তালিকা এখন
-            <span className="font-medium"> real</span> — শুধু আজকের ক্লাস ও নোটিশ অংশ
-            এখনো নমুনা (demo) ডেটা।
+            লগইন, প্রোফাইল, উপস্থিতি, Assessment, Recovery তালিকা, হোমওয়ার্ক ও
+            আজকের ক্লাস — সব এখন <span className="font-medium">real</span>।
           </p>
         </div>
 
@@ -96,26 +94,36 @@ export default function TeacherDashboardContent() {
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left column */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Today's classes */}
+            {/* Today's classes — real */}
             <div className="rounded-sm border border-line bg-paper p-6">
               <div className="flex items-center gap-2">
                 <CalendarDays size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">আজকের ক্লাস (নমুনা)</h2>
+                <h2 className="font-display-bn text-lg text-ink">আজকের ক্লাস</h2>
               </div>
-              <div className="mt-4 space-y-3">
-                {demoClassesToday.map((c) => (
-                  <div
-                    key={c.batch}
-                    className="flex items-center justify-between rounded-sm border border-line px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-[15px] text-ink">{c.batch}</p>
-                      <p className="text-xs text-ink-soft/70">{c.room}</p>
+              {todaySchedule === null ? (
+                <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
+              ) : todaySchedule.length === 0 ? (
+                <p className="mt-4 text-sm text-ink-soft/60">আজকে কোনো ক্লাস নির্ধারিত নেই।</p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {todaySchedule.map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between rounded-sm border border-line px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-[15px] text-ink">
+                          {c.className} — {c.subject}
+                        </p>
+                        <p className="text-xs text-ink-soft/70">{c.room}</p>
+                      </div>
+                      <span className="text-xs text-ink-soft">
+                        {c.startTime}–{c.endTime}
+                      </span>
                     </div>
-                    <span className="text-xs text-ink-soft">{c.time}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   href="/teacher/attendance"

@@ -12,15 +12,16 @@ import { useUserProfile } from "@/lib/useUserProfile";
 import { useAttendanceSummary } from "@/lib/useAttendanceSummary";
 import { useAssessments } from "@/lib/useAssessments";
 import { useHomework } from "@/lib/useHomework";
+import { useTodaySchedule } from "@/lib/useTodaySchedule";
 import RecentNotices from "@/components/dashboard/RecentNotices";
 import FeeSummary from "@/components/dashboard/FeeSummary";
-import { demoClassesToday } from "@/content/student-demo";
 
 export default function StudentDashboardContent() {
   const profile = useUserProfile();
   const attendance = useAttendanceSummary(profile?.uid);
   const assessments = useAssessments(profile?.uid);
   const homework = useHomework(profile?.className);
+  const todaySchedule = useTodaySchedule({ field: "className", value: profile?.className });
 
   return (
     <section className="bg-paper-raised">
@@ -29,8 +30,8 @@ export default function StudentDashboardContent() {
         <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
           <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
           <p className="text-sm leading-relaxed text-ink">
-            লগইন, প্রোফাইল, উপস্থিতি, Assessment ও হোমওয়ার্ক এখন
-            <span className="font-medium"> real</span> — শুধু আজকের ক্লাসের তথ্য এখনো নমুনা (demo)।
+            লগইন, প্রোফাইল, উপস্থিতি, Assessment, হোমওয়ার্ক, ফি ও আজকের
+            ক্লাস — সব এখন <span className="font-medium">real</span>।
           </p>
         </div>
 
@@ -54,26 +55,36 @@ export default function StudentDashboardContent() {
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left column */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Today's classes */}
+            {/* Today's classes — real */}
             <div className="rounded-sm border border-line bg-paper p-6">
               <div className="flex items-center gap-2">
                 <CalendarDays size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">আজকের ক্লাস (নমুনা)</h2>
+                <h2 className="font-display-bn text-lg text-ink">আজকের ক্লাস</h2>
               </div>
-              <div className="mt-4 space-y-3">
-                {demoClassesToday.map((c) => (
-                  <div
-                    key={c.subject}
-                    className="flex items-center justify-between rounded-sm border border-line px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-[15px] text-ink">{c.subject}</p>
-                      <p className="text-xs text-ink-soft/70">{c.teacher}</p>
+              {todaySchedule === null ? (
+                <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
+              ) : todaySchedule.length === 0 ? (
+                <p className="mt-4 text-sm text-ink-soft/60">আজকে কোনো ক্লাস নির্ধারিত নেই।</p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {todaySchedule.map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between rounded-sm border border-line px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-[15px] text-ink">{c.subject}</p>
+                        <p className="text-xs text-ink-soft/70">
+                          {c.teacherName} {c.room ? `— ${c.room}` : ""}
+                        </p>
+                      </div>
+                      <span className="text-xs text-ink-soft">
+                        {c.startTime}–{c.endTime}
+                      </span>
                     </div>
-                    <span className="text-xs text-ink-soft">{c.time}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Assessment & Recovery — real */}

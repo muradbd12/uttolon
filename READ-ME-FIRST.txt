@@ -1,41 +1,102 @@
-=========================================================
-ধাপে ধাপে — এখন কী করবেন
-=========================================================
-
-১) নিচের ২টা ফাইল বসান (Merge/Replace):
-   src/components/AdminCreateUserForm.tsx
-   src/app/api/admin/create-user/route.ts
-
-   (এর আগের uttolon-update-17.zip — next.config.ts-এর ফিক্সটা — এখনো
-   না বসিয়ে থাকলে সেটাও এখন একসাথে বসান, ওটাও জরুরি)
-
-২) GitHub-এ push করুন, Vercel deploy শেষ হওয়া পর্যন্ত অপেক্ষা করুন
-   (Deployments ট্যাবে "Ready" দেখাবে)
-
-৩) লাইভ সাইটে /admin/login দিয়ে লগইন করে /admin/users -এ যান
-
-৪) আবার একটা Teacher অ্যাকাউন্ট তৈরির চেষ্টা করুন
-
-৫) এবার error message-এর নিচে একটা ছোট সাদা বাক্সে ইংরেজিতে আসল
-   কারণটা লেখা থাকবে (যেমন: "FIREBASE_SERVICE_ACCOUNT_KEY env
-   variable missing" বা এই জাতীয় কিছু) — এটাই আসল, নির্দিষ্ট কারণ
-
-৬) সেই সাদা বাক্সের লেখাটা হুবহু কপি করে বা স্ক্রিনশট নিয়ে আমাকে দিন
+এই আপডেটে Class Schedule (ক্লাস রুটিন) সিস্টেম যোগ হলো — এতদিন যা
+demo ছিল তার সবশেষটা।
 
 =========================================================
-কেন আগে "নির্দিষ্ট কারণ" দেখাচ্ছিল না
+ধাপ ১ — Security Rules-এ আরেকটা collection যোগ করুন
 =========================================================
-আগে কোডে ভুল হলে শুধু "কিছু একটা সমস্যা হয়েছে" জাতীয় সাধারণ বার্তা
-দেখাতো, আসল কারণ (যেমন কোন env variable ভুল আছে) শুধু Vercel-এর
-Logs-এ লুকানো থাকতো, যেটা খুঁজে বের করা কঠিন। এখন আসল কারণটা সরাসরি
-পেজেই দেখানো হবে, তাই Vercel-এ কিছু খোঁজার দরকার নেই।
+আগেরটার সাথে শুধু "schedule" ব্লক নতুন — সব মুছে এটা দিয়ে Publish করুন:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isTeacher() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function isGuardianOf(studentUid) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUid == studentUid;
+    }
+
+    match /admissions/{applicationId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId)
+        || isAdmin()
+        || (isTeacher() && resource.data.role == 'student')
+        || isGuardianOf(userId);
+      allow write: if false;
+    }
+
+    match /attendance/{attendanceId} {
+      allow create, update: if isAdmin() || isTeacher();
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /assessments/{assessmentId} {
+      allow create, update: if isAdmin() || isTeacher();
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /homework/{homeworkId} {
+      allow create, update, delete: if isAdmin() || isTeacher();
+      allow read: if request.auth != null;
+    }
+
+    match /fees/{feeId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /schedule/{scheduleId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if request.auth != null;
+    }
+  }
+}
 
 =========================================================
-কোনো নতুন বাগ তৈরি হয়নি তার নিশ্চয়তা
+ধাপ ২ — ফাইল বসান
 =========================================================
-শুধু error message-এর ভেতরের লেখা পরিবর্তন করেছি — অ্যাকাউন্ট তৈরির
-মূল প্রক্রিয়া (logic) একটুও বদলায়নি। Build ও পুরো সাইটের সব পাতা
-(৩৩টা) আবার টেস্ট করে দেখেছি, কোথাও নতুন সমস্যা হয়নি।
+এই zip-এর সব ফাইল (৬টা) Merge/Replace করে বসান।
 
-সাদা বাক্সের লেখাটা পেলেই আমি একদম নিশ্চিতভাবে বলে দিতে পারব ঠিক কী
-ঠিক করতে হবে — এবার অনুমান করতে হবে না।
+=========================================================
+কীভাবে ব্যবহার করবেন
+=========================================================
+- Admin Dashboard -> "প্রোগ্রাম ও ব্যাচ" কার্ড -> "পরিচালনা করুন"
+- একটা ক্লাস, বিষয়, শিক্ষক, বার (রবি-শনি), শুরু/শেষ সময়, রুম দিয়ে
+  রুটিনে যোগ করুন
+- সেই ক্লাসের Student ও সেই Teacher — দুজনের dashboard-এই আজকের
+  বার অনুযায়ী ক্লাস দেখাবে (অন্য দিনের ক্লাস দেখাবে না, শুধু আজকেরটা)
+
+=========================================================
+এখন সামগ্রিক অবস্থা
+=========================================================
+মূল কার্যকারিতার সবটাই এখন real — Login, Attendance, Assessment,
+Homework, Notices, Fee, Class Schedule, Admin Analytics। বাকি যা আছে
+(Resource Library, Blog-admin-editing, Testimonial approval) মূল
+ব্যবহারের জন্য জরুরি না, চাইলে পরে যোগ করা যাবে।

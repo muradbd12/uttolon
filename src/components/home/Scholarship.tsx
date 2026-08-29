@@ -23,7 +23,7 @@ export default function Scholarship() {
               প্রদান করে।
             </p>
             <Link
-              href="/contact"
+              href="/scholarship"
               className="mt-7 inline-flex rounded-sm bg-gold px-6 py-3 text-sm font-medium text-ink hover:bg-gold-soft"
             >
               বৃত্তি সম্পর্কে জানুন

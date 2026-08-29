@@ -7,16 +7,21 @@ import { Inbox } from "lucide-react";
 
 export default function AdminPendingActions() {
   const [pendingAdmissions, setPendingAdmissions] = useState<number | null>(null);
+  const [pendingScholarships, setPendingScholarships] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
         const db = getFirebaseDb();
-        const q = query(collection(db, "admissions"), where("status", "==", "new"));
-        const snapshot = await getDocs(q);
-        setPendingAdmissions(snapshot.size);
+        const [admissionsSnap, scholarshipsSnap] = await Promise.all([
+          getDocs(query(collection(db, "admissions"), where("status", "==", "new"))),
+          getDocs(query(collection(db, "scholarshipApplications"), where("status", "==", "pending"))),
+        ]);
+        setPendingAdmissions(admissionsSnap.size);
+        setPendingScholarships(scholarshipsSnap.size);
       } catch {
         setPendingAdmissions(0);
+        setPendingScholarships(0);
       }
     }
     load();
@@ -24,7 +29,7 @@ export default function AdminPendingActions() {
 
   const items = [
     { label: "পর্যালোচনার অপেক্ষায় থাকা ভর্তি আবেদন", count: pendingAdmissions === null ? "…" : pendingAdmissions },
-    { label: "পর্যালোচনার অপেক্ষায় থাকা বৃত্তি আবেদন", count: 0 },
+    { label: "পর্যালোচনার অপেক্ষায় থাকা বৃত্তি আবেদন", count: pendingScholarships === null ? "…" : pendingScholarships },
     { label: "অনুমোদনের অপেক্ষায় থাকা Testimonial", count: 0 },
   ];
 

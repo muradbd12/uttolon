@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { blogPosts } from "@/content/blog";
+import DynamicBlogPost from "@/components/blog/DynamicBlogPost";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -12,6 +12,8 @@ export function generateStaticParams() {
   return blogPosts.map((post) => ({ slug: post.slug }));
 }
 
+// generateStaticParams-এ না থাকা slug-গুলো এখনো render হবে (dynamicParams
+// এর ডিফল্ট true) — সেগুলোর জন্য DynamicBlogPost Firestore থেকে খুঁজবে।
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = blogPosts.find((p) => p.slug === slug);
@@ -22,7 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = blogPosts.find((p) => p.slug === slug);
-  if (!post) notFound();
+
+  if (!post) {
+    return <DynamicBlogPost slug={slug} />;
+  }
 
   return (
     <article>

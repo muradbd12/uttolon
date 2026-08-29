@@ -51,6 +51,7 @@ const liveLinks: Record<string, string> = {
   "প্রোগ্রাম ও ব্যাচ": "/admin/schedule",
   "ফলাফল ও Success Story": "/admin/success-stories",
   "বৃত্তি আবেদন": "/admin/scholarships",
+  "ব্লগ": "/admin/blog",
 };
 
 export default function AdminDashboardPage() {

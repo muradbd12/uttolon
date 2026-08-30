@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { User, BadgeCheck } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
+import TeachersDirectory from "@/components/TeachersDirectory";
 
 export const metadata: Metadata = {
   title: "শিক্ষক | Uttolon",
@@ -26,19 +27,7 @@ export default function TeachersPage() {
           <span>প্রতিটি প্রোফাইল যাচাইকৃত ও অ্যাডমিন প্যানেল থেকে সম্পাদনযোগ্য</span>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="flex flex-col items-center rounded-sm border border-dashed border-line p-8 text-center"
-            >
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-paper-raised text-ink-soft/40">
-                <User size={26} strokeWidth={1.4} />
-              </span>
-              <p className="mt-4 text-sm text-ink-soft/60">শিক্ষকের প্রোফাইল শীঘ্রই যুক্ত হবে</p>
-            </div>
-          ))}
-        </div>
+        <TeachersDirectory />
       </div>
     </section>
   );

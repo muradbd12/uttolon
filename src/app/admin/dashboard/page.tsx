@@ -55,6 +55,12 @@ const liveLinks: Record<string, string> = {
   "রিসোর্স লাইব্রেরি": "/admin/resources",
 };
 
+// কোনো কোনো কার্ডে দ্বিতীয় একটা কাজও আছে (যেমন শিক্ষকের লগইন
+// অ্যাকাউন্ট বনাম পাবলিক প্রোফাইল) — এখানে সেই বাড়তি লিংক রাখা হলো
+const secondaryLinks: Record<string, { label: string; href: string }> = {
+  "শিক্ষক": { label: "পাবলিক প্রোফাইল", href: "/admin/teacher-profiles" },
+};
+
 export default function AdminDashboardPage() {
   return (
     <RequireRoleAuth role="admin" loginPath="/admin/login">
@@ -90,6 +96,7 @@ export default function AdminDashboardPage() {
               {demoManagementAreas.map((area) => {
                 const Icon = iconMap[area.title] ?? LayoutDashboard;
                 const href = liveLinks[area.title];
+                const secondary = secondaryLinks[area.title];
                 return (
                   <div
                     key={area.title}
@@ -100,10 +107,11 @@ export default function AdminDashboardPage() {
                     <p className="mt-1.5 flex-1 text-sm leading-relaxed text-ink-soft">
                       {area.desc}
                     </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
                     {href ? (
                       <Link
                         href={href}
-                        className="mt-4 flex w-fit items-center gap-1.5 text-xs font-medium text-ink hover:text-gold-deep"
+                        className="flex w-fit items-center gap-1.5 text-xs font-medium text-ink hover:text-gold-deep"
                       >
                         পরিচালনা করুন <ArrowUpRight size={12} />
                       </Link>
@@ -111,11 +119,20 @@ export default function AdminDashboardPage() {
                       <button
                         type="button"
                         disabled
-                        className="mt-4 flex w-fit cursor-not-allowed items-center gap-1.5 text-xs text-ink-soft/50"
+                        className="flex w-fit cursor-not-allowed items-center gap-1.5 text-xs text-ink-soft/50"
                       >
                         পরিচালনা করুন (শীঘ্রই) <ArrowUpRight size={12} />
                       </button>
                     )}
+                    {secondary && (
+                      <Link
+                        href={secondary.href}
+                        className="flex w-fit items-center gap-1.5 text-xs font-medium text-teal-deep hover:text-teal"
+                      >
+                        {secondary.label} <ArrowUpRight size={12} />
+                      </Link>
+                    )}
+                    </div>
                   </div>
                 );
               })}

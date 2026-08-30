@@ -81,6 +81,7 @@ export default function AdminResourceForm() {
   }
 
   async function handleDelete(id: string) {
+    if (!window.confirm("এই রিসোর্সটা মুছে ফেলতে চান? এটা আর ফিরিয়ে আনা যাবে না।")) return;
     setDeletingId(id);
     try {
       await deleteDoc(doc(getFirebaseDb(), "resources", id));

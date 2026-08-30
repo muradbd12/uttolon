@@ -116,6 +116,7 @@ export default function AdminBlogForm() {
   }
 
   async function handleDelete(slug: string) {
+    if (!window.confirm("এই ব্লগ পোস্টটা মুছে ফেলতে চান? এটা আর ফিরিয়ে আনা যাবে না।")) return;
     setBusySlug(slug);
     try {
       await deleteDoc(doc(getFirebaseDb(), "blogPosts", slug));

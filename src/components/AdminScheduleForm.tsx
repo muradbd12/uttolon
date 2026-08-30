@@ -110,6 +110,7 @@ export default function AdminScheduleForm() {
   }
 
   async function handleDelete(id: string) {
+    if (!window.confirm("এই রুটিন এন্ট্রিটা মুছে ফেলতে চান? এটা আর ফিরিয়ে আনা যাবে না।")) return;
     setDeletingId(id);
     try {
       await deleteDoc(doc(getFirebaseDb(), "schedule", id));

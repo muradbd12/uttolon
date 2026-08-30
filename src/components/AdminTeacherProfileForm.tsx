@@ -169,6 +169,7 @@ export default function AdminTeacherProfileForm() {
   }
 
   async function handleDeleteProfile(id: string) {
+    if (!window.confirm("এই শিক্ষকের পাবলিক প্রোফাইলটা মুছে ফেলতে চান?")) return;
     setBusyId(id);
     try {
       await deleteDoc(doc(getFirebaseDb(), "teacherProfiles", id));

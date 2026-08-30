@@ -91,6 +91,7 @@ export default function TeacherHomeworkForm() {
   }
 
   async function handleDelete(id: string) {
+    if (!window.confirm("এই হোমওয়ার্কটা মুছে ফেলতে চান? শিক্ষার্থীরা আর দেখতে পাবে না।")) return;
     setDeletingId(id);
     try {
       await deleteDoc(doc(getFirebaseDb(), "homework", id));

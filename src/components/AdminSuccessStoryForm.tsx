@@ -93,6 +93,7 @@ export default function AdminSuccessStoryForm() {
   }
 
   async function handleDelete(id: string) {
+    if (!window.confirm("এই গল্পটা মুছে ফেলতে চান? এটা আর ফিরিয়ে আনা যাবে না।")) return;
     setBusyId(id);
     try {
       await deleteDoc(doc(getFirebaseDb(), "successStories", id));

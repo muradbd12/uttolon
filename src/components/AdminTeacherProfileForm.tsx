@@ -13,8 +13,8 @@ import {
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getFirebaseDb, getFirebaseStorage } from "@/lib/firebase";
+import { getFirebaseDb } from "@/lib/firebase";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { Loader2, AlertCircle, Trash2, Info, User } from "lucide-react";
 
 type TeacherOption = { uid: string; name: string; subject: string | null };
@@ -33,7 +33,7 @@ type Profile = {
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
 
-const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
 
 export default function AdminTeacherProfileForm() {
   const [teachers, setTeachers] = useState<TeacherOption[] | null>(null);
@@ -107,7 +107,7 @@ export default function AdminTeacherProfileForm() {
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setErrorMsg("ছবির সাইজ ২ MB-এর বেশি হতে পারবে না।");
+      setErrorMsg("ছবির সাইজ ৫ MB-এর বেশি হতে পারবে না।");
       setStatus("error");
       return;
     }
@@ -127,10 +127,7 @@ export default function AdminTeacherProfileForm() {
     try {
       let photoUrl = profile?.photoUrl || "";
       if (photoFile) {
-        const storage = getFirebaseStorage();
-        const fileRef = ref(storage, `teacher-photos/${selectedUid}`);
-        await uploadBytes(fileRef, photoFile);
-        photoUrl = await getDownloadURL(fileRef);
+        photoUrl = await uploadImageToCloudinary(photoFile);
       }
 
       await setDoc(doc(getFirebaseDb(), "teacherProfiles", selectedUid), {
@@ -148,9 +145,9 @@ export default function AdminTeacherProfileForm() {
       setStatus("saved");
       setPhotoFile(null);
       loadProfiles();
-    } catch {
+    } catch (err) {
       setStatus("error");
-      setErrorMsg("সংরক্ষণ করা যায়নি — আবার চেষ্টা করুন।");
+      setErrorMsg(err instanceof Error ? err.message : "সংরক্ষণ করা যায়নি — আবার চেষ্টা করুন।");
     }
   }
 
@@ -231,7 +228,7 @@ export default function AdminTeacherProfileForm() {
               )}
             </span>
             <label className="block">
-              <span className="text-sm font-medium text-ink">ছবি (সর্বোচ্চ ২ MB)</span>
+              <span className="text-sm font-medium text-ink">ছবি (সর্বোচ্চ ৫ MB)</span>
               <input
                 type="file"
                 accept="image/*"

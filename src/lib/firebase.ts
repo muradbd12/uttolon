@@ -3,7 +3,6 @@
 import { initializeApp, getApps, type FirebaseOptions } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -40,14 +39,4 @@ export function getFirebaseDb(): Firestore {
     dbInstance = getFirestore(firebaseApp);
   }
   return dbInstance;
-}
-
-let storageInstance: FirebaseStorage | null = null;
-
-// ছবি আপলোডের জন্য (যেমন শিক্ষকের ছবি) — একই কারণে lazy রাখা হলো।
-export function getFirebaseStorage(): FirebaseStorage {
-  if (!storageInstance) {
-    storageInstance = getStorage(firebaseApp);
-  }
-  return storageInstance;
 }

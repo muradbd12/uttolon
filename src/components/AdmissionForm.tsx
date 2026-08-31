@@ -5,14 +5,28 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
-const classes = ["Class 8", "Class 9", "Class 10", "SSC", "Dakhil"];
+const classes = [
+  "Class 3",
+  "Class 4",
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "SSC",
+  "Dakhil",
+];
+
 const groups = ["Science", "Business Studies", "Humanities"];
+
 const programs = [
   "Regular Academic Program",
   "Revision Batch",
   "Recovery Batch",
   "Final Preparation Batch",
   "SSC / Dakhil Program",
+  "University Admission Program",
 ];
 
 function Field({
@@ -139,17 +153,21 @@ export default function AdmissionForm() {
                 নির্বাচন করুন
               </option>
               {classes.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </Field>
-          <Field label="গ্রুপ">
+          <Field label="গ্রুপ (প্রযোজ্য ক্ষেত্রে)">
             <select name="group" className={inputClass} defaultValue="">
-              <option value="" disabled>
-                নির্বাচন করুন
+              <option value="">
+                প্রযোজ্য নয় / নির্বাচন করুন
               </option>
               {groups.map((g) => (
-                <option key={g}>{g}</option>
+                <option key={g} value={g}>
+                  {g}
+                </option>
               ))}
             </select>
           </Field>
@@ -173,7 +191,9 @@ export default function AdmissionForm() {
                 নির্বাচন করুন
               </option>
               {programs.map((p) => (
-                <option key={p}>{p}</option>
+                <option key={p} value={p}>
+                  {p}
+                </option>
               ))}
             </select>
           </Field>

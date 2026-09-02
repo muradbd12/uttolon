@@ -6,14 +6,34 @@ import { getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2, Printer } from "lucide-react";
 import { withTimeout } from "@/lib/withTimeout";
 
-const classes = ["Class 8", "Class 9", "Class 10", "SSC", "Dakhil"];
-const groups = ["Science", "Business Studies", "Humanities"];
+const classes = [
+  "Class 3",
+  "Class 4",
+  "Class 5",
+  "Class 6",
+  "Class 7",
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "SSC",
+  "Dakhil",
+  "University Admission",
+];
+
+const groups = [
+  "General / প্রযোজ্য নয়",
+  "Science",
+  "Business Studies",
+  "Humanities",
+];
+
 const programs = [
   "Regular Academic Program",
   "Revision Batch",
   "Recovery Batch",
   "Final Preparation Batch",
   "SSC / Dakhil Program",
+  "University Admission Program",
 ];
 
 type AdmissionData = {
@@ -65,20 +85,20 @@ export default function AdmissionForm() {
     setStatus("loading");
     const form = new FormData(e.currentTarget);
     const data: AdmissionData = {
-      studentName: form.get("studentName") as string,
-      dob: form.get("dob") as string,
-      fatherName: form.get("fatherName") as string,
-      motherName: form.get("motherName") as string,
-      mobile: form.get("mobile") as string,
-      guardianMobile: form.get("guardianMobile") as string,
-      address: form.get("address") as string,
-      school: form.get("school") as string,
-      className: form.get("className") as string,
-      group: form.get("group") as string,
-      previousResult: form.get("previousResult") as string,
-      weakSubjects: form.get("weakSubjects") as string,
-      program: form.get("program") as string,
-      preferredBatchTime: form.get("preferredBatchTime") as string,
+      studentName: (form.get("studentName") as string) || "",
+      dob: (form.get("dob") as string) || "",
+      fatherName: (form.get("fatherName") as string) || "",
+      motherName: (form.get("motherName") as string) || "",
+      mobile: (form.get("mobile") as string) || "",
+      guardianMobile: (form.get("guardianMobile") as string) || "",
+      address: (form.get("address") as string) || "",
+      school: (form.get("school") as string) || "",
+      className: (form.get("className") as string) || "",
+      group: (form.get("group") as string) || "",
+      previousResult: (form.get("previousResult") as string) || "",
+      weakSubjects: (form.get("weakSubjects") as string) || "",
+      program: (form.get("program") as string) || "",
+      preferredBatchTime: (form.get("preferredBatchTime") as string) || "",
     };
 
     try {
@@ -117,7 +137,6 @@ export default function AdmissionForm() {
           </button>
         </div>
 
-        {/* এই অংশটা স্ক্রিনেও দেখা যাবে, প্রিন্ট করলেও শুধু এটাই ছাপা হবে */}
         <div className="mt-6 rounded-sm border border-line bg-paper p-8 print:mt-0 print:border-none print:p-0">
           <div className="flex items-center justify-between border-b border-line pb-4">
             <div>
@@ -246,7 +265,7 @@ export default function AdmissionForm() {
                 নির্বাচন করুন
               </option>
               {classes.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </Field>
@@ -256,7 +275,7 @@ export default function AdmissionForm() {
                 নির্বাচন করুন
               </option>
               {groups.map((g) => (
-                <option key={g}>{g}</option>
+                <option key={g} value={g}>{g}</option>
               ))}
             </select>
           </Field>
@@ -280,7 +299,7 @@ export default function AdmissionForm() {
                 নির্বাচন করুন
               </option>
               {programs.map((p) => (
-                <option key={p}>{p}</option>
+                <option key={p} value={p}>{p}</option>
               ))}
             </select>
           </Field>

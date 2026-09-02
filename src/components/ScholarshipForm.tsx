@@ -4,6 +4,7 @@ import { useState } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { withTimeout } from "@/lib/withTimeout";
 
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
@@ -25,17 +26,19 @@ export default function ScholarshipForm() {
     setStatus("loading");
     const form = new FormData(e.currentTarget);
     try {
-      await addDoc(collection(getFirebaseDb(), "scholarshipApplications"), {
-        studentName: form.get("studentName"),
-        className: form.get("className"),
-        mobile: form.get("mobile"),
-        guardianMobile: form.get("guardianMobile"),
-        academicPerformance: form.get("academicPerformance"),
-        familyCircumstances: form.get("familyCircumstances"),
-        reason: form.get("reason"),
-        status: "pending",
-        submittedAt: serverTimestamp(),
-      });
+      await withTimeout(
+        addDoc(collection(getFirebaseDb(), "scholarshipApplications"), {
+          studentName: form.get("studentName"),
+          className: form.get("className"),
+          mobile: form.get("mobile"),
+          guardianMobile: form.get("guardianMobile"),
+          academicPerformance: form.get("academicPerformance"),
+          familyCircumstances: form.get("familyCircumstances"),
+          reason: form.get("reason"),
+          status: "pending",
+          submittedAt: serverTimestamp(),
+        })
+      );
       setStatus("success");
     } catch {
       setStatus("error");

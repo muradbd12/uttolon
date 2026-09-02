@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
-import { CheckCircle2, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Eye, EyeOff, Info } from "lucide-react";
 
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
@@ -23,6 +24,13 @@ const errorMessages: Record<string, string> = {
 type StudentOption = { uid: string; name: string; identifier: string };
 
 export default function AdminCreateUserForm() {
+  const searchParams = useSearchParams();
+  const prefillName = searchParams.get("prefillName") || "";
+  const prefillClass = searchParams.get("prefillClass") || "";
+  const prefillGuardianMobile = searchParams.get("prefillGuardianMobile") || "";
+  const prefillIdentifier = searchParams.get("prefillIdentifier") || "";
+  const hasPrefill = Boolean(prefillName || prefillClass || prefillGuardianMobile || prefillIdentifier);
+
   const [role, setRole] = useState<"student" | "guardian" | "teacher">("student");
   const [idType, setIdType] = useState<"email" | "phone">("phone");
   const [showPassword, setShowPassword] = useState(false);
@@ -138,6 +146,12 @@ export default function AdminCreateUserForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 rounded-sm border border-line bg-paper p-6">
+      {hasPrefill && (
+        <div className="flex items-start gap-2 rounded-sm border border-teal/30 bg-teal-soft px-3 py-2 text-sm text-teal-deep">
+          <Info size={14} className="mt-0.5 shrink-0" />
+          <span>ভর্তি আবেদন থেকে তথ্য পূরণ করা হয়েছে — যাচাই করে বাকি অংশ (পাসওয়ার্ড ইত্যাদি) পূরণ করুন।</span>
+        </div>
+      )}
       {status === "error" && (
         <div className="flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
           <AlertCircle size={14} className="mt-0.5 shrink-0" />
@@ -175,7 +189,7 @@ export default function AdminCreateUserForm() {
 
       <label className="block">
         <span className="text-sm font-medium text-ink">পূর্ণ নাম</span>
-        <input required name="name" type="text" className={`mt-1.5 ${inputClass}`} />
+        <input required name="name" type="text" defaultValue={prefillName} className={`mt-1.5 ${inputClass}`} />
       </label>
 
       <div>
@@ -208,6 +222,7 @@ export default function AdminCreateUserForm() {
           required
           name="identifier"
           type={idType === "phone" ? "tel" : "email"}
+          defaultValue={prefillIdentifier}
           placeholder={idType === "phone" ? "01XXXXXXXXX" : "name@example.com"}
           className={`mt-1.5 ${inputClass}`}
         />
@@ -267,13 +282,14 @@ export default function AdminCreateUserForm() {
               required
               name="guardianMobile"
               type="tel"
+              defaultValue={prefillGuardianMobile}
               placeholder="01XXXXXXXXX"
               className={`mt-1.5 ${inputClass}`}
             />
           </label>
           <label className="block">
             <span className="text-sm font-medium text-ink">ক্লাস</span>
-            <input name="className" type="text" className={`mt-1.5 ${inputClass}`} />
+            <input name="className" type="text" defaultValue={prefillClass} className={`mt-1.5 ${inputClass}`} />
           </label>
         </div>
       )}

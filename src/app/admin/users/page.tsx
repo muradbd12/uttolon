@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
 import AdminCreateUserForm from "@/components/AdminCreateUserForm";
@@ -27,7 +28,9 @@ export default function AdminUsersPage() {
             অ্যাকাউন্ট তৈরি হওয়ার পর লগইন তথ্য সংশ্লিষ্ট ব্যক্তিকে সরাসরি জানিয়ে দিন।
           </p>
           <div className="mt-8">
-            <AdminCreateUserForm />
+            <Suspense fallback={null}>
+              <AdminCreateUserForm />
+            </Suspense>
           </div>
         </div>
       </section>

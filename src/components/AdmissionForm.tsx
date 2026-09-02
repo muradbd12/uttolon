@@ -3,31 +3,35 @@
 import { useState } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Printer } from "lucide-react";
+import { withTimeout } from "@/lib/withTimeout";
 
-const classes = [
-  "Class 3",
-  "Class 4",
-  "Class 5",
-  "Class 6",
-  "Class 7",
-  "Class 8",
-  "Class 9",
-  "Class 10",
-  "SSC",
-  "Dakhil",
-];
-
+const classes = ["Class 8", "Class 9", "Class 10", "SSC", "Dakhil"];
 const groups = ["Science", "Business Studies", "Humanities"];
-
 const programs = [
   "Regular Academic Program",
   "Revision Batch",
   "Recovery Batch",
   "Final Preparation Batch",
   "SSC / Dakhil Program",
-  "University Admission Program",
 ];
+
+type AdmissionData = {
+  studentName: string;
+  dob: string;
+  fatherName: string;
+  motherName: string;
+  mobile: string;
+  guardianMobile: string;
+  address: string;
+  school: string;
+  className: string;
+  group: string;
+  previousResult: string;
+  weakSubjects: string;
+  program: string;
+  preferredBatchTime: string;
+};
 
 function Field({
   label,
@@ -47,15 +51,20 @@ function Field({
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
 
+function todayBn() {
+  return new Date().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" });
+}
+
 export default function AdmissionForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<AdmissionData | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
     const form = new FormData(e.currentTarget);
-    const data = {
+    const data: AdmissionData = {
       studentName: form.get("studentName") as string,
       dob: form.get("dob") as string,
       fatherName: form.get("fatherName") as string,
@@ -70,33 +79,117 @@ export default function AdmissionForm() {
       weakSubjects: form.get("weakSubjects") as string,
       program: form.get("program") as string,
       preferredBatchTime: form.get("preferredBatchTime") as string,
-      status: "new",
-      submittedAt: serverTimestamp(),
     };
 
     try {
-      const docRef = await addDoc(collection(getFirebaseDb(), "admissions"), data);
+      const docRef = await withTimeout(
+        addDoc(collection(getFirebaseDb(), "admissions"), {
+          ...data,
+          status: "new",
+          submittedAt: serverTimestamp(),
+        })
+      );
       setApplicationId(docRef.id);
+      setSubmitted(data);
       setStatus("success");
     } catch {
       setStatus("error");
     }
   }
 
-  if (status === "success") {
+  if (status === "success" && submitted) {
+    const shortId = applicationId ? applicationId.slice(0, 8).toUpperCase() : "";
     return (
-      <div className="rounded-sm border border-teal/30 bg-teal-soft p-8 text-center">
-        <CheckCircle2 className="mx-auto text-teal-deep" size={32} />
-        <h3 className="mt-4 font-display-bn text-xl text-ink">আবেদন সফলভাবে জমা হয়েছে</h3>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
-          আপনার আবেদন আমাদের কাছে পৌঁছে গেছে। প্রয়োজনে যোগাযোগের জন্য নিচের আইডিটি
-          রেখে দিন।
-        </p>
-        {applicationId && (
-          <p className="mx-auto mt-3 w-fit rounded-sm bg-paper px-4 py-1.5 font-display-en text-sm text-ink">
-            {applicationId.slice(0, 8).toUpperCase()}
+      <div>
+        <div className="rounded-sm border border-teal/30 bg-teal-soft p-8 text-center print:hidden">
+          <CheckCircle2 className="mx-auto text-teal-deep" size={32} />
+          <h3 className="mt-4 font-display-bn text-xl text-ink">আবেদন সফলভাবে জমা হয়েছে</h3>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
+            নিচের রশিদটি প্রিন্ট করে বা ছবি তুলে রেখে দিন — ভর্তি নিশ্চিত করতে ও
+            যোগাযোগের জন্য এই আইডি প্রয়োজন হবে।
           </p>
-        )}
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="mx-auto mt-5 flex items-center gap-2 rounded-sm bg-ink px-6 py-3 text-sm font-medium text-paper hover:bg-gold-deep"
+          >
+            <Printer size={16} /> রশিদ প্রিন্ট করুন
+          </button>
+        </div>
+
+        {/* এই অংশটা স্ক্রিনেও দেখা যাবে, প্রিন্ট করলেও শুধু এটাই ছাপা হবে */}
+        <div className="mt-6 rounded-sm border border-line bg-paper p-8 print:mt-0 print:border-none print:p-0">
+          <div className="flex items-center justify-between border-b border-line pb-4">
+            <div>
+              <p className="font-display-bn text-xl text-ink">উত্তোলন</p>
+              <p className="text-xs text-ink-soft/60">Uttolon Learning System</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-ink-soft/60">আবেদন আইডি</p>
+              <p className="font-display-en text-sm text-ink">{shortId}</p>
+            </div>
+          </div>
+
+          <h4 className="mt-5 font-display-bn text-lg text-ink">ভর্তি আবেদনের রশিদ</h4>
+          <p className="text-xs text-ink-soft/60">জমার তারিখ: {todayBn()}</p>
+
+          <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-ink-soft/60">শিক্ষার্থীর নাম</dt>
+              <dd className="text-ink">{submitted.studentName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">জন্ম তারিখ</dt>
+              <dd className="text-ink">{submitted.dob}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">বাবার নাম</dt>
+              <dd className="text-ink">{submitted.fatherName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">মায়ের নাম</dt>
+              <dd className="text-ink">{submitted.motherName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">মোবাইল নম্বর</dt>
+              <dd className="text-ink">{submitted.mobile}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">গার্ডিয়ানের নম্বর</dt>
+              <dd className="text-ink">{submitted.guardianMobile}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-ink-soft/60">ঠিকানা</dt>
+              <dd className="text-ink">{submitted.address}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">স্কুল/মাদ্রাসা</dt>
+              <dd className="text-ink">{submitted.school}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">ক্লাস / গ্রুপ</dt>
+              <dd className="text-ink">
+                {submitted.className} {submitted.group ? `/ ${submitted.group}` : ""}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">প্রোগ্রাম</dt>
+              <dd className="text-ink">{submitted.program}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-soft/60">পছন্দের ব্যাচ সময়</dt>
+              <dd className="text-ink">{submitted.preferredBatchTime || "—"}</dd>
+            </div>
+          </dl>
+
+          <div className="mt-8 border-t border-dashed border-line pt-4">
+            <p className="text-xs leading-relaxed text-ink-soft/70">
+              এই রশিদটি শুধু আবেদন জমার প্রমাণ — চূড়ান্ত ভর্তি নিশ্চিত হয়েছে কিনা তা
+              জানতে আবেদন আইডি উল্লেখ করে সরাসরি যোগাযোগ করুন। উত্তোলন থেকেও প্রদত্ত
+              নম্বরে যোগাযোগ করা হবে।
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -153,21 +246,17 @@ export default function AdmissionForm() {
                 নির্বাচন করুন
               </option>
               {classes.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c}>{c}</option>
               ))}
             </select>
           </Field>
-          <Field label="গ্রুপ (প্রযোজ্য ক্ষেত্রে)">
+          <Field label="গ্রুপ">
             <select name="group" className={inputClass} defaultValue="">
-              <option value="">
-                প্রযোজ্য নয় / নির্বাচন করুন
+              <option value="" disabled>
+                নির্বাচন করুন
               </option>
               {groups.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
+                <option key={g}>{g}</option>
               ))}
             </select>
           </Field>
@@ -191,9 +280,7 @@ export default function AdmissionForm() {
                 নির্বাচন করুন
               </option>
               {programs.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
+                <option key={p}>{p}</option>
               ))}
             </select>
           </Field>

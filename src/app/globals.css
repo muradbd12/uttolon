@@ -92,3 +92,15 @@ body {
   background-image: linear-gradient(to top, var(--line) 1px, transparent 1px);
   background-size: 100% 3px;
 }
+
+/* প্রিন্ট করার সময় সাইটের হেডার/ফুটার/নেভিগেশন লুকিয়ে শুধু রিসিট/রশিদের
+   মতো নির্দিষ্ট কনটেন্ট (print:hidden না থাকা অংশ) ছাপা হবে। */
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}

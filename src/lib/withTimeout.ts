@@ -1,13 +1,22 @@
-// নেটওয়ার্ক/ডেটাবেস সমস্যা হলে (যেমন ভুল কনফিগারেশন) কিছু Firestore
-// কল অনির্দিষ্টকালের জন্য ঝুলে থাকতে পারে, কোনো error বা success কিছুই
-// না দিয়ে — ব্যবহারকারী তখন অনন্তকাল "লোড হচ্ছে..." দেখতে থাকেন। এই
-// হেল্পার একটা সময়সীমা বেঁধে দেয়, যাতে নির্দিষ্ট সময় পরও কিছু না
-// হলে honest error দেখানো যায়।
-export function withTimeout<T>(promise: Promise<T>, ms = 15000): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error("সময় শেষ — সার্ভারের সাড়া পাওয়া যায়নি")), ms);
-    }),
-  ]);
+/**
+ * Wraps a promise with a timeout. If the promise doesn't settle within `ms`
+ * milliseconds, the returned promise rejects so the caller can show an error
+ * instead of hanging forever (e.g. on a dead/slow network).
+ */
+export function withTimeout<T>(promise: Promise<T>, ms: number = 15000): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Request timed out after ${ms}ms`));
+    }, ms);
+
+    promise
+      .then((result) => {
+        clearTimeout(timer);
+        resolve(result);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
 }

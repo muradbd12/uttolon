@@ -1,8 +1,46 @@
 import type { Metadata } from "next";
+import { Fraunces, Hind_Siliguri, Inter, Noto_Serif_Bengali, Tiro_Bangla } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SITE_URL } from "@/lib/site";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--next-font-fraunces",
+  display: "swap",
+});
+
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["bengali", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--next-font-hind-siliguri",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--next-font-inter",
+  display: "swap",
+});
+
+const notoSerifBengali = Noto_Serif_Bengali({
+  subsets: ["bengali"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--next-font-noto-serif-bengali",
+  display: "swap",
+});
+
+const tiroBangla = Tiro_Bangla({
+  subsets: ["bengali", "latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--next-font-tiro-bangla",
+  display: "swap",
+});
 
 const title = "উত্তোলন | Uttolon Learning System";
 const description =
@@ -36,16 +74,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Noto Serif Bengali সহ সকল ফন্টের সম্পূর্ণ লিঙ্ক */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600;700&family=Tiro+Bangla:ital@0;1&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="bn"
+      className={`${fraunces.variable} ${hindSiliguri.variable} ${inter.variable} ${notoSerifBengali.variable} ${tiroBangla.variable}`}
+    >
       <body className="antialiased">
         <Header />
         <main>{children}</main>

@@ -26,10 +26,10 @@
   --clay: #b4483a;
   --clay-soft: #f1ded9;
 
-  --font-display-bn: "Tiro Bangla", "Noto Serif Bengali", serif;
-  --font-display-en: "Fraunces", serif;
-  --font-body: "Hind Siliguri", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-label: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display-bn: var(--next-font-tiro-bangla), var(--next-font-noto-serif-bengali), serif;
+  --font-display-en: var(--next-font-fraunces), serif;
+  --font-body: var(--next-font-hind-siliguri), var(--next-font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--next-font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
@@ -96,6 +96,10 @@ body {
 /* প্রিন্ট করার সময় সাইটের হেডার/ফুটার/নেভিগেশন লুকিয়ে শুধু রিসিট/রশিদের
    মতো নির্দিষ্ট কনটেন্ট (print:hidden না থাকা অংশ) ছাপা হবে। */
 @media print {
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
   header,
   footer {
     display: none !important;
@@ -104,3 +108,4 @@ body {
     background: #fff;
   }
 }
+

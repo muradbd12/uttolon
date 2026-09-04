@@ -107,5 +107,28 @@ body {
   body {
     background: #fff;
   }
+  /* ডিফল্টভাবে ব্রাউজার প্রিন্টে ব্যাকগ্রাউন্ড কালার/গ্রেডিয়েন্ট বাদ দেয় —
+     এটা ছাড়া রশিদের লোগো ব্যাজ, সেকশন বার, স্ট্যাটাস ব্যাজের রঙ প্রিন্টে আসবে না। */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+
+/* printIsolated() হেল্পার ব্যবহার করে রশিদ প্রিন্ট করার সময় — body-এর সরাসরি
+   বাকি সব সন্তান (dashboard sidebar-সহ যা-ই থাকুক) লুকিয়ে শুধু ক্লোন করা
+   রশিদটাই ছাপা হবে, পৃষ্ঠার বাকি কাঠামো নির্বিশেষে। */
+@media print {
+  body.printing-isolated > *:not(#print-isolated-root) {
+    display: none !important;
+  }
+  #print-isolated-root {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    display: block !important;
+    width: 100%;
+  }
 }
 

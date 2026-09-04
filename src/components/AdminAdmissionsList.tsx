@@ -6,6 +6,7 @@ import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc, type Ti
 import { getFirebaseDb } from "@/lib/firebase";
 import { AlertTriangle, Inbox, Loader2, ChevronDown, ChevronUp, Check, X, UserPlus, Printer, XCircle, Pencil, Trash2 } from "lucide-react";
 import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
+import { printIsolated } from "@/lib/printReceipt";
 
 type Application = {
   id: string;
@@ -419,7 +420,7 @@ export default function AdminAdmissionsList() {
         <div className="fixed right-4 top-4 z-50 flex gap-3 print:hidden">
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => printIsolated("printable-receipt")}
             className="flex items-center gap-2 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep"
           >
             <Printer size={15} /> প্রিন্ট / PDF ডাউনলোড

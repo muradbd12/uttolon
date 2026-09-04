@@ -6,6 +6,7 @@ import { getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2, Printer, Check } from "lucide-react";
 import { withTimeout } from "@/lib/withTimeout";
 import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
+import { printIsolated } from "@/lib/printReceipt";
 
 const classes = [
   "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8",
@@ -215,7 +216,7 @@ export default function AdmissionForm() {
           </p>
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => printIsolated("printable-receipt")}
             className="mx-auto mt-5 flex items-center gap-2 rounded-sm bg-ink px-6 py-3 text-sm font-medium text-paper hover:bg-gold-deep"
           >
             <Printer size={16} /> রশিদ প্রিন্ট করুন

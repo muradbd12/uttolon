@@ -122,13 +122,13 @@ function todayBn() {
 }
 
 export default function AdmissionForm() {
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "review" | "loading" | "success" | "error">("idle");
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<AdmissionData | null>(null);
+  const [pendingData, setPendingData] = useState<AdmissionData | null>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleReview(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setStatus("loading");
     const form = new FormData(e.currentTarget);
     const get = (name: string) => (form.get(name) as string) || "";
 
@@ -174,16 +174,28 @@ export default function AdmissionForm() {
       referralOther: get("referralOther"),
     };
 
+    setPendingData(data);
+    setStatus("review");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleBackToEdit() {
+    setStatus("idle");
+  }
+
+  async function handleConfirmSubmit() {
+    if (!pendingData) return;
+    setStatus("loading");
     try {
       const docRef = await withTimeout(
         addDoc(collection(getFirebaseDb(), "admissions"), {
-          ...data,
+          ...pendingData,
           status: "new",
           submittedAt: serverTimestamp(),
         })
       );
       setApplicationId(docRef.id);
-      setSubmitted(data);
+      setSubmitted(pendingData);
       setStatus("success");
     } catch {
       setStatus("error");
@@ -216,14 +228,8 @@ export default function AdmissionForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10">
-      {status === "error" && (
-        <div className="flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-4 py-3 text-sm text-clay">
-          <AlertCircle size={16} className="mt-0.5 shrink-0" />
-          <span>আবেদন জমা দেওয়া যায়নি — ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।</span>
-        </div>
-      )}
-
+    <form onSubmit={handleReview} className="space-y-10">
+      <div className={status === "idle" ? "space-y-10" : "hidden"}>
       <fieldset className="space-y-5">
         <SectionHeader number="০১" title="শিক্ষার্থীর তথ্য" />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -421,12 +427,48 @@ export default function AdmissionForm() {
 
       <button
         type="submit"
-        disabled={status === "loading"}
-        className="flex w-full items-center justify-center gap-2 rounded-sm bg-ink py-3.5 text-sm font-medium text-paper transition-colors hover:bg-gold-deep disabled:opacity-60 sm:w-auto sm:px-10"
+        className="flex w-full items-center justify-center gap-2 rounded-sm bg-ink py-3.5 text-sm font-medium text-paper transition-colors hover:bg-gold-deep sm:w-auto sm:px-10"
       >
-        {status === "loading" && <Loader2 size={15} className="animate-spin" />}
-        {status === "loading" ? "জমা হচ্ছে..." : "ভর্তি আবেদন জমা দিন"}
+        পর্যালোচনা করুন
       </button>
+      </div>
+
+      {status !== "idle" && pendingData && (
+        <div>
+          {status === "error" && (
+            <div className="mb-4 flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-4 py-3 text-sm text-clay">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <span>আবেদন জমা দেওয়া যায়নি — ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।</span>
+            </div>
+          )}
+          <div className="rounded-sm border border-gold/40 bg-gold-soft/30 px-4 py-3 text-sm text-ink-soft">
+            নিচে আপনার দেওয়া তথ্য যাচাই করুন। ভুল থাকলে <strong className="text-ink">&quot;সম্পাদনা করুন&quot;</strong> চেপে ঠিক করুন —
+            একবার নিশ্চিত করে জমা দিলে আপনি নিজে আর পরিবর্তন করতে পারবেন না।
+          </div>
+          <div className="mt-4">
+            <AdmissionReceiptCard data={pendingData} dateLabel={todayBn()} />
+          </div>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleBackToEdit}
+              disabled={status === "loading"}
+              className="rounded-sm border border-line px-6 py-3 text-sm font-medium text-ink-soft hover:border-ink hover:text-ink disabled:opacity-50"
+            >
+              সম্পাদনা করুন
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmSubmit}
+              disabled={status === "loading"}
+              className="flex items-center justify-center gap-2 rounded-sm bg-ink px-8 py-3 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
+            >
+              {status === "loading" && <Loader2 size={15} className="animate-spin" />}
+              {status === "loading" ? "জমা হচ্ছে..." : "নিশ্চিত করে জমা দিন"}
+            </button>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

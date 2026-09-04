@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { collection, getDocs, orderBy, query, doc, updateDoc, type Timestamp } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc, type Timestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { AlertTriangle, Inbox, Loader2, ChevronDown, ChevronUp, Check, X, UserPlus, Printer, XCircle } from "lucide-react";
+import { AlertTriangle, Inbox, Loader2, ChevronDown, ChevronUp, Check, X, UserPlus, Printer, XCircle, Pencil, Trash2 } from "lucide-react";
 import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
 
 type Application = {
@@ -79,6 +79,43 @@ function Item({ label, value }: { label: string; value?: string }) {
   );
 }
 
+const editableFields: { key: keyof Application; label: string }[] = [
+  { key: "studentNameBn", label: "নাম (বাংলায়)" },
+  { key: "studentNameEn", label: "নাম (ইংরেজি)" },
+  { key: "dob", label: "জন্ম তারিখ" },
+  { key: "gender", label: "লিঙ্গ" },
+  { key: "className", label: "শ্রেণি" },
+  { key: "group", label: "গ্রুপ" },
+  { key: "rollNumber", label: "রোল নম্বর" },
+  { key: "studentIdNumber", label: "ছাত্র/ছাত্রী আইডি" },
+  { key: "religion", label: "ধর্ম" },
+  { key: "nationality", label: "জাতীয়তা" },
+  { key: "mobile", label: "মোবাইল" },
+  { key: "email", label: "ইমেইল" },
+  { key: "fatherName", label: "পিতার নাম" },
+  { key: "motherName", label: "মাতার নাম" },
+  { key: "guardianName", label: "অভিভাবকের নাম" },
+  { key: "guardianMobile", label: "অভিভাবকের মোবাইল" },
+  { key: "guardianOccupation", label: "অভিভাবকের পেশা" },
+  { key: "monthlyIncome", label: "মাসিক আয়" },
+  { key: "address", label: "ঠিকানা" },
+  { key: "thana", label: "থানা/উপজেলা" },
+  { key: "district", label: "জেলা" },
+  { key: "postCode", label: "পোস্ট কোড" },
+  { key: "previousInstitution", label: "পূর্ববর্তী প্রতিষ্ঠান" },
+  { key: "examName", label: "পরীক্ষা" },
+  { key: "passingYear", label: "পাশের সাল" },
+  { key: "previousResult", label: "পূর্ববর্তী ফলাফল" },
+  { key: "weakSubjects", label: "দুর্বল বিষয়" },
+  { key: "specialComments", label: "বিশেষ মন্তব্য" },
+  { key: "program", label: "প্রোগ্রাম" },
+  { key: "batch", label: "ব্যাচ" },
+  { key: "preferredSubject", label: "পছন্দের বিষয়" },
+  { key: "classSchedule", label: "ক্লাস শিডিউল" },
+  { key: "referralSource", label: "কিভাবে জানলেন" },
+  { key: "referralOther", label: "অন্যান্য (কিভাবে জানলেন)" },
+];
+
 export default function AdminAdmissionsList() {
   const router = useRouter();
   const [apps, setApps] = useState<Application[] | null>(null);
@@ -86,6 +123,8 @@ export default function AdminAdmissionsList() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [printingApp, setPrintingApp] = useState<Application | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<Application | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -121,6 +160,52 @@ export default function AdminAdmissionsList() {
       prefillIdentifier: a.mobile || "",
     });
     router.push(`/admin/users?${params.toString()}`);
+  }
+
+  function startEdit(a: Application) {
+    setEditDraft({ ...a });
+    setEditingId(a.id);
+    setExpandedId(a.id);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditDraft(null);
+  }
+
+  async function saveEdit() {
+    if (!editDraft) return;
+    const id = editDraft.id;
+    const fields: Record<string, string> = {};
+    editableFields.forEach((f) => {
+      fields[f.key as string] = (editDraft[f.key] as string) || "";
+    });
+    setBusyId(id);
+    try {
+      await updateDoc(doc(getFirebaseDb(), "admissions", id), fields);
+      setApps((prev) => (prev ? prev.map((x) => (x.id === id ? { ...x, ...fields } : x)) : prev));
+      setEditingId(null);
+      setEditDraft(null);
+    } catch {
+      setError(true);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDelete(a: Application) {
+    const name = a.studentNameBn || a.studentNameEn || "এই আবেদন";
+    const sure = window.confirm(`আপনি কি নিশ্চিত "${name}"-এর আবেদনটি স্থায়ীভাবে ডিলেট করতে চান? এটি আর ফিরিয়ে আনা যাবে না।`);
+    if (!sure) return;
+    setBusyId(a.id);
+    try {
+      await deleteDoc(doc(getFirebaseDb(), "admissions", a.id));
+      setApps((prev) => (prev ? prev.filter((x) => x.id !== a.id) : prev));
+    } catch {
+      setError(true);
+    } finally {
+      setBusyId(null);
+    }
   }
 
   if (error) {
@@ -179,7 +264,46 @@ export default function AdminAdmissionsList() {
               </div>
             </button>
 
-            {isOpen && (
+            {isOpen && editingId === a.id && editDraft && (
+              <div className="border-t border-line px-4 py-4">
+                <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gold-deep">তথ্য সম্পাদনা করুন</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {editableFields.map((f) => (
+                    <label key={f.key as string} className="block text-xs">
+                      <span className="text-ink-soft/70">{f.label}</span>
+                      <input
+                        type="text"
+                        value={(editDraft[f.key] as string) || ""}
+                        onChange={(e) =>
+                          setEditDraft((prev) => (prev ? { ...prev, [f.key]: e.target.value } : prev))
+                        }
+                        className="mt-1 w-full rounded-sm border border-line bg-paper-raised px-2 py-1.5 text-[13px] text-ink outline-none focus:border-ink"
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-4 flex gap-2 border-t border-line pt-4">
+                  <button
+                    type="button"
+                    onClick={saveEdit}
+                    disabled={busyId === a.id}
+                    className="flex items-center gap-1.5 rounded-sm bg-teal-deep px-4 py-2 text-xs font-medium text-paper hover:opacity-90 disabled:opacity-50"
+                  >
+                    {busyId === a.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} সেভ করুন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    disabled={busyId === a.id}
+                    className="rounded-sm border border-line px-4 py-2 text-xs text-ink-soft hover:border-ink hover:text-ink disabled:opacity-50"
+                  >
+                    বাতিল করুন
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isOpen && editingId !== a.id && (
               <div className="border-t border-line px-4 py-4">
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gold-deep">শিক্ষার্থীর তথ্য</p>
                 <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
@@ -237,6 +361,21 @@ export default function AdminAdmissionsList() {
                     className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-ink hover:text-ink"
                   >
                     <Printer size={13} /> রশিদ দেখুন / প্রিন্ট করুন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(a)}
+                    className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-ink hover:text-ink"
+                  >
+                    <Pencil size={13} /> সম্পাদনা করুন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(a)}
+                    disabled={busyId === a.id}
+                    className="flex items-center gap-1.5 rounded-sm border border-clay/40 px-3 py-1.5 text-xs text-clay hover:bg-clay-soft disabled:opacity-50"
+                  >
+                    <Trash2 size={13} /> ডিলেট করুন
                   </button>
                   {(!a.status || a.status === "new") && (
                     <>

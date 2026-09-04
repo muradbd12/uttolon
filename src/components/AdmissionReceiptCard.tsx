@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 
 export type ReceiptData = {
   studentNameBn?: string;
@@ -63,7 +63,7 @@ interface AdmissionReceiptCardProps {
 
 function Item({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-gray-100 py-[2px] text-[9.5px]">
+    <div className="flex items-center justify-between border-b border-gray-100 py-[2.5px] text-[9.5px]">
       <span className="text-gray-500">{label}:</span>
       <span className="font-semibold text-gray-900 text-right truncate max-w-[150px]">
         {value && value.trim() !== "" ? value : "—"}
@@ -74,7 +74,7 @@ function Item({ label, value }: { label: string; value?: string }) {
 
 function SectionBar({ title, color = "bg-emerald-800" }: { title: string; color?: string }) {
   return (
-    <div className={`mt-1 rounded px-2 py-[2px] text-[9px] font-bold text-white ${color}`}>
+    <div className={`mt-1 rounded px-2 py-[2.5px] text-[9px] font-bold text-white ${color}`}>
       {title}
     </div>
   );
@@ -88,10 +88,54 @@ export default function AdmissionReceiptCard({
 }: AdmissionReceiptCardProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
 
+  // প্রিন্টের সময় ব্যাকগ্রাউন্ডের সব কনটেন্ট আলাদা করার লজিক
+  const preparePrint = () => {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("print-isolated-root")) return;
+
+    const receiptEl = document.getElementById("printable-receipt");
+    if (!receiptEl) return;
+
+    const printArea = document.createElement("div");
+    printArea.id = "print-isolated-root";
+    const clone = receiptEl.cloneNode(true) as HTMLElement;
+
+    // ক্লোন থেকে বাড়তি বাটন দূর করা
+    const noPrints = clone.querySelectorAll(".no-print");
+    noPrints.forEach((el) => el.remove());
+
+    printArea.appendChild(clone);
+    document.body.appendChild(printArea);
+    document.body.classList.add("printing-receipt-mode");
+  };
+
+  const cleanupPrint = () => {
+    if (typeof document === "undefined") return;
+    document.body.classList.remove("printing-receipt-mode");
+    const el = document.getElementById("print-isolated-root");
+    if (el && el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("beforeprint", preparePrint);
+    window.addEventListener("afterprint", cleanupPrint);
+    window.addEventListener("focus", cleanupPrint);
+
+    return () => {
+      window.removeEventListener("beforeprint", preparePrint);
+      window.removeEventListener("afterprint", cleanupPrint);
+      window.removeEventListener("focus", cleanupPrint);
+      cleanupPrint();
+    };
+  }, []);
+
   const handlePrint = async () => {
     if (typeof window !== "undefined" && "fonts" in document) {
       await document.fonts.ready;
     }
+    preparePrint();
     window.print();
   };
 
@@ -108,12 +152,12 @@ export default function AdmissionReceiptCard({
 
   return (
     <div className="relative w-full">
-      {/* অ্যাকশন বাটন বার (প্রিন্টে স্বয়ংক্রিয়ভাবে হাইড থাকবে) */}
-      <div className="no-print mb-3 flex items-center justify-end gap-2.5 print:hidden">
+      {/* অ্যাকশন বাটন বার */}
+      <div className="no-print mb-2 flex items-center justify-end gap-2 print:hidden">
         <button
           onClick={handlePrint}
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-emerald-800 active:scale-95 transition"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow hover:bg-emerald-800 active:scale-95 transition"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -131,7 +175,7 @@ export default function AdmissionReceiptCard({
         )}
       </div>
 
-      {/* রসিদ কন্টেইনার (ID: printable-receipt দিয়ে প্রিন্ট আইসোলেশন নিয়ন্ত্রণ করা হয়েছে) */}
+      {/* মূল রসিদ কন্টেইনার */}
       <div
         id="printable-receipt"
         ref={receiptRef}
@@ -180,7 +224,7 @@ export default function AdmissionReceiptCard({
           </div>
         </div>
 
-        {/* অভিভাবক ও যোগাযোগ (জায়গা বাঁচাতে ২ কলামে বিভক্ত) */}
+        {/* অভিভাবক ও যোগাযোগের তথ্য */}
         <div className="grid grid-cols-2 gap-2 mt-1">
           <div>
             <SectionBar title="২. পিতা-মাতা / অভিভাবকের তথ্য" color="bg-orange-600" />
@@ -262,7 +306,7 @@ export default function AdmissionReceiptCard({
           </div>
         </div>
 
-        {/* অফিসিয়াল ব্যবহারের জন্য */}
+        {/* অফিসিয়াল ব্যবহারের জন্য */}
         <div className="mt-1 border border-gray-300 rounded p-1.5 bg-gray-50/60">
           <div className="bg-gray-800 text-white text-center font-bold text-[8.5px] py-0.5 rounded-sm">
             অফিসিয়াল ব্যবহারের জন্য (OFFICIAL USE ONLY)
@@ -336,7 +380,7 @@ export default function AdmissionReceiptCard({
           </span>
         </div>
 
-        {/* ===== ২. শিক্ষার্থীর কপি (STUDENT COPY STUB) ===== */}
+        {/* ===== ২. শিক্ষার্থীর কপি (STUDENT COPY) ===== */}
         <div className="border border-gray-300 rounded p-1.5 bg-gray-50/40">
           <div className="flex items-center justify-between border-b border-gray-200 pb-0.5 mb-1">
             <div className="flex items-center gap-1.5">
@@ -365,37 +409,40 @@ export default function AdmissionReceiptCard({
         </div>
       </div>
 
-      {/* গ্লোবাল প্রিন্ট আইসোলেশন ও ফন্ট সিএসএস */}
+      {/* ত্রুটিমুক্ত আইসোলেটেড প্রিন্ট সিএসএস */}
       <style jsx global>{`
         @media print {
-          /* পেছনের ড্যাশবোর্ড, বাটন এবং সম্পূর্ণ বডি হাইড */
-          body * {
-            visibility: hidden !important;
+          /* ১. প্রিন্টের সময় ব্যাকগ্রাউন্ডের মূল সাইট ও অ্যাডমিন বার পুরোপুরি হাইড */
+          body.printing-receipt-mode > *:not(#print-isolated-root) {
+            display: none !important;
           }
 
-          /* শুধুমাত্র রসিদ ও তার ভেতরের কনটেন্ট ভিজিবল */
-          #printable-receipt,
-          #printable-receipt * {
-            visibility: visible !important;
-          }
-
-          /* রসিদকে পেজের শীর্ষে স্থির করে মার্জিন সেট করা */
-          #printable-receipt {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+          /* ২. আইসোলেটেড রুটকে নরমাল ফ্লোতে একদম উপরে রাখা */
+          #print-isolated-root {
+            display: block !important;
+            position: static !important;
             width: 100% !important;
-            max-width: 210mm !important;
-            margin: 0 auto !important;
-            padding: 4mm 6mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
             background: #ffffff !important;
+          }
+
+          #print-isolated-root #printable-receipt {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 4mm 6mm !important;
             box-shadow: none !important;
             border: none !important;
+            background: #ffffff !important;
+            font-family: 'Hind Siliguri', 'Noto Serif Bengali', sans-serif !important;
+          }
+
+          /* ৩. ব্যাকগ্রাউন্ড গ্রাফিক্স ও পেপার সাইজ লক করা */
+          * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            font-family: 'Hind Siliguri', 'Noto Serif Bengali', 'Tiro Bangla', sans-serif !important;
-            font-feature-settings: "kern" 1, "liga" 1 !important;
-            text-rendering: optimizeLegibility !important;
           }
 
           @page {

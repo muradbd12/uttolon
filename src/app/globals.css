@@ -98,7 +98,7 @@ body {
 @media print {
   @page {
     size: A4;
-    margin: 8mm;
+    margin: 3mm;
   }
   header,
   footer {

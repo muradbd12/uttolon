@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2, Printer, Check } from "lucide-react";
 import { withTimeout } from "@/lib/withTimeout";
 import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
+import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
 import { printIsolated } from "@/lib/printReceipt";
+import { getProgramFee } from "@/lib/programFees";
 
 const classes = [
   "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8",
@@ -127,6 +129,10 @@ export default function AdmissionForm() {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<AdmissionData | null>(null);
   const [pendingData, setPendingData] = useState<AdmissionData | null>(null);
+  const [payChoice, setPayChoice] = useState<"full" | "partial" | "due" | null>(null);
+  const [payAmount, setPayAmount] = useState("");
+  const [payStatus, setPayStatus] = useState<"idle" | "processing" | "done" | "error">("idle");
+  const [voucher, setVoucher] = useState<VoucherData | null>(null);
 
   function handleReview(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -188,13 +194,19 @@ export default function AdmissionForm() {
     if (!pendingData) return;
     setStatus("loading");
     try {
+      const fee = getProgramFee(pendingData.program);
       const docRef = await withTimeout(
         addDoc(collection(getFirebaseDb(), "admissions"), {
           ...pendingData,
           status: "new",
+          totalFee: fee,
+          totalPaid: 0,
+          due: fee,
           submittedAt: serverTimestamp(),
         })
       );
+      const shortId = docRef.id.slice(0, 8).toUpperCase();
+      await withTimeout(updateDoc(doc(getFirebaseDb(), "admissions", docRef.id), { shortId }));
       setApplicationId(docRef.id);
       setSubmitted(pendingData);
       setStatus("success");
@@ -203,8 +215,59 @@ export default function AdmissionForm() {
     }
   }
 
+  const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
+
+  async function handlePayment() {
+    if (!applicationId || !submitted) return;
+    const fee = getProgramFee(submitted.program);
+    const amount =
+      payChoice === "full" ? fee : Math.min(Math.max(Math.round(Number(payAmount) || 0), 0), fee);
+    if (amount <= 0) return;
+
+    setPayStatus("processing");
+    try {
+      const newTotalPaid = amount;
+      const newDue = fee - newTotalPaid;
+      await withTimeout(
+        addDoc(collection(getFirebaseDb(), "admissions", applicationId, "payments"), {
+          amount,
+          method: payMethod,
+          monthOrPurpose: "ভর্তি ফি",
+          paidAt: serverTimestamp(),
+        })
+      );
+      await withTimeout(
+        updateDoc(doc(getFirebaseDb(), "admissions", applicationId), {
+          totalPaid: newTotalPaid,
+          due: newDue,
+        })
+      );
+      setVoucher({
+        studentNameBn: submitted.studentNameBn,
+        studentNameEn: submitted.studentNameEn,
+        applicationId: applicationId.slice(0, 8).toUpperCase(),
+        className: submitted.className,
+        group: submitted.group,
+        program: submitted.program,
+        mobile: submitted.mobile,
+        voucherId: applicationId.slice(0, 6).toUpperCase() + "-V1",
+        paymentDate: todayBn(),
+        amountPaidNow: amount,
+        method: payMethod,
+        monthOrPurpose: "ভর্তি ফি",
+        totalFee: fee,
+        totalPaid: newTotalPaid,
+        due: newDue,
+      });
+      setPayStatus("done");
+    } catch {
+      setPayStatus("error");
+    }
+  }
+
   if (status === "success" && submitted) {
     const shortId = applicationId ? applicationId.slice(0, 8).toUpperCase() : "";
+    const fee = getProgramFee(submitted.program);
     return (
       <div>
         <div className="rounded-sm border border-teal/30 bg-teal-soft p-8 text-center print:hidden">
@@ -224,9 +287,112 @@ export default function AdmissionForm() {
         </div>
 
         <AdmissionReceiptCard data={submitted} applicationId={shortId} dateLabel={todayBn()} />
+
+        {payStatus !== "done" && (
+          <div className="mt-8 rounded-sm border-2 border-gold-soft bg-gold-soft/20 p-5 print:hidden">
+            <h4 className="font-display-bn text-lg text-ink">পেমেন্ট করুন</h4>
+            <p className="mt-1 text-sm text-ink-soft">
+              এই প্রোগ্রামের ফি: <strong className="text-ink">৳{fee.toLocaleString("bn-BD")}</strong>
+            </p>
+
+            {payStatus === "error" && (
+              <div className="mt-3 flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
+                <AlertCircle size={15} className="mt-0.5 shrink-0" /> পেমেন্ট সেভ করা যায়নি — আবার চেষ্টা করুন।
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => { setPayChoice("full"); setPayAmount(String(fee)); }}
+                className={`rounded-sm border px-4 py-2 text-sm ${payChoice === "full" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
+              >
+                সম্পূর্ণ পরিশোধ করুন (৳{fee.toLocaleString("bn-BD")})
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPayChoice("partial"); setPayAmount(""); }}
+                className={`rounded-sm border px-4 py-2 text-sm ${payChoice === "partial" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
+              >
+                আংশিক পরিশোধ করুন
+              </button>
+              <button
+                type="button"
+                onClick={() => setPayChoice("due")}
+                className={`rounded-sm border px-4 py-2 text-sm ${payChoice === "due" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
+              >
+                এখন বাকি রাখুন
+              </button>
+            </div>
+
+            {payChoice === "partial" && (
+              <input
+                type="number"
+                min={1}
+                max={fee}
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                placeholder="কত টাকা দিচ্ছেন লিখুন"
+                className="mt-3 w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink sm:w-64"
+              />
+            )}
+
+            {(payChoice === "full" || payChoice === "partial") && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <select
+                  value={payMethod}
+                  onChange={(e) => setPayMethod(e.target.value)}
+                  className="rounded-sm border border-line bg-paper-raised px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+                >
+                  <option>ক্যাশ (হাতে হাতে)</option>
+                  <option>বিকাশ</option>
+                  <option>নগদ (Nagad)</option>
+                  <option>রকেট</option>
+                  <option>ব্যাংক ট্রান্সফার</option>
+                  <option>অন্যান্য</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={handlePayment}
+                  disabled={payStatus === "processing" || (payChoice === "partial" && (!payAmount || Number(payAmount) <= 0))}
+                  className="flex items-center gap-2 rounded-sm bg-teal-deep px-6 py-2.5 text-sm font-medium text-paper hover:opacity-90 disabled:opacity-50"
+                >
+                  {payStatus === "processing" && <Loader2 size={14} className="animate-spin" />}
+                  পেমেন্ট নিশ্চিত করুন
+                </button>
+              </div>
+            )}
+
+            {payChoice === "due" && (
+              <p className="mt-3 text-sm text-ink-soft">
+                ঠিক আছে — এখন কিছু দিতে হবে না। পরে পরিশোধ করতে আপনার আবেদন আইডি
+                (<strong className="text-ink">{shortId}</strong>) ও মোবাইল নম্বর দিয়ে পেমেন্ট পেজ থেকে
+                পরিশোধ করতে পারবেন।
+              </p>
+            )}
+          </div>
+        )}
+
+        {payStatus === "done" && voucher && (
+          <div className="mt-8">
+            <div className="text-center print:hidden">
+              <button
+                type="button"
+                onClick={() => printIsolated("printable-voucher")}
+                className="mx-auto flex items-center gap-2 rounded-sm bg-ink px-6 py-3 text-sm font-medium text-paper hover:bg-gold-deep"
+              >
+                <Printer size={16} /> ভাউচার প্রিন্ট করুন
+              </button>
+            </div>
+            <div className="mt-4">
+              <PaymentVoucherCard data={voucher} />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
+
 
   return (
     <form onSubmit={handleReview} className="space-y-10">

@@ -3,7 +3,6 @@ import { Fraunces, Hind_Siliguri, Inter, Noto_Serif_Bengali, Tiro_Bangla } from 
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { SITE_URL } from "@/lib/site";
 
 const fraunces = Fraunces({
@@ -80,7 +79,6 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hindSiliguri.variable} ${inter.variable} ${notoSerifBengali.variable} ${tiroBangla.variable}`}
     >
       <body className="antialiased">
-        <GoogleAnalytics />
         <Header />
         <main>{children}</main>
         <Footer />

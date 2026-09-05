@@ -1,125 +1,34 @@
-Contact ফর্ম এখন real — বার্তা Firestore-এ সংরক্ষিত হবে এবং Admin
-থেকে দেখা যাবে।
+সাইট-জোড়া Search বার যোগ হলো। Security Rules বদলানোর দরকার নেই —
+শুধু ৩টা ফাইল বসিয়ে push করুন।
 
 =========================================================
-ধাপ ১ — Security Rules-এ আরেকটা collection যোগ করুন
+কীভাবে কাজ করে
 =========================================================
-আগেরটার সাথে শুধু "contactMessages" ব্লক নতুন — সব মুছে এটা দিয়ে
-Publish করুন:
+- হেডারে (ডেস্কটপ ও মোবাইল দুই জায়গাতেই) একটা 🔍 আইকন যোগ হয়েছে
+- চাপলে একটা সার্চ বক্স খুলবে
+- টাইপ করলেই সাথে সাথে ফলাফল দেখাবে — Notice, Blog, Resource,
+  Teacher — এই ৪ ধরনের real কনটেন্ট জুড়ে, প্লাস কয়েকটা মূল পেজ
+  (About, Programs, Admission ইত্যাদি)
+- কোনো ফলাফলে ক্লিক করলে সরাসরি সেই পেজে চলে যাবে
+- Esc চাপলে বা বাইরে ক্লিক করলে বন্ধ হয়ে যাবে
+- ডেস্কটপে Ctrl+K (বা Mac-এ Cmd+K) চাপলেও সার্চ বক্স খুলবে
 
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-
-    function isAdmin() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    function isTeacher() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
-    }
-
-    function isGuardianOf(studentUid) {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUid == studentUid;
-    }
-
-    match /admissions/{applicationId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /notices/{noticeId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /users/{userId} {
-      allow read: if (request.auth != null && request.auth.uid == userId)
-        || isAdmin()
-        || (isTeacher() && resource.data.role == 'student')
-        || isGuardianOf(userId);
-      allow write: if false;
-    }
-
-    match /attendance/{attendanceId} {
-      allow create, update: if isAdmin() || isTeacher();
-      allow read: if isAdmin() || isTeacher()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /assessments/{assessmentId} {
-      allow create, update: if isAdmin() || isTeacher();
-      allow read: if isAdmin() || isTeacher()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /homework/{homeworkId} {
-      allow create, update, delete: if isAdmin() || isTeacher();
-      allow read: if request.auth != null;
-    }
-
-    match /fees/{feeId} {
-      allow create, update, delete: if isAdmin();
-      allow read: if isAdmin()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /schedule/{scheduleId} {
-      allow create, update, delete: if isAdmin();
-      allow read: if request.auth != null;
-    }
-
-    match /successStories/{storyId} {
-      allow create, update, delete: if isAdmin();
-      allow read: if resource.data.published == true || isAdmin();
-    }
-
-    match /scholarshipApplications/{applicationId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /blogPosts/{slug} {
-      allow read: if resource.data.published == true || isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /resources/{resourceId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /contactMessages/{messageId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
-    }
-  }
-}
+এটা কোনো বাড়তি সার্ভিস বা খরচ ছাড়াই কাজ করে — সাইটের বিদ্যমান
+ডেটা একবার লোড হয়ে ব্রাউজারেই ফিল্টার হয়, যা এই আকারের সাইটের জন্য
+যথেষ্ট।
 
 =========================================================
-ধাপ ২ — ফাইল বসান (৬টা)
+ফাইল বসান (৩টা)
 =========================================================
+src/lib/useSiteSearch.ts       (নতুন)
+src/components/SiteSearch.tsx  (নতুন)
+src/components/Header.tsx      (পরিবর্তিত)
+
 সব Merge/Replace করে বসিয়ে push করুন।
 
 =========================================================
-কীভাবে কাজ করবে
+টেস্ট করবেন যেভাবে
 =========================================================
-- /contact পেজের ফর্ম এখন সত্যিকারের বার্তা সংরক্ষণ করবে (নাম, ফোন,
-  বিষয়, বার্তা)
-- Admin Dashboard-এ নতুন কার্ড "যোগাযোগ বার্তা" — এখানে সব বার্তা
-  দেখা যাবে, পঠিত/অপঠিত চিহ্নিত করা যাবে, মুছে ফেলা যাবে
-- "পেন্ডিং অ্যাকশন"-এ এখন "অপঠিত যোগাযোগ বার্তা"-র সংখ্যাও দেখাবে
-- আগের সব ফর্মের মতোই ১৫ সেকেন্ডের timeout guard আছে, তাই সার্ভার
-  সমস্যা হলে অনির্দিষ্টকাল আটকে থাকবে না
-
-টেস্ট: /contact-এ একটা বার্তা পাঠিয়ে Admin দিয়ে /admin/messages-এ
-গিয়ে দেখুন।
+সাইটের যেকোনো পেজে হেডারের 🔍 আইকনে চেপে কোনো নোটিশ, ব্লগ পোস্টের
+শিরোনাম, বা শিক্ষকের নাম দিয়ে খুঁজে দেখুন — ফলাফলে ক্লিক করলে সঠিক
+পেজে যাচ্ছে কিনা যাচাই করুন।

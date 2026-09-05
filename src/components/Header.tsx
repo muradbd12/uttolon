@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, ArrowUpRight, User2 } from "lucide-react";
+import SiteSearch from "@/components/SiteSearch";
 
 const navLinks = [
   { label: "হোম", href: "/" },
@@ -21,19 +22,20 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
         {/* Logo mark */}
-        <Link href="/" className="flex items-center gap-3 group">
-  <div className="w-10 h-10 relative flex items-center justify-center">
-    <img 
-      src="/logo.png" 
-      alt="উত্তোলন লোগো" 
-      className="w-full h-full object-contain"
-    />
-  </div>
-  <div className="flex flex-col">
-    <span className="text-xl font-bold text-slate-900 leading-tight">উত্তোলন</span>
-    <span className="text-[10px] text-slate-500 font-medium tracking-wider">UTTOLON LEARNING SYSTEM</span>
-  </div>
-</Link>
+        <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-sm bg-ink">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 20 L11 13 L15 17 L20 4" stroke="var(--gold)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M20 4 L20 9 M20 4 L15 4" stroke="var(--gold)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span className="flex flex-col leading-none">
+            <span className="font-display-bn text-xl text-ink">উত্তোলন</span>
+            <span className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+              Uttolon Learning System
+            </span>
+          </span>
+        </Link>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-7 lg:flex">
@@ -49,6 +51,7 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
+          <SiteSearch />
           <Link
             href="/student/login"
             className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
@@ -73,14 +76,17 @@ export default function Header() {
         </div>
 
         {/* Mobile toggle */}
-        <button
-          type="button"
-          className="flex items-center justify-center p-2 lg:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        <div className="flex items-center gap-1 lg:hidden">
+          <SiteSearch />
+          <button
+            type="button"
+            className="flex items-center justify-center p-2"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}

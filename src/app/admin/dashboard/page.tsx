@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   ArrowUpRight,
   Mail,
+  BarChart3,
 } from "lucide-react";
 import { demoManagementAreas } from "@/content/admin-demo";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
@@ -79,13 +80,31 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Header */}
-        <div className="mt-8 border-b border-line pb-6">
-          <p className="font-label text-xs uppercase tracking-[0.2em] text-gold-deep">
-            Admin Dashboard
-          </p>
-          <h1 className="mt-2 font-display-bn text-2xl text-ink sm:text-3xl">
-            নিয়ন্ত্রণ কেন্দ্র
-          </h1>
+        <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+          <div>
+            <p className="font-label text-xs uppercase tracking-[0.2em] text-gold-deep">
+              Admin Dashboard
+            </p>
+            <h1 className="mt-2 font-display-bn text-2xl text-ink sm:text-3xl">
+              নিয়ন্ত্রণ কেন্দ্র
+            </h1>
+          </div>
+          {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? (
+            <a
+              href="https://analytics.google.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-2 text-sm text-ink hover:border-ink"
+            >
+              <BarChart3 size={15} className="text-gold-deep" />
+              ওয়েবসাইট ট্রাফিক দেখুন
+            </a>
+          ) : (
+            <p className="flex items-center gap-1.5 text-xs text-ink-soft/60">
+              <BarChart3 size={14} />
+              ট্রাফিক অ্যানালিটিক্স চালু করতে Google Analytics সেটআপ করুন
+            </p>
+          )}
         </div>
 
         {/* Stats row — real */}

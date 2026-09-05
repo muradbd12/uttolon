@@ -209,6 +209,23 @@ export default function AdminAdmissionsList() {
     }
   }
 
+  async function handleDelete(a: Application) {
+    const confirmed = window.confirm(
+      `আপনি কি নিশ্চিত যে "${a.studentNameBn || a.studentNameEn || "এই আবেদনটি"}" মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।`
+    );
+    if (!confirmed) return;
+
+    setBusyId(a.id);
+    try {
+      await withTimeout(deleteDoc(doc(getFirebaseDb(), "admissions", a.id)));
+      setApps((prev) => (prev ? prev.filter((x) => x.id !== a.id) : prev));
+    } catch {
+      setError(true);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   function startPay(a: Application) {
     setPayingId(a.id);
     setFeeInput(a.totalFee ? String(a.totalFee) : "");

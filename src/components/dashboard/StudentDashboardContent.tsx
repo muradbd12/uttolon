@@ -15,6 +15,7 @@ import { useHomework } from "@/lib/useHomework";
 import { useTodaySchedule } from "@/lib/useTodaySchedule";
 import RecentNotices from "@/components/dashboard/RecentNotices";
 import FeeSummary from "@/components/dashboard/FeeSummary";
+import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 
 export default function StudentDashboardContent() {
   const profile = useUserProfile();
@@ -50,6 +51,11 @@ export default function StudentDashboardContent() {
             <UserRound size={15} className="text-gold-deep" />
             {profile?.identifier || "Student"}
           </div>
+        </div>
+
+        {/* সতর্কতা — অনুপস্থিতি ও ফি বাকি থাকলে */}
+        <div className="mt-6">
+          <DashboardAlerts studentUid={profile?.uid} subjectLabel="তুমি" />
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">

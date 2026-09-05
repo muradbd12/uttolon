@@ -16,6 +16,7 @@ import { useAssessments } from "@/lib/useAssessments";
 import { getFirebaseDb } from "@/lib/firebase";
 import RecentNotices from "@/components/dashboard/RecentNotices";
 import FeeSummary from "@/components/dashboard/FeeSummary";
+import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 import { demoUpcomingExams } from "@/content/guardian-demo";
 
 type ChildProfile = { name?: string; className?: string; identifier?: string };
@@ -68,6 +69,11 @@ export default function GuardianDashboardContent() {
             <UserRound size={15} className="text-gold-deep" />
             {child?.identifier || "Student"}
           </div>
+        </div>
+
+        {/* সতর্কতা — অনুপস্থিতি ও ফি বাকি থাকলে */}
+        <div className="mt-6">
+          <DashboardAlerts studentUid={profile?.linkedStudentUid} subjectLabel="সন্তান" />
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">

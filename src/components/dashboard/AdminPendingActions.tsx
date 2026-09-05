@@ -8,20 +8,24 @@ import { Inbox } from "lucide-react";
 export default function AdminPendingActions() {
   const [pendingAdmissions, setPendingAdmissions] = useState<number | null>(null);
   const [pendingScholarships, setPendingScholarships] = useState<number | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
         const db = getFirebaseDb();
-        const [admissionsSnap, scholarshipsSnap] = await Promise.all([
+        const [admissionsSnap, scholarshipsSnap, messagesSnap] = await Promise.all([
           getDocs(query(collection(db, "admissions"), where("status", "==", "new"))),
           getDocs(query(collection(db, "scholarshipApplications"), where("status", "==", "pending"))),
+          getDocs(query(collection(db, "contactMessages"), where("status", "==", "new"))),
         ]);
         setPendingAdmissions(admissionsSnap.size);
         setPendingScholarships(scholarshipsSnap.size);
+        setUnreadMessages(messagesSnap.size);
       } catch {
         setPendingAdmissions(0);
         setPendingScholarships(0);
+        setUnreadMessages(0);
       }
     }
     load();
@@ -30,6 +34,7 @@ export default function AdminPendingActions() {
   const items = [
     { label: "পর্যালোচনার অপেক্ষায় থাকা ভর্তি আবেদন", count: pendingAdmissions === null ? "…" : pendingAdmissions },
     { label: "পর্যালোচনার অপেক্ষায় থাকা বৃত্তি আবেদন", count: pendingScholarships === null ? "…" : pendingScholarships },
+    { label: "অপঠিত যোগাযোগ বার্তা", count: unreadMessages === null ? "…" : unreadMessages },
     { label: "অনুমোদনের অপেক্ষায় থাকা Testimonial", count: 0 },
   ];
 

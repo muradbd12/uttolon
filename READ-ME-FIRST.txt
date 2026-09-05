@@ -1,65 +1,125 @@
-Admission-এর সম্পূর্ণ প্রক্রিয়া আপডেট করা হলো। Security Rules বদলানোর
-দরকার নেই — শুধু ৭টা ফাইল বসিয়ে push করুন।
+Contact ফর্ম এখন real — বার্তা Firestore-এ সংরক্ষিত হবে এবং Admin
+থেকে দেখা যাবে।
 
 =========================================================
-আপনার প্রতিটা প্রশ্নের উত্তরে যা করলাম
+ধাপ ১ — Security Rules-এ আরেকটা collection যোগ করুন
 =========================================================
+আগেরটার সাথে শুধু "contactMessages" ব্লক নতুন — সব মুছে এটা দিয়ে
+Publish করুন:
 
-১) "Documents নেই, কীভাবে নিশ্চিত হবে আবেদন করেছে"
-   -> আবেদন জমা দেওয়ার সাথে সাথে এখন একটা সম্পূর্ণ রশিদ (Receipt)
-   দেখাবে — নাম, বাবা-মায়ের নাম, ঠিকানা, স্কুল, প্রোগ্রাম সহ সবকিছু,
-   প্লাস একটা Application ID। "রশিদ প্রিন্ট করুন" বাটনে চাপলে এটা
-   PDF/কাগজে প্রিন্ট করা যাবে (ব্রাউজারের নিজস্ব Print ফিচার দিয়ে,
-   কোনো বাড়তি খরচ ছাড়াই)।
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
 
-২) "OTP Code নেই" — এই একটা জায়গায় honest থাকা দরকার:
-   সত্যিকারের SMS OTP বাংলাদেশে বিনামূল্যে হয় না — প্রতিটা SMS-এর
-   জন্য একটা গেটওয়ে সার্ভিসকে টাকা দিতে হয় (যেমন SSL Wireless, Alpha
-   SMS)। যেহেতু আপনি সবকিছু ফ্রি রাখতে চেয়েছিলেন, তাই real OTP এখানে
-   যোগ করিনি। এর বদলে যেটা করলাম সেটা কার্যত একই কাজ করে বিনামূল্যে:
-   রশিদ + Application ID (প্রমাণ), আর Admin-এর ম্যানুয়াল
-   review/confirm ধাপ (নিচে ৩ নম্বরে)। ভবিষ্যতে কখনো একটা paid SMS
-   API যোগ করতে চাইলে সেটা আলাদা একটা ধাপ হিসেবে করা যাবে।
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
 
-৩) "শুধু নাম দেখাচ্ছে, প্রোফাইল চেক করা যায় না"
-   -> Admin -> ভর্তি আবেদন পেজে এখন প্রতিটা আবেদনে ক্লিক করলে পুরো
-   তথ্য (জন্ম তারিখ, বাবা-মায়ের নাম, ঠিকানা, স্কুল, গ্রুপ, পূর্ববর্তী
-   ফলাফল, দুর্বল বিষয়, ব্যাচ পছন্দ) খুলে দেখা যাবে।
+    function isTeacher() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
 
-৪) নতুন যোগ করা — ভর্তি নিশ্চিতকরণ ধাপ:
-   প্রতিটা আবেদনে এখন "ভর্তি নিশ্চিত করুন" বা "প্রত্যাখ্যান করুন"
-   বাটন আছে। নিশ্চিত করার পর একটা নতুন বাটন আসবে — "লগইন অ্যাকাউন্ট
-   তৈরি করুন" — এটাতে চাপলে সরাসরি অ্যাকাউন্ট তৈরির পেজে চলে যাবে,
-   এবং নাম/ক্লাস/গার্ডিয়ানের নম্বর/মোবাইল আগে থেকেই পূরণ করা থাকবে
-   (আবার টাইপ করতে হবে না)।
+    function isGuardianOf(studentUid) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUid == studentUid;
+    }
 
-৫) বাড়তি একটা জিনিস নিজে থেকে ধরে ঠিক করেছি:
-   টেস্ট করতে গিয়ে দেখলাম, ইন্টারনেট/সার্ভার সমস্যা হলে ফর্ম
-   অনির্দিষ্টকাল "জমা হচ্ছে..." দেখিয়ে আটকে থাকতে পারতো, কোনো error
-   ছাড়াই। এখন ১৫ সেকেন্ডের মধ্যে সাড়া না পেলে স্পষ্ট error message
-   দেখাবে। Admission ও Scholarship — দুটো ফর্মেই এটা যোগ করা হয়েছে।
+    match /admissions/{applicationId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId)
+        || isAdmin()
+        || (isTeacher() && resource.data.role == 'student')
+        || isGuardianOf(userId);
+      allow write: if false;
+    }
+
+    match /attendance/{attendanceId} {
+      allow create, update: if isAdmin() || isTeacher();
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /assessments/{assessmentId} {
+      allow create, update: if isAdmin() || isTeacher();
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /homework/{homeworkId} {
+      allow create, update, delete: if isAdmin() || isTeacher();
+      allow read: if request.auth != null;
+    }
+
+    match /fees/{feeId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /schedule/{scheduleId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if request.auth != null;
+    }
+
+    match /successStories/{storyId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if resource.data.published == true || isAdmin();
+    }
+
+    match /scholarshipApplications/{applicationId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /blogPosts/{slug} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /contactMessages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}
 
 =========================================================
-ফাইল বসান (৭টা)
+ধাপ ২ — ফাইল বসান (৬টা)
 =========================================================
-src/lib/withTimeout.ts  (নতুন)
-src/components/AdmissionForm.tsx
-src/components/AdminAdmissionsList.tsx
-src/components/AdminCreateUserForm.tsx
-src/components/ScholarshipForm.tsx
-src/app/globals.css
-src/app/admin/users/page.tsx
-
 সব Merge/Replace করে বসিয়ে push করুন।
 
 =========================================================
-আপনাকে যা করতে হবে (টেস্ট)
+কীভাবে কাজ করবে
 =========================================================
-1. /admission-এ একটা টেস্ট আবেদন জমা দিন — রশিদ ও "প্রিন্ট করুন"
-   বাটন দেখা উচিত
-2. Admin দিয়ে লগইন করে /admin/admissions-এ সেই আবেদনে ক্লিক করে
-   পুরো তথ্য দেখুন
-3. "ভর্তি নিশ্চিত করুন" চাপুন, তারপর "লগইন অ্যাকাউন্ট তৈরি করুন"
-   চেপে দেখুন নাম/ক্লাস/নম্বর আগে থেকে পূরণ করা আছে কিনা
+- /contact পেজের ফর্ম এখন সত্যিকারের বার্তা সংরক্ষণ করবে (নাম, ফোন,
+  বিষয়, বার্তা)
+- Admin Dashboard-এ নতুন কার্ড "যোগাযোগ বার্তা" — এখানে সব বার্তা
+  দেখা যাবে, পঠিত/অপঠিত চিহ্নিত করা যাবে, মুছে ফেলা যাবে
+- "পেন্ডিং অ্যাকশন"-এ এখন "অপঠিত যোগাযোগ বার্তা"-র সংখ্যাও দেখাবে
+- আগের সব ফর্মের মতোই ১৫ সেকেন্ডের timeout guard আছে, তাই সার্ভার
+  সমস্যা হলে অনির্দিষ্টকাল আটকে থাকবে না
 
-কোনো সমস্যা পেলে জানাবেন, ঠিক করে দেব।
+টেস্ট: /contact-এ একটা বার্তা পাঠিয়ে Admin দিয়ে /admin/messages-এ
+গিয়ে দেখুন।

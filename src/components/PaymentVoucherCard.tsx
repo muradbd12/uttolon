@@ -55,7 +55,7 @@ export default function PaymentVoucherCard({ data }: { data: VoucherData }) {
         </div>
         <div className="text-right">
           <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[8.5px] font-bold uppercase text-gold-deep">
-            পেমেন্ট ভাউচার
+            মানি রিসিট — অফিস কপি (Office Copy)
           </span>
           <p className="mt-0.5 font-display-en text-[10.5px] text-ink">
             ভাউচার: {data.voucherId} · তারিখ: {data.paymentDate}
@@ -111,7 +111,7 @@ export default function PaymentVoucherCard({ data }: { data: VoucherData }) {
           পরিশোধকারীর স্বাক্ষর
         </span>
         <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
-          গ্রহণকারীর স্বাক্ষর (অফিস)
+          টাকা আদায়কারীর স্বাক্ষর (অফিস)
         </span>
       </div>
 
@@ -120,6 +120,39 @@ export default function PaymentVoucherCard({ data }: { data: VoucherData }) {
         <span className="font-medium text-ink">www.uttolonbd.com</span>
         <span>info@uttolonbd.com</span>
       </div>
+
+      {/* ===== কাটার লাইন ===== */}
+      <p className="mt-3 mb-1.5 text-center text-[8px] tracking-widest text-ink-soft/50 print:break-inside-avoid">
+        ✂ ------------------------------ এখান থেকে কেটে নিন / শিক্ষার্থীর কপি ------------------------------ ✂
+      </p>
+
+      {/* ===== STUDENT COPY (condensed money-receipt stub) ===== */}
+      <div className="flex items-center justify-between rounded-sm border border-dashed border-ink-soft/40 bg-paper-raised px-3 py-2 print:break-inside-avoid">
+        <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-7 w-7 object-contain" />
+          <div>
+            <p className="font-display-bn text-[11px] leading-none text-ink">উত্তোলন — মানি রিসিট (Student Copy)</p>
+            <p className="mt-0.5 text-[8.5px] text-ink-soft/60">
+              ভাউচার: {data.voucherId} · তারিখ: {data.paymentDate}
+            </p>
+          </div>
+        </div>
+      </div>
+      <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 rounded-sm border border-line p-1.5 text-[10px] sm:grid-cols-4 print:break-inside-avoid">
+        <Item label="নাম" value={data.studentNameBn || data.studentNameEn} />
+        <Item label="আবেদন আইডি" value={data.applicationId} />
+        <Item label="জমার পরিমাণ" value={fmtTaka(data.amountPaidNow)} />
+        <Item label="উদ্দেশ্য / মাস" value={data.monthOrPurpose} />
+      </dl>
+      <div className="mt-1.5 flex justify-end print:break-inside-avoid">
+        <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
+          টাকা আদায়কারীর স্বাক্ষর
+        </span>
+      </div>
+      <p className="mt-1 text-center text-[8px] text-ink-soft/60 print:break-inside-avoid">
+        এই কপিটি নিজের কাছে সংরক্ষণ করুন — পরবর্তীতে যেকোনো হিসাব-নিকাশে এটি প্রমাণ হিসেবে কাজ করবে।
+      </p>
     </div>
   );
 }

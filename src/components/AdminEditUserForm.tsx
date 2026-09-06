@@ -13,7 +13,7 @@ type UserOption = {
   className: string | null;
   subject: string | null;
   guardianMobile: string | null;
-  linkedStudentUid: string | null;
+  linkedStudentUids: string[];
 };
 
 type StudentOption = { uid: string; name: string; identifier: string };
@@ -45,6 +45,7 @@ export default function AdminEditUserForm() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UserOption | null>(null);
   const [idType, setIdType] = useState<"email" | "phone">("phone");
+  const [selectedStudentUids, setSelectedStudentUids] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -55,16 +56,26 @@ export default function AdminEditUserForm() {
         const q = query(collection(db, "users"), where("role", "in", ["student", "guardian", "teacher"]));
         const snapshot = await getDocs(q);
         setUsers(
-          snapshot.docs.map((d) => ({
-            uid: d.id,
-            name: (d.data().name as string) || "নাম নেই",
-            identifier: (d.data().identifier as string) || "",
-            role: d.data().role as string,
-            className: (d.data().className as string) || null,
-            subject: (d.data().subject as string) || null,
-            guardianMobile: (d.data().guardianMobile as string) || null,
-            linkedStudentUid: (d.data().linkedStudentUid as string) || null,
-          }))
+          snapshot.docs.map((d) => {
+            const data = d.data();
+            // পুরনো অ্যাকাউন্টে হয়তো এখনো singular linkedStudentUid আছে —
+            // সেক্ষেত্রেও যেন কাজ করে তাই এই ফলব্যাক।
+            const linkedStudentUids: string[] = Array.isArray(data.linkedStudentUids)
+              ? data.linkedStudentUids
+              : data.linkedStudentUid
+                ? [data.linkedStudentUid as string]
+                : [];
+            return {
+              uid: d.id,
+              name: (data.name as string) || "নাম নেই",
+              identifier: (data.identifier as string) || "",
+              role: data.role as string,
+              className: (data.className as string) || null,
+              subject: (data.subject as string) || null,
+              guardianMobile: (data.guardianMobile as string) || null,
+              linkedStudentUids,
+            };
+          })
         );
       } catch {
         setUsers([]);
@@ -93,6 +104,7 @@ export default function AdminEditUserForm() {
   function selectUser(u: UserOption) {
     setSelected(u);
     setIdType(u.identifier.includes("@") ? "email" : "phone");
+    setSelectedStudentUids(u.linkedStudentUids);
     setStatus("idle");
   }
 
@@ -106,6 +118,11 @@ export default function AdminEditUserForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!selected) return;
+    if (selected.role === "guardian" && selectedStudentUids.length === 0) {
+      setStatus("error");
+      setErrorMsg(errorMessages.linked_student_required);
+      return;
+    }
     setStatus("saving");
     setErrorMsg("");
     const form = new FormData(e.currentTarget);
@@ -129,7 +146,7 @@ export default function AdminEditUserForm() {
           className: form.get("className") || undefined,
           subject: form.get("subject") || undefined,
           guardianMobile: form.get("guardianMobile") || undefined,
-          linkedStudentUid: selected.role === "guardian" ? form.get("linkedStudentUid") || undefined : undefined,
+          linkedStudentUids: selected.role === "guardian" ? selectedStudentUids : undefined,
         }),
       });
 
@@ -280,26 +297,40 @@ export default function AdminEditUserForm() {
           )}
 
           {selected.role === "guardian" && (
-            <label className="block">
+            <div>
               <span className="text-sm font-medium text-ink">
-                কোন শিক্ষার্থীর সাথে যুক্ত <span className="text-clay">*</span>
+                কোন কোন শিক্ষার্থীর সাথে যুক্ত <span className="text-clay">*</span>
               </span>
-              <select
-                required
-                name="linkedStudentUid"
-                defaultValue={selected.linkedStudentUid || ""}
-                className={`mt-1.5 ${inputClass}`}
-              >
-                <option value="" disabled>
-                  নির্বাচন করুন
-                </option>
-                {students?.map((s) => (
-                  <option key={s.uid} value={s.uid}>
-                    {s.name} ({s.identifier})
-                  </option>
-                ))}
-              </select>
-            </label>
+              <p className="mt-1 text-xs text-ink-soft/60">একাধিক সন্তান থাকলে সবগুলো টিক দিন।</p>
+              <div className="mt-2 max-h-48 overflow-y-auto rounded-sm border border-line">
+                {students === null ? (
+                  <p className="p-3 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
+                ) : students.length === 0 ? (
+                  <p className="p-3 text-sm text-ink-soft/60">কোনো শিক্ষার্থী পাওয়া যায়নি।</p>
+                ) : (
+                  students.map((s) => (
+                    <label
+                      key={s.uid}
+                      className="flex items-center gap-2.5 border-b border-line px-3 py-2.5 last:border-0 hover:bg-paper-raised"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedStudentUids.includes(s.uid)}
+                        onChange={(e) => {
+                          setSelectedStudentUids((prev) =>
+                            e.target.checked ? [...prev, s.uid] : prev.filter((uid) => uid !== s.uid)
+                          );
+                        }}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm text-ink">
+                        {s.name} <span className="text-ink-soft/60">({s.identifier})</span>
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
           )}
 
           <button

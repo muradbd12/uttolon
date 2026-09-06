@@ -46,15 +46,26 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, role, identifier, password, guardianMobile, className, subject, linkedStudentUid } = body as {
+    const {
+      name,
+      role,
+      identifier,
+      password,
+      guardianMobile,
+      className,
+      subject,
+      linkedStudentUids,
+      adminLevel,
+    } = body as {
       name?: string;
-      role?: "student" | "guardian" | "teacher";
+      role?: "student" | "guardian" | "teacher" | "admin";
       identifier?: string;
       password?: string;
       guardianMobile?: string;
       className?: string;
       subject?: string;
-      linkedStudentUid?: string;
+      linkedStudentUids?: string[];
+      adminLevel?: "super" | "academic";
     };
 
     if (!name || !role || !identifier || !password) {
@@ -66,11 +77,28 @@ export async function POST(req: NextRequest) {
     if (role === "student" && !guardianMobile) {
       return NextResponse.json({ error: "guardian_mobile_required" }, { status: 400 });
     }
-    if (role === "guardian" && !linkedStudentUid) {
+    if (role === "guardian" && (!linkedStudentUids || linkedStudentUids.length === 0)) {
       return NextResponse.json({ error: "linked_student_required" }, { status: 400 });
     }
-    if (!["student", "guardian", "teacher"].includes(role)) {
+    if (!["student", "guardian", "teacher", "admin"].includes(role)) {
       return NextResponse.json({ error: "invalid_role" }, { status: 400 });
+    }
+
+    const db = getAdminDb();
+
+    if (role === "admin") {
+      if (!adminLevel || !["super", "academic"].includes(adminLevel)) {
+        return NextResponse.json({ error: "admin_level_required" }, { status: 400 });
+      }
+      // নতুন Admin অ্যাকাউন্ট তৈরি করার অনুমতি শুধু Super Admin-এর —
+      // এখানে caller নিজে Super Admin কিনা তা Firestore থেকে যাচাই
+      // করা হচ্ছে (শুধু ADMIN_EMAILS-এ থাকাই যথেষ্ট না এই একটা কাজের
+      // জন্য)।
+      const callerDoc = await db.collection("users").doc(decoded.uid).get();
+      const callerData = callerDoc.exists ? callerDoc.data() : null;
+      if (!callerData || callerData.role !== "admin" || callerData.adminLevel !== "super") {
+        return NextResponse.json({ error: "super_admin_required" }, { status: 403 });
+      }
     }
 
     const email = identifierToEmail(identifier);
@@ -83,7 +111,6 @@ export async function POST(req: NextRequest) {
 
     await adminAuth.setCustomUserClaims(userRecord.uid, { role });
 
-    const db = getAdminDb();
     await db
       .collection("users")
       .doc(userRecord.uid)
@@ -94,7 +121,8 @@ export async function POST(req: NextRequest) {
         guardianMobile: guardianMobile || null,
         className: className || null,
         subject: subject || null,
-        linkedStudentUid: linkedStudentUid || null,
+        linkedStudentUids: role === "guardian" ? linkedStudentUids : null,
+        adminLevel: role === "admin" ? adminLevel : null,
         createdAt: new Date().toISOString(),
       });
 

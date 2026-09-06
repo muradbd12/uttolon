@@ -39,14 +39,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { targetUid, name, identifier, className, subject, guardianMobile, linkedStudentUid } = body as {
+    const { targetUid, name, identifier, className, subject, guardianMobile, linkedStudentUids } = body as {
       targetUid?: string;
       name?: string;
       identifier?: string;
       className?: string;
       subject?: string;
       guardianMobile?: string;
-      linkedStudentUid?: string;
+      linkedStudentUids?: string[];
     };
 
     if (!targetUid || !name || !identifier) {
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     if (targetData.role === "student" && !guardianMobile) {
       return NextResponse.json({ error: "guardian_mobile_required" }, { status: 400 });
     }
-    if (targetData.role === "guardian" && !linkedStudentUid) {
+    if (targetData.role === "guardian" && (!linkedStudentUids || linkedStudentUids.length === 0)) {
       return NextResponse.json({ error: "linked_student_required" }, { status: 400 });
     }
 
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
         className: className || null,
         subject: subject || null,
         guardianMobile: guardianMobile || null,
-        linkedStudentUid: linkedStudentUid || null,
+        linkedStudentUids: targetData.role === "guardian" ? linkedStudentUids : null,
         updatedAt: new Date().toISOString(),
       });
 

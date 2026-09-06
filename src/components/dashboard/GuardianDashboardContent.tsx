@@ -8,9 +8,10 @@ import {
   Sparkles,
   MessageSquareText,
   CalendarClock,
+  Users,
 } from "lucide-react";
 import ProgressRow from "@/components/ProgressRow";
-import { useUserProfile } from "@/lib/useUserProfile";
+import { useUserProfile, getLinkedStudentUids } from "@/lib/useUserProfile";
 import { useAttendanceSummary } from "@/lib/useAttendanceSummary";
 import { useAssessments } from "@/lib/useAssessments";
 import { getFirebaseDb } from "@/lib/firebase";
@@ -19,26 +20,44 @@ import FeeSummary from "@/components/dashboard/FeeSummary";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 import { demoUpcomingExams } from "@/content/guardian-demo";
 
-type ChildProfile = { name?: string; className?: string; identifier?: string };
+type ChildProfile = { uid: string; name?: string; className?: string; identifier?: string };
 
 export default function GuardianDashboardContent() {
   const profile = useUserProfile();
-  const [child, setChild] = useState<ChildProfile | null>(null);
-  const attendance = useAttendanceSummary(profile?.linkedStudentUid);
-  const assessments = useAssessments(profile?.linkedStudentUid);
+  const linkedUids = getLinkedStudentUids(profile);
+  const [children, setChildren] = useState<ChildProfile[] | null>(null);
+  const [selectedUid, setSelectedUid] = useState<string | null>(null);
+
+  const attendance = useAttendanceSummary(selectedUid);
+  const assessments = useAssessments(selectedUid);
 
   useEffect(() => {
-    if (!profile?.linkedStudentUid) return;
-    async function loadChild() {
+    if (linkedUids.length === 0) return;
+    let cancelled = false;
+    async function loadChildren() {
       try {
-        const snap = await getDoc(doc(getFirebaseDb(), "users", profile!.linkedStudentUid!));
-        setChild(snap.exists() ? (snap.data() as ChildProfile) : null);
+        const results = await Promise.all(
+          linkedUids.map(async (uid) => {
+            const snap = await getDoc(doc(getFirebaseDb(), "users", uid));
+            return { uid, ...(snap.exists() ? (snap.data() as Omit<ChildProfile, "uid">) : {}) };
+          })
+        );
+        if (!cancelled) {
+          setChildren(results);
+          setSelectedUid((prev) => prev || results[0]?.uid || null);
+        }
       } catch {
-        setChild(null);
+        if (!cancelled) setChildren([]);
       }
     }
-    loadChild();
-  }, [profile?.linkedStudentUid]);
+    loadChildren();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedUids.join(",")]);
+
+  const selectedChild = children?.find((c) => c.uid === selectedUid) || null;
 
   return (
     <section className="bg-paper-raised">
@@ -62,18 +81,39 @@ export default function GuardianDashboardContent() {
               স্বাগতম, {profile?.name || "..."}
             </h1>
             <p className="mt-1 text-sm text-ink-soft">
-              সন্তান: {child?.name || "..."} {child?.className ? `· ${child.className}` : ""}
+              সন্তান: {selectedChild?.name || "..."} {selectedChild?.className ? `· ${selectedChild.className}` : ""}
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-sm border border-line bg-paper px-4 py-2 text-sm text-ink-soft">
             <UserRound size={15} className="text-gold-deep" />
-            {child?.identifier || "Student"}
+            {selectedChild?.identifier || "Student"}
           </div>
         </div>
 
+        {/* একাধিক সন্তান থাকলে বেছে নেওয়ার অপশন */}
+        {children && children.length > 1 && (
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-1.5 text-xs text-ink-soft/70">
+              <Users size={14} /> সন্তান বেছে নিন:
+            </span>
+            {children.map((c) => (
+              <button
+                key={c.uid}
+                type="button"
+                onClick={() => setSelectedUid(c.uid)}
+                className={`rounded-sm border px-3.5 py-1.5 text-sm ${
+                  selectedUid === c.uid ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"
+                }`}
+              >
+                {c.name || "শিক্ষার্থী"}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* সতর্কতা — অনুপস্থিতি ও ফি বাকি থাকলে */}
         <div className="mt-6">
-          <DashboardAlerts studentUid={profile?.linkedStudentUid} subjectLabel="সন্তান" />
+          <DashboardAlerts studentUid={selectedUid} subjectLabel="সন্তান" />
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -183,7 +223,7 @@ export default function GuardianDashboardContent() {
             </div>
 
             {/* Fees — real */}
-            <FeeSummary studentUid={profile?.linkedStudentUid} />
+            <FeeSummary studentUid={selectedUid} />
 
             <RecentNotices />
           </div>

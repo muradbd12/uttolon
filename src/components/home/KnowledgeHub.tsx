@@ -1,8 +1,39 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { getFirebaseDb } from "@/lib/firebase";
 import { Bell, ArrowUpRight } from "lucide-react";
-import { blogPosts } from "@/content/blog";
+import { blogPosts as staticPosts } from "@/content/blog";
+
+type Post = { slug: string; title: string; category: string };
 
 export default function KnowledgeHub() {
+  const [posts, setPosts] = useState<Post[] | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const db = getFirebaseDb();
+        const q = query(
+          collection(db, "blogPosts"),
+          where("published", "==", true),
+          orderBy("createdAt", "desc")
+        );
+        const snapshot = await getDocs(q);
+        setPosts(snapshot.docs.slice(0, 3).map((d) => d.data() as Post));
+      } catch {
+        setPosts([]);
+      }
+    }
+    load();
+  }, []);
+
+  // Admin থেকে real পোস্ট প্রকাশিত থাকলে সেগুলো দেখাবে, না থাকলে
+  // শুরুর ৩টা স্থায়ী পোস্ট (fallback হিসেবে)।
+  const displayPosts = posts && posts.length > 0 ? posts : staticPosts;
+
   return (
     <section id="notice" className="scroll-mt-20 border-b border-line">
       <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
@@ -19,7 +50,7 @@ export default function KnowledgeHub() {
         </div>
 
         <div className="mt-9 grid grid-cols-1 gap-5 sm:grid-cols-3">
-          {blogPosts.map((post) => (
+          {displayPosts.map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}

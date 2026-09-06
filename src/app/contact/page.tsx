@@ -8,10 +8,10 @@ export const metadata: Metadata = {
 };
 
 const info = [
-  { icon: MapPin, label: "ঠিকানা", value: "শীঘ্রই যুক্ত হবে" },
-  { icon: Phone, label: "ফোন", value: "শীঘ্রই যুক্ত হবে" },
-  { icon: Mail, label: "ইমেইল", value: "শীঘ্রই যুক্ত হবে" },
-  { icon: Clock, label: "অফিস সময়", value: "শীঘ্রই যুক্ত হবে" },
+  { icon: MapPin, label: "ঠিকানা", value: "Qatari Tower, College Road, Amishapara, Sonaimuri, Noakhali" },
+  { icon: Phone, label: "ফোন", value: "01824-020933 · 01577-886349" },
+  { icon: Mail, label: "ইমেইল", value: "info@uttolonbd.com" },
+  { icon: Clock, label: "অফিস সময়", value: "সকাল ৯টা – রাত ৯টা" },
 ];
 
 export default function ContactPage() {

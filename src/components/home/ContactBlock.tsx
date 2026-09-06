@@ -13,13 +13,14 @@ export default function ContactBlock() {
             </h2>
             <div className="mt-6 space-y-3 text-sm text-ink-soft">
               <p className="flex items-center gap-2">
-                <Phone size={15} className="text-gold-deep" /> ফোন নম্বর শীঘ্রই যুক্ত হবে
+                <Phone size={15} className="text-gold-deep" /> 01824-020933 · 01577-886349
               </p>
               <p className="flex items-center gap-2">
-                <Mail size={15} className="text-gold-deep" /> ইমেইল শীঘ্রই যুক্ত হবে
+                <Mail size={15} className="text-gold-deep" /> info@uttolonbd.com
               </p>
-              <p className="flex items-center gap-2">
-                <MapPin size={15} className="text-gold-deep" /> ঠিকানা শীঘ্রই যুক্ত হবে
+              <p className="flex items-start gap-2">
+                <MapPin size={15} className="mt-0.5 shrink-0 text-gold-deep" /> Qatari Tower, College Road,
+                Amishapara, Sonaimuri, Noakhali
               </p>
             </div>
           </div>

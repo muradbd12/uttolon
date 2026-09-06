@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin } from "lucide-react";
 
+const CONTACT = {
+  address: "Qatari Tower, College Road, Amishapara, Sonaimuri, Noakhali",
+  phones: ["01824-020933", "01577-886349"],
+  email: "info@uttolonbd.com",
+  facebook: "https://www.facebook.com/share/1GjxNBcK3u/",
+  youtube: "https://www.youtube.com/@uttolon",
+};
+
 export default function Footer() {
   return (
     <footer className="border-t border-line bg-ink text-paper/90">
@@ -13,14 +21,18 @@ export default function Footer() {
           </p>
           <div className="mt-5 flex gap-3">
             <a
-              href="#"
+              href={CONTACT.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Facebook Page"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/20 text-xs font-semibold text-paper/70 transition-colors hover:border-gold hover:text-gold"
             >
               f
             </a>
             <a
-              href="#"
+              href={CONTACT.youtube}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="YouTube Channel"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/20 text-[10px] font-semibold text-paper/70 transition-colors hover:border-gold hover:text-gold"
             >
@@ -55,23 +67,37 @@ export default function Footer() {
           <ul className="mt-4 space-y-3 text-sm text-paper/75">
             <li className="flex items-start gap-2">
               <MapPin size={15} className="mt-0.5 shrink-0 text-gold" />
-              <span>ঠিকানা শীঘ্রই যুক্ত হবে</span>
+              <span>{CONTACT.address}</span>
             </li>
-            <li className="flex items-center gap-2">
-              <Phone size={15} className="shrink-0 text-gold" />
-              <span>শীঘ্রই যুক্ত হবে</span>
+            <li className="flex items-start gap-2">
+              <Phone size={15} className="mt-0.5 shrink-0 text-gold" />
+              <span>{CONTACT.phones.join(" · ")}</span>
             </li>
             <li className="flex items-center gap-2">
               <Mail size={15} className="shrink-0 text-gold" />
-              <span>শীঘ্রই যুক্ত হবে</span>
+              <a href={`mailto:${CONTACT.email}`} className="hover:text-gold">
+                {CONTACT.email}
+              </a>
             </li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-paper/10">
-        <div className="mx-auto max-w-7xl px-5 py-5 text-xs text-paper/50 sm:px-8">
-          © {new Date().getFullYear()} Uttolon Learning System. All Rights Reserved.
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-5 py-5 text-xs text-paper/50 sm:px-8">
+          <span>© {new Date().getFullYear()} Uttolon Learning System. All Rights Reserved.</span>
+          <span>
+            Developed by{" "}
+            <a
+              href="https://murad.uttolonbd.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-paper/70 hover:text-gold"
+            >
+              Mosharraf Hossain Murad
+            </a>
+            , Electrical Engineer &amp; IT Specialist
+          </span>
         </div>
       </div>
     </footer>

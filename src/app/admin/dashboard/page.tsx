@@ -19,6 +19,7 @@ import {
   BarChart3,
   FlaskConical,
   KeyRound,
+  UserCog,
 } from "lucide-react";
 import { demoManagementAreas } from "@/content/admin-demo";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
@@ -45,6 +46,7 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   "যোগাযোগ বার্তা": Mail,
   "Practical Learning": FlaskConical,
   "পাসওয়ার্ড রিসেট": KeyRound,
+  "তথ্য এডিট": UserCog,
   "ওয়েবসাইট কনটেন্ট": LayoutDashboard,
 };
 
@@ -63,6 +65,7 @@ const liveLinks: Record<string, string> = {
   "যোগাযোগ বার্তা": "/admin/messages",
   "Practical Learning": "/admin/practical-learning",
   "পাসওয়ার্ড রিসেট": "/admin/reset-password",
+  "তথ্য এডিট": "/admin/edit-user",
 };
 
 // কোনো কোনো কার্ডে দ্বিতীয় একটা কাজও আছে (যেমন শিক্ষকের লগইন

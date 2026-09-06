@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
@@ -28,6 +28,22 @@ export default function AdminLoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  async function handleForgotPassword(e: React.MouseEvent) {
+    e.preventDefault();
+    if (!email.trim()) {
+      setError("প্রথমে উপরে আপনার ইমেইল লিখুন।");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
+      setResetSent(true);
+      setError(null);
+    } catch {
+      setError("রিসেট লিংক পাঠানো যায়নি — ইমেইলটা সঠিক কিনা যাচাই করুন।");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,6 +89,21 @@ export default function AdminLoginForm() {
           className={`mt-1.5 ${inputClass}`}
         />
       </label>
+
+      <div>
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          className="text-xs text-ink-soft underline decoration-line underline-offset-4 hover:text-ink hover:decoration-ink"
+        >
+          পাসওয়ার্ড ভুলে গেছেন?
+        </button>
+        {resetSent && (
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-teal-deep">
+            <CheckCircle2 size={13} /> রিসেট লিংক ইমেইলে পাঠানো হয়েছে।
+          </p>
+        )}
+      </div>
       <button
         type="submit"
         disabled={loading}

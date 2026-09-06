@@ -18,6 +18,7 @@ import {
   Mail,
   BarChart3,
   FlaskConical,
+  KeyRound,
 } from "lucide-react";
 import { demoManagementAreas } from "@/content/admin-demo";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
@@ -43,6 +44,7 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   "রিসোর্স লাইব্রেরি": FolderOpen,
   "যোগাযোগ বার্তা": Mail,
   "Practical Learning": FlaskConical,
+  "পাসওয়ার্ড রিসেট": KeyRound,
   "ওয়েবসাইট কনটেন্ট": LayoutDashboard,
 };
 
@@ -60,6 +62,7 @@ const liveLinks: Record<string, string> = {
   "রিসোর্স লাইব্রেরি": "/admin/resources",
   "যোগাযোগ বার্তা": "/admin/messages",
   "Practical Learning": "/admin/practical-learning",
+  "পাসওয়ার্ড রিসেট": "/admin/reset-password",
 };
 
 // কোনো কোনো কার্ডে দ্বিতীয় একটা কাজও আছে (যেমন শিক্ষকের লগইন

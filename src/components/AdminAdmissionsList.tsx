@@ -55,7 +55,6 @@ type Application = {
   totalFee?: number;
   totalPaid?: number;
   due?: number;
-  monthlyFee?: number;
   shortId?: string;
 
   status?: "new" | "confirmed" | "rejected";
@@ -211,7 +210,7 @@ export default function AdminAdmissionsList() {
 
   async function handleDelete(a: Application) {
     const confirmed = window.confirm(
-      `আপনি কি নিশ্চিত যে "${a.studentNameBn || a.studentNameEn || "এই আবেদনটি"}" মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।`
+      `আপনি কি নিশ্চিত যে "${a.studentNameBn || a.studentNameEn || "এই আবেদনটি"}" মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।`
     );
     if (!confirmed) return;
 
@@ -449,7 +448,7 @@ export default function AdminAdmissionsList() {
                   </p>
                 )}
 
-                <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-gold-deep">পেমেন্ট</p>
+                <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-gold-deep">ভর্তি ফি</p>
                 {a.totalFee ? (
                   <div className="grid grid-cols-3 gap-2 rounded-sm border border-line bg-paper-raised p-2 text-center text-xs">
                     <div>
@@ -470,29 +469,9 @@ export default function AdminAdmissionsList() {
                 ) : (
                   <p className="text-xs text-ink-soft/60">এখনো ফি নির্ধারণ করা হয়নি।</p>
                 )}
-
-                <div className="mt-2 flex items-center gap-2 text-xs">
-                  <span className="text-ink-soft/60">মাসিক বেতন:</span>
-                  {a.monthlyFee ? (
-                    <span className="font-medium text-ink">৳{a.monthlyFee.toLocaleString("bn-BD")} / মাস</span>
-                  ) : (
-                    <span className="text-ink-soft/40">নির্ধারিত না</span>
-                  )}
-                  <input
-                    type="number"
-                    placeholder="নতুন/বদলানো অঙ্ক"
-                    className="ml-2 w-28 rounded-sm border border-line bg-paper-raised px-2 py-1 text-xs text-ink outline-none focus:border-ink"
-                    onKeyDown={async (e) => {
-                      if (e.key !== "Enter") return;
-                      const val = Math.max(Math.round(Number((e.target as HTMLInputElement).value) || 0), 0);
-                      if (val <= 0) return;
-                      await updateDoc(doc(getFirebaseDb(), "admissions", a.id), { monthlyFee: val });
-                      setApps((prev) => (prev ? prev.map((x) => (x.id === a.id ? { ...x, monthlyFee: val } : x)) : prev));
-                      (e.target as HTMLInputElement).value = "";
-                    }}
-                  />
-                  <span className="text-ink-soft/40">(টাইপ করে Enter চাপুন)</span>
-                </div>
+                <p className="mt-1.5 text-xs text-ink-soft/50">
+                  (প্রতি মাসের বেতনের হিসাব এখন "ফি ব্যবস্থাপনা" (/admin/fees) পেজ থেকে করা হয় — এখানে শুধু এককালীন ভর্তি ফি।)
+                </p>
 
                 {payingId === a.id && (
                   <div className="mt-2 rounded-sm border border-gold-soft bg-gold-soft/20 p-3">

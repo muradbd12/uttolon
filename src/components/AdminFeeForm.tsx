@@ -137,6 +137,9 @@ export default function AdminFeeForm() {
     }
   }
 
+  const allTimePaid = entries?.reduce((sum, en) => sum + (en.amountPaid || 0), 0) ?? 0;
+  const dueMonthsCount = entries?.filter((en) => en.status !== "paid").length ?? 0;
+
   return (
     <div className="space-y-6">
       <label className="block">
@@ -161,36 +164,50 @@ export default function AdminFeeForm() {
       {selectedUid && (
         <>
           {entries && entries.length > 0 && (
-            <div className="overflow-x-auto rounded-sm border border-line">
-              <table className="w-full min-w-[560px] text-sm">
-                <thead>
-                  <tr className="border-b border-line bg-paper-raised text-left text-ink-soft">
-                    <th className="px-4 py-2 font-normal">মাস</th>
-                    <th className="px-4 py-2 font-normal">বকেয়া</th>
-                    <th className="px-4 py-2 font-normal">ছাড়</th>
-                    <th className="px-4 py-2 font-normal">জরিমানা</th>
-                    <th className="px-4 py-2 font-normal">পরিশোধিত</th>
-                    <th className="px-4 py-2 font-normal">অবস্থা</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {entries.map((en) => (
-                    <tr key={en.month} className="border-b border-line last:border-0">
-                      <td className="px-4 py-2 text-ink">{en.month}</td>
-                      <td className="px-4 py-2 text-ink-soft">{en.amountDue}</td>
-                      <td className="px-4 py-2 text-ink-soft">{en.discount}</td>
-                      <td className="px-4 py-2 text-ink-soft">{en.fine}</td>
-                      <td className="px-4 py-2 text-ink-soft">{en.amountPaid}</td>
-                      <td className="px-4 py-2">
-                        <span className={`rounded-sm px-2 py-0.5 text-xs font-medium ${statusClass[en.status]}`}>
-                          {statusLabel[en.status]}
-                        </span>
-                      </td>
+            <>
+              {/* এডমিন-অনলি সর্বমোট হিসাব — গার্ডিয়ান/স্টুডেন্ট ড্যাশবোর্ডে এটা দেখানো হয় না */}
+              <div className="grid grid-cols-2 gap-3 rounded-sm border border-line bg-paper-raised p-4 text-center sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-ink-soft/60">সর্বমোট পরিশোধিত (এ পর্যন্ত)</p>
+                  <p className="mt-1 text-lg font-bold text-teal-deep">৳{allTimePaid.toLocaleString("bn-BD")}</p>
+                </div>
+                <div className="border-l border-line">
+                  <p className="text-xs text-ink-soft/60">বকেয়া মাসের সংখ্যা</p>
+                  <p className="mt-1 text-lg font-bold text-clay">{dueMonthsCount}</p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto rounded-sm border border-line">
+                <table className="w-full min-w-[560px] text-sm">
+                  <thead>
+                    <tr className="border-b border-line bg-paper-raised text-left text-ink-soft">
+                      <th className="px-4 py-2 font-normal">মাস</th>
+                      <th className="px-4 py-2 font-normal">বকেয়া</th>
+                      <th className="px-4 py-2 font-normal">ছাড়</th>
+                      <th className="px-4 py-2 font-normal">জরিমানা</th>
+                      <th className="px-4 py-2 font-normal">পরিশোধিত</th>
+                      <th className="px-4 py-2 font-normal">অবস্থা</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {entries.map((en) => (
+                      <tr key={en.month} className="border-b border-line last:border-0">
+                        <td className="px-4 py-2 text-ink">{en.month}</td>
+                        <td className="px-4 py-2 text-ink-soft">{en.amountDue}</td>
+                        <td className="px-4 py-2 text-ink-soft">{en.discount}</td>
+                        <td className="px-4 py-2 text-ink-soft">{en.fine}</td>
+                        <td className="px-4 py-2 text-ink-soft">{en.amountPaid}</td>
+                        <td className="px-4 py-2">
+                          <span className={`rounded-sm px-2 py-0.5 text-xs font-medium ${statusClass[en.status]}`}>
+                            {statusLabel[en.status]}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2, Eye, EyeOff, Info } from "lucide-react";
 
@@ -14,8 +14,6 @@ const errorMessages: Record<string, string> = {
   weak_password: "পাসওয়ার্ড অন্তত ৬ ক্যারেক্টার হতে হবে।",
   guardian_mobile_required: "শিক্ষার্থীর জন্য গার্ডিয়ানের মোবাইল নম্বর আবশ্যক।",
   linked_student_required: "গার্ডিয়ানের জন্য একজন শিক্ষার্থী নির্বাচন করা আবশ্যক।",
-  admin_level_required: "অ্যাডমিনের স্তর (Super/Academic) নির্বাচন করুন।",
-  super_admin_required: "নতুন অ্যাডমিন অ্যাকাউন্ট তৈরির অনুমতি শুধু Super Admin-এর আছে।",
   already_exists: "এই ইমেইল/নম্বর দিয়ে ইতিমধ্যে একটা অ্যাকাউন্ট আছে।",
   unauthorized: "লগইন সেশন শেষ হয়ে গেছে — আবার লগইন করুন।",
   forbidden: "এই কাজের অনুমতি নেই।",
@@ -33,7 +31,7 @@ export default function AdminCreateUserForm() {
   const prefillIdentifier = searchParams.get("prefillIdentifier") || "";
   const hasPrefill = Boolean(prefillName || prefillClass || prefillGuardianMobile || prefillIdentifier);
 
-  const [role, setRole] = useState<"student" | "guardian" | "teacher" | "admin">("student");
+  const [role, setRole] = useState<"student" | "guardian" | "teacher">("student");
   const [idType, setIdType] = useState<"email" | "phone">("phone");
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -42,23 +40,6 @@ export default function AdminCreateUserForm() {
   const [errorDetails, setErrorDetails] = useState("");
   const [created, setCreated] = useState<{ identifier: string; password: string } | null>(null);
   const [students, setStudents] = useState<StudentOption[] | null>(null);
-  const [selectedStudentUids, setSelectedStudentUids] = useState<string[]>([]);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-
-  useEffect(() => {
-    async function checkSelf() {
-      try {
-        const authInstance = getFirebaseAuth();
-        const uid = authInstance.currentUser?.uid;
-        if (!uid) return;
-        const snap = await getDoc(doc(getFirebaseDb(), "users", uid));
-        setIsSuperAdmin(snap.exists() && snap.data().adminLevel === "super");
-      } catch {
-        setIsSuperAdmin(false);
-      }
-    }
-    checkSelf();
-  }, []);
 
   useEffect(() => {
     if (role !== "guardian" || students !== null) return;
@@ -92,13 +73,6 @@ export default function AdminCreateUserForm() {
     const identifier = form.get("identifier") as string;
     const password = form.get("password") as string;
 
-    if (role === "guardian" && selectedStudentUids.length === 0) {
-      setStatus("error");
-      setErrorMsg(errorMessages.linked_student_required);
-      setErrorCode("linked_student_required");
-      return;
-    }
-
     try {
       const authInstance = getFirebaseAuth();
       const token = await authInstance.currentUser?.getIdToken();
@@ -120,8 +94,7 @@ export default function AdminCreateUserForm() {
           guardianMobile: form.get("guardianMobile") || undefined,
           className: form.get("className") || undefined,
           subject: form.get("subject") || undefined,
-          linkedStudentUids: role === "guardian" ? selectedStudentUids : undefined,
-          adminLevel: role === "admin" ? form.get("adminLevel") || undefined : undefined,
+          linkedStudentUid: role === "guardian" ? form.get("linkedStudentUid") || undefined : undefined,
         }),
       });
 
@@ -136,7 +109,6 @@ export default function AdminCreateUserForm() {
 
       setCreated({ identifier, password });
       setStatus("success");
-      setSelectedStudentUids([]);
       (e.target as HTMLFormElement).reset();
     } catch {
       setStatus("error");
@@ -199,7 +171,7 @@ export default function AdminCreateUserForm() {
 
       <div>
         <span className="text-sm font-medium text-ink">অ্যাকাউন্টের ধরন</span>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 flex gap-2">
           {(["student", "guardian", "teacher"] as const).map((r) => (
             <button
               key={r}
@@ -212,17 +184,6 @@ export default function AdminCreateUserForm() {
               {r === "student" ? "শিক্ষার্থী" : r === "guardian" ? "গার্ডিয়ান" : "শিক্ষক"}
             </button>
           ))}
-          {isSuperAdmin && (
-            <button
-              type="button"
-              onClick={() => setRole("admin")}
-              className={`rounded-sm border px-4 py-2 text-sm ${
-                role === "admin" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"
-              }`}
-            >
-              অ্যাডমিন
-            </button>
-          )}
         </div>
       </div>
 
@@ -289,42 +250,26 @@ export default function AdminCreateUserForm() {
       </label>
 
       {role === "guardian" && (
-        <div>
+        <label className="block">
           <span className="text-sm font-medium text-ink">
-            কোন কোন শিক্ষার্থীর সাথে যুক্ত <span className="text-clay">*</span>
+            কোন শিক্ষার্থীর সাথে যুক্ত <span className="text-clay">*</span>
           </span>
-          <p className="mt-1 text-xs text-ink-soft/60">একাধিক সন্তান থাকলে সবগুলো টিক দিন।</p>
-          <div className="mt-2 max-h-48 overflow-y-auto rounded-sm border border-line">
-            {students === null ? (
-              <p className="p-3 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
-            ) : students.length === 0 ? (
-              <p className="p-3 text-sm text-ink-soft/60">
-                আগে অন্তত একজন শিক্ষার্থীর অ্যাকাউন্ট তৈরি করুন, তারপর তার গার্ডিয়ান যুক্ত করুন।
-              </p>
-            ) : (
-              students.map((s) => (
-                <label
-                  key={s.uid}
-                  className="flex items-center gap-2.5 border-b border-line px-3 py-2.5 last:border-0 hover:bg-paper-raised"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedStudentUids.includes(s.uid)}
-                    onChange={(e) => {
-                      setSelectedStudentUids((prev) =>
-                        e.target.checked ? [...prev, s.uid] : prev.filter((uid) => uid !== s.uid)
-                      );
-                    }}
-                    className="h-4 w-4"
-                  />
-                  <span className="text-sm text-ink">
-                    {s.name} <span className="text-ink-soft/60">({s.identifier})</span>
-                  </span>
-                </label>
-              ))
-            )}
-          </div>
-        </div>
+          <select required name="linkedStudentUid" className={`mt-1.5 ${inputClass}`} defaultValue="">
+            <option value="" disabled>
+              {students === null ? "লোড হচ্ছে..." : students.length === 0 ? "কোনো শিক্ষার্থী পাওয়া যায়নি" : "নির্বাচন করুন"}
+            </option>
+            {students?.map((s) => (
+              <option key={s.uid} value={s.uid}>
+                {s.name} ({s.identifier})
+              </option>
+            ))}
+          </select>
+          {students !== null && students.length === 0 && (
+            <p className="mt-1.5 text-xs text-ink-soft/60">
+              আগে অন্তত একজন শিক্ষার্থীর অ্যাকাউন্ট তৈরি করুন, তারপর তার গার্ডিয়ান যুক্ত করুন।
+            </p>
+          )}
+        </label>
       )}
 
       {role === "student" && (
@@ -354,32 +299,6 @@ export default function AdminCreateUserForm() {
           <span className="text-sm font-medium text-ink">বিষয়</span>
           <input name="subject" type="text" className={`mt-1.5 ${inputClass}`} />
         </label>
-      )}
-
-      {role === "admin" && (
-        <div>
-          <span className="text-sm font-medium text-ink">
-            অ্যাডমিনের স্তর <span className="text-clay">*</span>
-          </span>
-          <div className="mt-2 flex gap-2">
-            <label className="flex-1">
-              <input required type="radio" name="adminLevel" value="super" className="peer sr-only" />
-              <span className="block cursor-pointer rounded-sm border border-line px-4 py-2.5 text-center text-sm text-ink-soft peer-checked:border-ink peer-checked:bg-ink peer-checked:text-paper">
-                Super Admin
-              </span>
-            </label>
-            <label className="flex-1">
-              <input required type="radio" name="adminLevel" value="academic" className="peer sr-only" />
-              <span className="block cursor-pointer rounded-sm border border-line px-4 py-2.5 text-center text-sm text-ink-soft peer-checked:border-ink peer-checked:bg-ink peer-checked:text-paper">
-                Academic Admin
-              </span>
-            </label>
-          </div>
-          <p className="mt-1.5 text-xs text-ink-soft/60">
-            Super Admin সবকিছু (ফিসহ) দেখতে-পরিচালনা করতে পারবেন। Academic Admin
-            ফি ব্যবস্থাপনা ছাড়া বাকি সবকিছু পরিচালনা করতে পারবেন।
-          </p>
-        </div>
       )}
 
       <button

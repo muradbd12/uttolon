@@ -13,7 +13,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { Loader2, AlertCircle, Trash2, Info } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Info, Pencil, X } from "lucide-react";
 
 type Story = {
   id: string;
@@ -32,6 +32,7 @@ export default function AdminSuccessStoryForm() {
   const [stories, setStories] = useState<Story[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -48,6 +49,8 @@ export default function AdminSuccessStoryForm() {
     queueMicrotask(load);
   }, [load]);
 
+  const editingStory = editingId ? stories?.find((s) => s.id === editingId) || null : null;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("saving");
@@ -58,17 +61,25 @@ export default function AdminSuccessStoryForm() {
       setStatus("error");
       return;
     }
+    const fields = {
+      displayName,
+      program: (form.get("program") as string)?.trim() || "",
+      beforeScore: (form.get("beforeScore") as string)?.trim() || "",
+      afterScore: (form.get("afterScore") as string)?.trim() || "",
+      testimonial,
+    };
     try {
-      await addDoc(collection(getFirebaseDb(), "successStories"), {
-        displayName,
-        program: (form.get("program") as string)?.trim() || "",
-        beforeScore: (form.get("beforeScore") as string)?.trim() || "",
-        afterScore: (form.get("afterScore") as string)?.trim() || "",
-        testimonial,
-        published: false,
-        createdAt: serverTimestamp(),
-      });
+      if (editingId) {
+        await updateDoc(doc(getFirebaseDb(), "successStories", editingId), fields);
+      } else {
+        await addDoc(collection(getFirebaseDb(), "successStories"), {
+          ...fields,
+          published: false,
+          createdAt: serverTimestamp(),
+        });
+      }
       (e.target as HTMLFormElement).reset();
+      setEditingId(null);
       setStatus("idle");
       load();
     } catch {
@@ -98,6 +109,7 @@ export default function AdminSuccessStoryForm() {
     try {
       await deleteDoc(doc(getFirebaseDb(), "successStories", id));
       setStories((prev) => (prev ? prev.filter((s) => s.id !== id) : prev));
+      if (editingId === id) setEditingId(null);
     } catch {
       setStatus("error");
     } finally {
@@ -116,22 +128,73 @@ export default function AdminSuccessStoryForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">
+      <form
+        key={editingId || "new"}
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-sm border border-line bg-paper p-6"
+      >
+        <div className="flex items-center justify-between">
+          <p className="font-display-bn text-base text-ink">
+            {editingStory ? "গল্প এডিট করুন" : "নতুন গল্প"}
+          </p>
+          {editingStory && (
+            <button
+              type="button"
+              onClick={() => setEditingId(null)}
+              className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink"
+            >
+              <X size={13} /> বাতিল করুন
+            </button>
+          )}
+        </div>
+
         {status === "error" && (
           <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
             <AlertCircle size={14} /> নাম ও testimonial দুটোই দিন, তারপর আবার চেষ্টা করুন।
           </div>
         )}
 
-        <input required name="displayName" type="text" placeholder="প্রদর্শিত নাম (যেমন: রাফি, বা R.)" className={inputClass} />
-        <input name="program" type="text" placeholder="প্রোগ্রাম/বিষয় (ঐচ্ছিক)" className={inputClass} />
+        <input
+          required
+          name="displayName"
+          type="text"
+          placeholder="প্রদর্শিত নাম (যেমন: রাফি, বা R.)"
+          defaultValue={editingStory?.displayName}
+          className={inputClass}
+        />
+        <input
+          name="program"
+          type="text"
+          placeholder="প্রোগ্রাম/বিষয় (ঐচ্ছিক)"
+          defaultValue={editingStory?.program}
+          className={inputClass}
+        />
 
         <div className="grid grid-cols-2 gap-4">
-          <input name="beforeScore" type="text" placeholder="আগের ফলাফল (ঐচ্ছিক)" className={inputClass} />
-          <input name="afterScore" type="text" placeholder="পরের ফলাফল (ঐচ্ছিক)" className={inputClass} />
+          <input
+            name="beforeScore"
+            type="text"
+            placeholder="আগের ফলাফল (ঐচ্ছিক)"
+            defaultValue={editingStory?.beforeScore}
+            className={inputClass}
+          />
+          <input
+            name="afterScore"
+            type="text"
+            placeholder="পরের ফলাফল (ঐচ্ছিক)"
+            defaultValue={editingStory?.afterScore}
+            className={inputClass}
+          />
         </div>
 
-        <textarea required name="testimonial" rows={3} placeholder="Testimonial / অগ্রগতির বিবরণ" className={inputClass} />
+        <textarea
+          required
+          name="testimonial"
+          rows={3}
+          placeholder="Testimonial / অগ্রগতির বিবরণ"
+          defaultValue={editingStory?.testimonial}
+          className={inputClass}
+        />
 
         <button
           type="submit"
@@ -139,7 +202,7 @@ export default function AdminSuccessStoryForm() {
           className="flex items-center gap-2 rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
         >
           {status === "saving" && <Loader2 size={14} className="animate-spin" />}
-          Draft হিসেবে যোগ করুন
+          {editingStory ? "পরিবর্তন সংরক্ষণ করুন" : "Draft হিসেবে যোগ করুন"}
         </button>
       </form>
 
@@ -176,7 +239,14 @@ export default function AdminSuccessStoryForm() {
                   {s.published ? "Published" : "Draft"}
                 </span>
               </div>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingId(s.id)}
+                  className="flex items-center gap-1 rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
+                >
+                  <Pencil size={12} /> এডিট করুন
+                </button>
                 <button
                   type="button"
                   onClick={() => togglePublished(s)}

@@ -8,12 +8,13 @@ import {
   where,
   orderBy,
   addDoc,
+  updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Pencil, X } from "lucide-react";
 
 type TeacherOption = { uid: string; name: string; subject: string | null };
 type ScheduleEntry = {
@@ -38,6 +39,7 @@ export default function AdminScheduleForm() {
   const [entries, setEntries] = useState<ScheduleEntry[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadTeachers() {
@@ -71,6 +73,8 @@ export default function AdminScheduleForm() {
     }
   }
 
+  const editingEntry = editingId ? entries?.find((s) => s.id === editingId) || null : null;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("saving");
@@ -90,7 +94,7 @@ export default function AdminScheduleForm() {
 
     try {
       const teacher = teachers?.find((t) => t.uid === teacherUid);
-      await addDoc(collection(getFirebaseDb(), "schedule"), {
+      const fields = {
         className,
         subject,
         teacherUid,
@@ -99,9 +103,14 @@ export default function AdminScheduleForm() {
         startTime,
         endTime,
         room: room || "",
-        createdAt: serverTimestamp(),
-      });
+      };
+      if (editingId) {
+        await updateDoc(doc(getFirebaseDb(), "schedule", editingId), fields);
+      } else {
+        await addDoc(collection(getFirebaseDb(), "schedule"), { ...fields, createdAt: serverTimestamp() });
+      }
       (e.target as HTMLFormElement).reset();
+      setEditingId(null);
       setStatus("idle");
       loadEntries();
     } catch {
@@ -115,6 +124,7 @@ export default function AdminScheduleForm() {
     try {
       await deleteDoc(doc(getFirebaseDb(), "schedule", id));
       setEntries((prev) => (prev ? prev.filter((s) => s.id !== id) : prev));
+      if (editingId === id) setEditingId(null);
     } catch {
       setStatus("error");
     } finally {
@@ -124,7 +134,26 @@ export default function AdminScheduleForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">
+      <form
+        key={editingId || "new"}
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-sm border border-line bg-paper p-6"
+      >
+        <div className="flex items-center justify-between">
+          <p className="font-display-bn text-base text-ink">
+            {editingEntry ? "রুটিন এন্ট্রি এডিট করুন" : "নতুন রুটিন এন্ট্রি"}
+          </p>
+          {editingEntry && (
+            <button
+              type="button"
+              onClick={() => setEditingId(null)}
+              className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink"
+            >
+              <X size={13} /> বাতিল করুন
+            </button>
+          )}
+        </div>
+
         {status === "error" && (
           <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
             <AlertCircle size={14} /> সব প্রয়োজনীয় ফিল্ড পূরণ করুন, তারপর আবার চেষ্টা করুন।
@@ -132,11 +161,25 @@ export default function AdminScheduleForm() {
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <input required name="className" type="text" placeholder="ক্লাস (যেমন: Class 10)" className={inputClass} />
-          <input required name="subject" type="text" placeholder="বিষয়" className={inputClass} />
+          <input
+            required
+            name="className"
+            type="text"
+            placeholder="ক্লাস (যেমন: Class 10)"
+            defaultValue={editingEntry?.className}
+            className={inputClass}
+          />
+          <input
+            required
+            name="subject"
+            type="text"
+            placeholder="বিষয়"
+            defaultValue={editingEntry?.subject}
+            className={inputClass}
+          />
         </div>
 
-        <select required name="teacherUid" className={inputClass} defaultValue="">
+        <select required name="teacherUid" className={inputClass} defaultValue={editingEntry?.teacherUid || ""}>
           <option value="" disabled>
             {teachers === null ? "লোড হচ্ছে..." : "শিক্ষক নির্বাচন করুন"}
           </option>
@@ -148,7 +191,7 @@ export default function AdminScheduleForm() {
         </select>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <select required name="dayOfWeek" className={inputClass} defaultValue="">
+          <select required name="dayOfWeek" className={inputClass} defaultValue={editingEntry?.dayOfWeek ?? ""}>
             <option value="" disabled>
               বার
             </option>
@@ -158,9 +201,15 @@ export default function AdminScheduleForm() {
               </option>
             ))}
           </select>
-          <input required name="startTime" type="time" className={inputClass} />
-          <input required name="endTime" type="time" className={inputClass} />
-          <input name="room" type="text" placeholder="রুম (ঐচ্ছিক)" className={inputClass} />
+          <input required name="startTime" type="time" defaultValue={editingEntry?.startTime} className={inputClass} />
+          <input required name="endTime" type="time" defaultValue={editingEntry?.endTime} className={inputClass} />
+          <input
+            name="room"
+            type="text"
+            placeholder="রুম (ঐচ্ছিক)"
+            defaultValue={editingEntry?.room}
+            className={inputClass}
+          />
         </div>
 
         <button
@@ -169,7 +218,7 @@ export default function AdminScheduleForm() {
           className="flex items-center gap-2 rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
         >
           {status === "saving" && <Loader2 size={14} className="animate-spin" />}
-          রুটিনে যোগ করুন
+          {editingEntry ? "পরিবর্তন সংরক্ষণ করুন" : "রুটিনে যোগ করুন"}
         </button>
       </form>
 
@@ -184,7 +233,7 @@ export default function AdminScheduleForm() {
         </p>
       ) : (
         <div className="overflow-x-auto rounded-sm border border-line">
-          <table className="w-full min-w-[680px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-line bg-paper-raised text-left text-ink-soft">
                 <th className="px-4 py-2 font-normal">বার</th>
@@ -206,15 +255,24 @@ export default function AdminScheduleForm() {
                   <td className="px-4 py-2 text-ink-soft">{s.subject}</td>
                   <td className="px-4 py-2 text-ink-soft">{s.teacherName}</td>
                   <td className="px-4 py-2">
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(s.id)}
-                      disabled={deletingId === s.id}
-                      className="flex items-center gap-1 text-xs text-ink-soft hover:text-clay disabled:opacity-50"
-                    >
-                      {deletingId === s.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                      মুছুন
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(s.id)}
+                        className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink"
+                      >
+                        <Pencil size={12} /> এডিট
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(s.id)}
+                        disabled={deletingId === s.id}
+                        className="flex items-center gap-1 text-xs text-ink-soft hover:text-clay disabled:opacity-50"
+                      >
+                        {deletingId === s.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                        মুছুন
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

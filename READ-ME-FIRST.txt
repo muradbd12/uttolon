@@ -1,155 +1,36 @@
-একজন Guardian-এর একাধিক সন্তান থাকার সমস্যা সমাধান হলো।
+৬টা জায়গায় এডিট করার সুবিধা যোগ হলো — Blog, Resource, Success Story,
+Practical Learning, হোমওয়ার্ক, ক্লাস রুটিন। এতদিন এগুলো শুধু তৈরি ও
+মুছে ফেলা যেত, ভুল হলে আবার নতুন করে বানাতে হতো।
+
+Security Rules বদলানোর দরকার নেই।
+
+(বিঃদ্রঃ Teacher-এর পাবলিক প্রোফাইল, Assessment, Fee — এগুলো
+আগে থেকেই এডিট করা যেত, তাই এই আপডেটে নেই।)
 
 =========================================================
-ধাপ ১ — Security Rules বদলান (isGuardianOf ফাংশন)
+কীভাবে কাজ করে (৬ জায়গাতেই একই প্যাটার্ন)
 =========================================================
-আগেরটার সাথে শুধু isGuardianOf() ফাংশন বদলেছে (এখন array-ও চেক করে,
-আগের একক-সন্তান অ্যাকাউন্টও ভাঙবে না) — বাকি সব অপরিবর্তিত। সব মুছে
-এটা দিয়ে Publish করুন:
+প্রতিটা তালিকার আইটেমের পাশে এখন একটা "এডিট করুন" বাটন আছে —
+চাপলে উপরের ফর্মটা সেই আইটেমের বর্তমান তথ্য দিয়ে পূরণ হয়ে যাবে,
+পরিবর্তন করে "পরিবর্তন সংরক্ষণ করুন" চাপলেই হালনাগাদ হয়ে যাবে
+(নতুন আলাদা এন্ট্রি তৈরি হবে না, একই এন্ট্রি বদলাবে)। "বাতিল করুন"
+চাপলে এডিট মোড থেকে বেরিয়ে আসা যাবে, কিছু সংরক্ষণ হবে না।
 
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
+Blog পোস্টের ক্ষেত্রে: এডিট করার সময় URL (slug) পরিবর্তন করা যাবে
+না (এটা ইচ্ছাকৃত, নইলে আগের শেয়ার করা লিংক ভেঙে যেত) — Published/
+Draft অবস্থাও এডিট করার সময় অপরিবর্তিত থাকবে।
 
-    function isAdmin() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    function isSuperAdmin() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.adminLevel == 'super';
-    }
-
-    function isTeacher() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
-    }
-
-    function isGuardianOf(studentUid) {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUid == studentUid ||
-          (
-            'linkedStudentUids' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data &&
-            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUids.hasAny([studentUid])
-          )
-        );
-    }
-
-    match /admissions/{applicationId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /notices/{noticeId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /users/{userId} {
-      allow read: if (request.auth != null && request.auth.uid == userId)
-        || isAdmin()
-        || (isTeacher() && resource.data.role == 'student')
-        || isGuardianOf(userId);
-      allow write: if false;
-    }
-
-    match /attendance/{attendanceId} {
-      allow create, update: if isAdmin() || isTeacher();
-      allow read: if isAdmin() || isTeacher()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /assessments/{assessmentId} {
-      allow create, update: if isAdmin() || isTeacher();
-      allow read: if isAdmin() || isTeacher()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /homework/{homeworkId} {
-      allow create, update, delete: if isAdmin() || isTeacher();
-      allow read: if request.auth != null;
-    }
-
-    match /fees/{feeId} {
-      allow create, update, delete: if isSuperAdmin();
-      allow read: if isSuperAdmin()
-        || (request.auth != null && resource.data.studentUid == request.auth.uid)
-        || isGuardianOf(resource.data.studentUid);
-    }
-
-    match /schedule/{scheduleId} {
-      allow create, update, delete: if isAdmin();
-      allow read: if request.auth != null;
-    }
-
-    match /successStories/{storyId} {
-      allow create, update, delete: if isAdmin();
-      allow read: if resource.data.published == true || isAdmin();
-    }
-
-    match /scholarshipApplications/{applicationId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /blogPosts/{slug} {
-      allow read: if resource.data.published == true || isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /resources/{resourceId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /contactMessages/{messageId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /practicalLearning/{entryId} {
-      allow read: if resource.data.published == true || isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-  }
-}
+Practical Learning-এর ক্ষেত্রে: এডিট করার সময় নতুন ছবি না দিলে
+আগের ছবিটাই থেকে যাবে।
 
 =========================================================
-ধাপ ২ — ফাইল বসান (৬টা)
+ফাইল বসান (৬টা)
 =========================================================
 সব Merge/Replace করে বসিয়ে push করুন।
 
 =========================================================
-কীভাবে কাজ করে
-=========================================================
-- নতুন Guardian অ্যাকাউন্ট তৈরির সময় এখন একাধিক শিক্ষার্থী টিক
-  দিয়ে বেছে নেওয়া যাবে (আগে শুধু ১ জন)
-- "তথ্য এডিট" থেকে কোনো Guardian-এর সন্তানের তালিকা বদলানো (যোগ/বাদ)
-  যাবে
-- Guardian Dashboard-এ এখন ১-এর বেশি সন্তান থাকলে উপরে একটা "সন্তান
-  বেছে নিন" অংশ দেখাবে — যাকে বেছে নেওয়া হবে তার Attendance,
-  Assessment, ফি — সব সেই অনুযায়ী দেখাবে
-- ১ জন সন্তান হলে আগের মতোই সরাসরি দেখাবে, কোনো বাড়তি ধাপ লাগবে না
-- আগে থেকে তৈরি করা Guardian অ্যাকাউন্ট (১ সন্তান ধরে বানানো) ভাঙবে
-  না, স্বাভাবিকভাবে কাজ করতে থাকবে
-
-=========================================================
 টেস্ট করবেন যেভাবে
 =========================================================
-1. দুইজন টেস্ট শিক্ষার্থী তৈরি করুন (যদি না থাকে)
-2. একটা নতুন Guardian অ্যাকাউন্ট বানান, দুজনকেই টিক দিন
-3. সেই Guardian দিয়ে লগইন করে dashboard-এ "সন্তান বেছে নিন" অংশ
-   দেখা যাচ্ছে কিনা দেখুন
-4. একজন থেকে আরেকজনে ক্লিক করে বদলে দেখুন Attendance/Assessment/ফি
-   ঠিকভাবে বদলাচ্ছে কিনা
-5. আগে থেকে থাকা কোনো পুরনো Guardian অ্যাকাউন্ট দিয়ে লগইন করে
-   নিশ্চিত হোন সেটাও আগের মতোই কাজ করছে
+যেকোনো একটা জায়গায় (যেমন Blog) একটা এন্ট্রির "এডিট করুন" চেপে
+শিরোনাম একটু বদলে সংরক্ষণ করুন — তালিকায় নতুন কোনো ডুপ্লিকেট
+এন্ট্রি তৈরি না হয়ে, একই এন্ট্রির শিরোনাম বদলে গেছে কিনা দেখুন।

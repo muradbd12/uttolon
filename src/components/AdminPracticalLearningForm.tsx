@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
-import { Loader2, AlertCircle, Trash2, Info, ImagePlus } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Info, ImagePlus, Pencil, X } from "lucide-react";
 
 type Entry = {
   id: string;
@@ -39,6 +39,7 @@ export default function AdminPracticalLearningForm() {
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -54,6 +55,22 @@ export default function AdminPracticalLearningForm() {
   useEffect(() => {
     queueMicrotask(load);
   }, [load]);
+
+  const editingEntry = editingId ? entries?.find((x) => x.id === editingId) || null : null;
+
+  function startEdit(entry: Entry) {
+    setEditingId(entry.id);
+    setPhotoFile(null);
+    setPhotoPreview(entry.photoUrl || null);
+    setStatus("idle");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setStatus("idle");
+  }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -87,21 +104,31 @@ export default function AdminPracticalLearningForm() {
       return;
     }
     try {
-      let photoUrl = "";
+      let photoUrl = editingEntry?.photoUrl || "";
       if (photoFile) {
         photoUrl = await uploadImageToCloudinary(photoFile);
       }
-      await addDoc(collection(getFirebaseDb(), "practicalLearning"), {
-        title,
-        category,
-        description,
-        photoUrl,
-        published: false,
-        createdAt: serverTimestamp(),
-      });
+      if (editingId) {
+        await updateDoc(doc(getFirebaseDb(), "practicalLearning", editingId), {
+          title,
+          category,
+          description,
+          photoUrl,
+        });
+      } else {
+        await addDoc(collection(getFirebaseDb(), "practicalLearning"), {
+          title,
+          category,
+          description,
+          photoUrl,
+          published: false,
+          createdAt: serverTimestamp(),
+        });
+      }
       (e.target as HTMLFormElement).reset();
       setPhotoFile(null);
       setPhotoPreview(null);
+      setEditingId(null);
       setStatus("idle");
       load();
     } catch (err) {
@@ -130,6 +157,7 @@ export default function AdminPracticalLearningForm() {
     try {
       await deleteDoc(doc(getFirebaseDb(), "practicalLearning", id));
       setEntries((prev) => (prev ? prev.filter((x) => x.id !== id) : prev));
+      if (editingId === id) cancelEdit();
     } catch {
       setStatus("error");
     } finally {
@@ -147,16 +175,38 @@ export default function AdminPracticalLearningForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">
+      <form
+        key={editingId || "new"}
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-sm border border-line bg-paper p-6"
+      >
+        <div className="flex items-center justify-between">
+          <p className="font-display-bn text-base text-ink">
+            {editingEntry ? "এন্ট্রি এডিট করুন" : "নতুন এন্ট্রি"}
+          </p>
+          {editingEntry && (
+            <button type="button" onClick={cancelEdit} className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink">
+              <X size={13} /> বাতিল করুন
+            </button>
+          )}
+        </div>
+
         {status === "error" && errorMsg && (
           <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
             <AlertCircle size={14} /> {errorMsg}
           </div>
         )}
 
-        <input required name="title" type="text" placeholder="শিরোনাম (যেমন: প্রিজম দিয়ে আলোর বিচ্ছুরণ)" className={inputClass} />
+        <input
+          required
+          name="title"
+          type="text"
+          placeholder="শিরোনাম (যেমন: প্রিজম দিয়ে আলোর বিচ্ছুরণ)"
+          defaultValue={editingEntry?.title}
+          className={inputClass}
+        />
 
-        <select required name="category" className={inputClass} defaultValue="">
+        <select required name="category" className={inputClass} defaultValue={editingEntry?.category || ""}>
           <option value="" disabled>
             ক্যাটাগরি নির্বাচন করুন
           </option>
@@ -170,6 +220,7 @@ export default function AdminPracticalLearningForm() {
           name="description"
           rows={4}
           placeholder="কী করা হয়েছে, শিক্ষার্থীরা কী শিখেছে তার সংক্ষিপ্ত বিবরণ"
+          defaultValue={editingEntry?.description}
           className={inputClass}
         />
 
@@ -183,7 +234,9 @@ export default function AdminPracticalLearningForm() {
             )}
           </span>
           <label className="block">
-            <span className="text-sm font-medium text-ink">ছবি (ঐচ্ছিক, সর্বোচ্চ ৫ MB)</span>
+            <span className="text-sm font-medium text-ink">
+              ছবি (ঐচ্ছিক, সর্বোচ্চ ৫ MB){editingEntry ? " — না বদলালে আগেরটাই থাকবে" : ""}
+            </span>
             <input type="file" accept="image/*" onChange={handlePhotoChange} className="mt-1.5 block text-sm text-ink-soft" />
           </label>
         </div>
@@ -194,7 +247,7 @@ export default function AdminPracticalLearningForm() {
           className="flex items-center gap-2 rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
         >
           {status === "saving" && <Loader2 size={14} className="animate-spin" />}
-          Draft হিসেবে সংরক্ষণ করুন
+          {editingEntry ? "পরিবর্তন সংরক্ষণ করুন" : "Draft হিসেবে সংরক্ষণ করুন"}
         </button>
       </form>
 
@@ -227,7 +280,7 @@ export default function AdminPracticalLearningForm() {
                   <p className="mt-0.5 text-[15px] text-ink">{entry.title}</p>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <span
                   className={`rounded-sm px-2 py-0.5 text-xs font-medium ${
                     entry.published ? "bg-teal-soft text-teal-deep" : "bg-line text-ink-soft"
@@ -235,6 +288,13 @@ export default function AdminPracticalLearningForm() {
                 >
                   {entry.published ? "Published" : "Draft"}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => startEdit(entry)}
+                  className="rounded-sm border border-line px-2.5 py-1 text-xs text-ink hover:border-ink"
+                >
+                  <Pencil size={12} />
+                </button>
                 <button
                   type="button"
                   onClick={() => togglePublished(entry)}

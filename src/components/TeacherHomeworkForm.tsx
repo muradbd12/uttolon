@@ -7,13 +7,14 @@ import {
   query,
   orderBy,
   addDoc,
+  updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
   where,
 } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
-import { Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Pencil, X } from "lucide-react";
 
 type StudentOption = { className: string | null };
 type HomeworkItem = { id: string; title: string; subject: string; className: string; dueDate: string };
@@ -26,6 +27,7 @@ export default function TeacherHomeworkForm() {
   const [items, setItems] = useState<HomeworkItem[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const loadItems = useCallback(async () => {
     try {
@@ -60,6 +62,8 @@ export default function TeacherHomeworkForm() {
     queueMicrotask(loadItems);
   }, [loadItems]);
 
+  const editingItem = editingId ? items?.find((h) => h.id === editingId) || null : null;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("saving");
@@ -73,16 +77,21 @@ export default function TeacherHomeworkForm() {
       return;
     }
     try {
-      const authInstance = getFirebaseAuth();
-      await addDoc(collection(getFirebaseDb(), "homework"), {
-        title,
-        subject,
-        className,
-        dueDate,
-        assignedBy: authInstance.currentUser?.uid || null,
-        createdAt: serverTimestamp(),
-      });
+      if (editingId) {
+        await updateDoc(doc(getFirebaseDb(), "homework", editingId), { title, subject, className, dueDate });
+      } else {
+        const authInstance = getFirebaseAuth();
+        await addDoc(collection(getFirebaseDb(), "homework"), {
+          title,
+          subject,
+          className,
+          dueDate,
+          assignedBy: authInstance.currentUser?.uid || null,
+          createdAt: serverTimestamp(),
+        });
+      }
       (e.target as HTMLFormElement).reset();
+      setEditingId(null);
       setStatus("idle");
       loadItems();
     } catch {
@@ -96,6 +105,7 @@ export default function TeacherHomeworkForm() {
     try {
       await deleteDoc(doc(getFirebaseDb(), "homework", id));
       setItems((prev) => (prev ? prev.filter((h) => h.id !== id) : prev));
+      if (editingId === id) setEditingId(null);
     } catch {
       setStatus("error");
     } finally {
@@ -105,23 +115,57 @@ export default function TeacherHomeworkForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">
+      <form
+        key={editingId || "new"}
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-sm border border-line bg-paper p-6"
+      >
+        <div className="flex items-center justify-between">
+          <p className="font-display-bn text-base text-ink">
+            {editingItem ? "হোমওয়ার্ক এডিট করুন" : "নতুন হোমওয়ার্ক"}
+          </p>
+          {editingItem && (
+            <button
+              type="button"
+              onClick={() => setEditingId(null)}
+              className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink"
+            >
+              <X size={13} /> বাতিল করুন
+            </button>
+          )}
+        </div>
+
         {status === "error" && (
           <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
             <AlertCircle size={14} /> সব ফিল্ড পূরণ করুন, তারপর আবার চেষ্টা করুন।
           </div>
         )}
 
-        <input required name="title" type="text" placeholder="হোমওয়ার্কের শিরোনাম" className={inputClass} />
+        <input
+          required
+          name="title"
+          type="text"
+          placeholder="হোমওয়ার্কের শিরোনাম"
+          defaultValue={editingItem?.title}
+          className={inputClass}
+        />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <input required name="subject" type="text" placeholder="বিষয়" className={inputClass} />
+          <input
+            required
+            name="subject"
+            type="text"
+            placeholder="বিষয়"
+            defaultValue={editingItem?.subject}
+            className={inputClass}
+          />
           <input
             required
             name="className"
             type="text"
             list="class-options"
             placeholder="ক্লাস (যেমন: Class 10)"
+            defaultValue={editingItem?.className}
             className={inputClass}
           />
           <datalist id="class-options">
@@ -129,7 +173,7 @@ export default function TeacherHomeworkForm() {
               <option key={c} value={c} />
             ))}
           </datalist>
-          <input required name="dueDate" type="date" className={inputClass} />
+          <input required name="dueDate" type="date" defaultValue={editingItem?.dueDate} className={inputClass} />
         </div>
 
         <button
@@ -138,7 +182,7 @@ export default function TeacherHomeworkForm() {
           className="flex items-center gap-2 rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
         >
           {status === "saving" && <Loader2 size={14} className="animate-spin" />}
-          হোমওয়ার্ক দিন
+          {editingItem ? "পরিবর্তন সংরক্ষণ করুন" : "হোমওয়ার্ক দিন"}
         </button>
       </form>
 
@@ -162,15 +206,24 @@ export default function TeacherHomeworkForm() {
                 <p className="mt-1 text-[15px] text-ink">{h.title}</p>
                 <p className="mt-1 text-xs text-ink-soft/60">জমার সময়সীমা: {h.dueDate}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDelete(h.id)}
-                disabled={deletingId === h.id}
-                className="flex shrink-0 items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-clay hover:text-clay disabled:opacity-50"
-              >
-                {deletingId === h.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                মুছুন
-              </button>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingId(h.id)}
+                  className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
+                >
+                  <Pencil size={13} /> এডিট
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(h.id)}
+                  disabled={deletingId === h.id}
+                  className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-clay hover:text-clay disabled:opacity-50"
+                >
+                  {deletingId === h.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                  মুছুন
+                </button>
+              </div>
             </li>
           ))}
         </ul>

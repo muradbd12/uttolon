@@ -13,7 +13,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { Loader2, AlertCircle, Trash2, Info } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Info, Pencil, X } from "lucide-react";
 
 type Post = {
   slug: string;
@@ -53,6 +53,7 @@ export default function AdminBlogForm() {
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [busySlug, setBusySlug] = useState<string | null>(null);
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -69,6 +70,8 @@ export default function AdminBlogForm() {
     queueMicrotask(load);
   }, [load]);
 
+  const editingPost = editingSlug ? posts?.find((p) => p.slug === editingSlug) || null : null;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("saving");
@@ -82,7 +85,7 @@ export default function AdminBlogForm() {
       setStatus("error");
       return;
     }
-    const slug = slugify(customSlug || title);
+    const slug = editingSlug || slugify(customSlug || title);
     try {
       await setDoc(doc(getFirebaseDb(), "blogPosts", slug), {
         slug,
@@ -90,10 +93,11 @@ export default function AdminBlogForm() {
         category,
         excerpt,
         body,
-        published: false,
+        published: editingPost ? editingPost.published : false,
         createdAt: serverTimestamp(),
       });
       (e.target as HTMLFormElement).reset();
+      setEditingSlug(null);
       setStatus("idle");
       load();
     } catch {
@@ -121,6 +125,7 @@ export default function AdminBlogForm() {
     try {
       await deleteDoc(doc(getFirebaseDb(), "blogPosts", slug));
       setPosts((prev) => (prev ? prev.filter((p) => p.slug !== slug) : prev));
+      if (editingSlug === slug) setEditingSlug(null);
     } catch {
       setStatus("error");
     } finally {
@@ -139,21 +144,42 @@ export default function AdminBlogForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">
+      <form
+        key={editingSlug || "new"}
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-sm border border-line bg-paper p-6"
+      >
+        <div className="flex items-center justify-between">
+          <p className="font-display-bn text-base text-ink">
+            {editingPost ? "পোস্ট এডিট করুন" : "নতুন পোস্ট"}
+          </p>
+          {editingPost && (
+            <button
+              type="button"
+              onClick={() => setEditingSlug(null)}
+              className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink"
+            >
+              <X size={13} /> বাতিল করুন
+            </button>
+          )}
+        </div>
+
         {status === "error" && (
           <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
             <AlertCircle size={14} /> শিরোনাম, ক্যাটাগরি, সারসংক্ষেপ ও মূল লেখা — সবগুলো দিন।
           </div>
         )}
 
-        <input required name="title" type="text" placeholder="শিরোনাম" className={inputClass} />
-        <input
-          name="slug"
-          type="text"
-          placeholder="URL slug (ঐচ্ছিক, ইংরেজিতে — না দিলে শিরোনাম থেকে বানানো হবে)"
-          className={inputClass}
-        />
-        <select required name="category" className={inputClass} defaultValue="">
+        <input required name="title" type="text" placeholder="শিরোনাম" defaultValue={editingPost?.title} className={inputClass} />
+        {!editingPost && (
+          <input
+            name="slug"
+            type="text"
+            placeholder="URL slug (ঐচ্ছিক, ইংরেজিতে — না দিলে শিরোনাম থেকে বানানো হবে)"
+            className={inputClass}
+          />
+        )}
+        <select required name="category" className={inputClass} defaultValue={editingPost?.category || ""}>
           <option value="" disabled>
             ক্যাটাগরি নির্বাচন করুন
           </option>
@@ -161,8 +187,22 @@ export default function AdminBlogForm() {
             <option key={c}>{c}</option>
           ))}
         </select>
-        <textarea required name="excerpt" rows={2} placeholder="সারসংক্ষেপ (লিস্টিং পেজে দেখাবে)" className={inputClass} />
-        <textarea required name="body" rows={8} placeholder="মূল লেখা (অনুচ্ছেদের মাঝে ফাঁকা লাইন দিন)" className={inputClass} />
+        <textarea
+          required
+          name="excerpt"
+          rows={2}
+          placeholder="সারসংক্ষেপ (লিস্টিং পেজে দেখাবে)"
+          defaultValue={editingPost?.excerpt}
+          className={inputClass}
+        />
+        <textarea
+          required
+          name="body"
+          rows={8}
+          placeholder="মূল লেখা (অনুচ্ছেদের মাঝে ফাঁকা লাইন দিন)"
+          defaultValue={editingPost?.body}
+          className={inputClass}
+        />
 
         <button
           type="submit"
@@ -170,7 +210,7 @@ export default function AdminBlogForm() {
           className="flex items-center gap-2 rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
         >
           {status === "saving" && <Loader2 size={14} className="animate-spin" />}
-          Draft হিসেবে সংরক্ষণ করুন
+          {editingPost ? "পরিবর্তন সংরক্ষণ করুন" : "Draft হিসেবে সংরক্ষণ করুন"}
         </button>
       </form>
 
@@ -202,7 +242,14 @@ export default function AdminBlogForm() {
                   {p.published ? "Published" : "Draft"}
                 </span>
               </div>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingSlug(p.slug)}
+                  className="flex items-center gap-1 rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
+                >
+                  <Pencil size={12} /> এডিট করুন
+                </button>
                 <button
                   type="button"
                   onClick={() => togglePublished(p)}

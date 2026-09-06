@@ -7,12 +7,13 @@ import {
   query,
   orderBy,
   addDoc,
+  updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { Loader2, AlertCircle, Trash2, Info } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Info, Pencil, X } from "lucide-react";
 
 type Resource = {
   id: string;
@@ -33,6 +34,7 @@ export default function AdminResourceForm() {
   const [resources, setResources] = useState<Resource[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -49,6 +51,8 @@ export default function AdminResourceForm() {
     queueMicrotask(load);
   }, [load]);
 
+  const editingResource = editingId ? resources?.find((r) => r.id === editingId) || null : null;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("saving");
@@ -58,21 +62,34 @@ export default function AdminResourceForm() {
     const className = (form.get("className") as string)?.trim();
     const subject = (form.get("subject") as string)?.trim();
     const resourceType = form.get("resourceType") as string;
+    const chapter = (form.get("chapter") as string)?.trim() || "";
     if (!title || !link || !className || !subject || !resourceType) {
       setStatus("error");
       return;
     }
     try {
-      await addDoc(collection(getFirebaseDb(), "resources"), {
-        title,
-        resourceType,
-        className,
-        subject,
-        chapter: (form.get("chapter") as string)?.trim() || "",
-        link,
-        createdAt: serverTimestamp(),
-      });
+      if (editingId) {
+        await updateDoc(doc(getFirebaseDb(), "resources", editingId), {
+          title,
+          resourceType,
+          className,
+          subject,
+          chapter,
+          link,
+        });
+      } else {
+        await addDoc(collection(getFirebaseDb(), "resources"), {
+          title,
+          resourceType,
+          className,
+          subject,
+          chapter,
+          link,
+          createdAt: serverTimestamp(),
+        });
+      }
       (e.target as HTMLFormElement).reset();
+      setEditingId(null);
       setStatus("idle");
       load();
     } catch {
@@ -86,6 +103,7 @@ export default function AdminResourceForm() {
     try {
       await deleteDoc(doc(getFirebaseDb(), "resources", id));
       setResources((prev) => (prev ? prev.filter((r) => r.id !== id) : prev));
+      if (editingId === id) setEditingId(null);
     } catch {
       setStatus("error");
     } finally {
@@ -104,23 +122,76 @@ export default function AdminResourceForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">
+      <form
+        key={editingId || "new"}
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-sm border border-line bg-paper p-6"
+      >
+        <div className="flex items-center justify-between">
+          <p className="font-display-bn text-base text-ink">
+            {editingResource ? "রিসোর্স এডিট করুন" : "নতুন রিসোর্স"}
+          </p>
+          {editingResource && (
+            <button
+              type="button"
+              onClick={() => setEditingId(null)}
+              className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink"
+            >
+              <X size={13} /> বাতিল করুন
+            </button>
+          )}
+        </div>
+
         {status === "error" && (
           <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
             <AlertCircle size={14} /> শিরোনাম, লিংক, ক্লাস, বিষয় ও ধরন — সবগুলো দিন।
           </div>
         )}
 
-        <input required name="title" type="text" placeholder="রিসোর্সের শিরোনাম" className={inputClass} />
-        <input required name="link" type="url" placeholder="লিংক (Google Drive বা অন্য কোনো)" className={inputClass} />
+        <input
+          required
+          name="title"
+          type="text"
+          placeholder="রিসোর্সের শিরোনাম"
+          defaultValue={editingResource?.title}
+          className={inputClass}
+        />
+        <input
+          required
+          name="link"
+          type="url"
+          placeholder="লিংক (Google Drive বা অন্য কোনো)"
+          defaultValue={editingResource?.link}
+          className={inputClass}
+        />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <input required name="className" type="text" placeholder="ক্লাস" className={inputClass} />
-          <input required name="subject" type="text" placeholder="বিষয়" className={inputClass} />
-          <input name="chapter" type="text" placeholder="অধ্যায় (ঐচ্ছিক)" className={inputClass} />
+          <input
+            required
+            name="className"
+            type="text"
+            placeholder="ক্লাস"
+            defaultValue={editingResource?.className}
+            className={inputClass}
+          />
+          <input
+            required
+            name="subject"
+            type="text"
+            placeholder="বিষয়"
+            defaultValue={editingResource?.subject}
+            className={inputClass}
+          />
+          <input
+            name="chapter"
+            type="text"
+            placeholder="অধ্যায় (ঐচ্ছিক)"
+            defaultValue={editingResource?.chapter}
+            className={inputClass}
+          />
         </div>
 
-        <select required name="resourceType" className={inputClass} defaultValue="">
+        <select required name="resourceType" className={inputClass} defaultValue={editingResource?.resourceType || ""}>
           <option value="" disabled>
             ধরন নির্বাচন করুন
           </option>
@@ -135,7 +206,7 @@ export default function AdminResourceForm() {
           className="flex items-center gap-2 rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
         >
           {status === "saving" && <Loader2 size={14} className="animate-spin" />}
-          যোগ করুন
+          {editingResource ? "পরিবর্তন সংরক্ষণ করুন" : "যোগ করুন"}
         </button>
       </form>
 
@@ -158,15 +229,24 @@ export default function AdminResourceForm() {
                 </p>
                 <p className="mt-1 text-[15px] text-ink">{r.title}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDelete(r.id)}
-                disabled={deletingId === r.id}
-                className="flex shrink-0 items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-clay hover:text-clay disabled:opacity-50"
-              >
-                {deletingId === r.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                মুছুন
-              </button>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingId(r.id)}
+                  className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
+                >
+                  <Pencil size={13} /> এডিট
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(r.id)}
+                  disabled={deletingId === r.id}
+                  className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-clay hover:text-clay disabled:opacity-50"
+                >
+                  {deletingId === r.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                  মুছুন
+                </button>
+              </div>
             </li>
           ))}
         </ul>

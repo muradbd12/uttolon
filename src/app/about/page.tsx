@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import CycleDiagram from "@/components/CycleDiagram";
+import FounderStory from "@/components/about/FounderStory";
 
 export const metadata: Metadata = {
   title: "উত্তোলন সম্পর্কে | Uttolon",
@@ -93,6 +94,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <FounderStory />
 
       <section>
         <div className="mx-auto max-w-3xl px-5 py-16 text-center sm:px-8 sm:py-20">

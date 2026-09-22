@@ -25,18 +25,22 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook Page"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/20 text-xs font-semibold text-paper/70 transition-colors hover:border-gold hover:text-gold"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/20 text-paper/70 transition-colors hover:border-gold hover:text-gold"
             >
-              f
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
+              </svg>
             </a>
             <a
               href={CONTACT.youtube}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="YouTube Channel"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/20 text-[10px] font-semibold text-paper/70 transition-colors hover:border-gold hover:text-gold"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/20 text-paper/70 transition-colors hover:border-gold hover:text-gold"
             >
-              YT
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M23.5 6.5s-.23-1.64-.94-2.36c-.9-.95-1.9-.95-2.36-1.01C16.9 2.8 12 2.8 12 2.8h-.01s-4.9 0-8.2.33c-.46.06-1.46.06-2.36 1.01C.72 4.86.5 6.5.5 6.5S.27 8.42.27 10.35v1.31C.27 13.58.5 15.5.5 15.5s.23 1.64.93 2.36c.9.96 2.08.93 2.6 1.03 1.9.18 8.07.24 8.07.24s4.9-.01 8.2-.34c.46-.06 1.46-.06 2.36-1.02.7-.72.94-2.36.94-2.36s.23-1.92.23-3.85v-1.31c0-1.93-.23-3.85-.23-3.85ZM9.7 14.87V7.98l6.5 3.45-6.5 3.44Z" />
+              </svg>
             </a>
           </div>
         </div>

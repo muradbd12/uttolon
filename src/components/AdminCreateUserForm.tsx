@@ -94,7 +94,9 @@ export default function AdminCreateUserForm() {
           guardianMobile: form.get("guardianMobile") || undefined,
           className: form.get("className") || undefined,
           subject: form.get("subject") || undefined,
-          linkedStudentUid: role === "guardian" ? form.get("linkedStudentUid") || undefined : undefined,
+          linkedStudentUids: role === "guardian" && form.get("linkedStudentUid")
+            ? [form.get("linkedStudentUid") as string]
+            : undefined,
         }),
       });
 

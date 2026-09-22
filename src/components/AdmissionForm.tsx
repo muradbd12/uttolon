@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2, Printer, Check } from "lucide-react";
 import { withTimeout } from "@/lib/withTimeout";
@@ -13,7 +13,7 @@ import { toEnglishDigits } from "@/lib/numberInput";
 
 const classes = [
   "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8",
-  "Class 9", "Class 10", "SSC", "Dakhil", "University Admission",
+  "Class 9", "Class 10", "SSC", "Dakhil", "HSC", "Alim", "University Admission",
 ];
 
 const groups = ["General / প্রযোজ্য নয়", "Science", "Business Studies", "Humanities"];
@@ -39,7 +39,8 @@ const examNames = ["জেএসসি (JSC)", "জেডিসি (JDC)", "এ�
 
 const programs = [
   "Regular Academic Program", "Revision Batch", "Recovery Batch",
-  "Final Preparation Batch", "SSC / Dakhil Program", "University Admission Program",
+  "Final Preparation Batch", "SSC Program", "Dakhil Program",
+  "Alim Program", "HSC Program", "University Admission Program",
 ];
 
 const batchOptions = ["সকাল ব্যাচ", "দুপুর ব্যাচ", "বিকাল ব্যাচ", "সন্ধ্যা ব্যাচ", "উইকেন্ড ব্যাচ"];
@@ -196,18 +197,27 @@ export default function AdmissionForm() {
     setStatus("loading");
     try {
       const fee = getProgramFee(pendingData.program);
-      const docRef = await withTimeout(
-        addDoc(collection(getFirebaseDb(), "admissions"), {
+      // আগে এখানে প্রথমে addDoc() দিয়ে আবেদন তৈরি করে, তারপর আলাদা
+      // updateDoc() দিয়ে shortId বসানো হতো — কিন্তু Security Rules-এ
+      // সাধারণ (অ্যাডমিন না এমন) কাউকে admissions ডকুমেন্ট update
+      // করতে দেওয়া নেই, তাই ওই দ্বিতীয় ধাপটা সবসময় ব্যর্থ হচ্ছিল।
+      // এখন doc আইডি আগেই বানিয়ে (এখনো সেভ না করে) shortId বের করে,
+      // একবারেই সব ডেটাসহ সেভ করা হচ্ছে — create অনুমতি সবার জন্যই
+      // খোলা আছে, তাই এটা কাজ করবে।
+      const admissionsRef = collection(getFirebaseDb(), "admissions");
+      const docRef = doc(admissionsRef);
+      const shortId = docRef.id.slice(0, 8).toUpperCase();
+      await withTimeout(
+        setDoc(docRef, {
           ...pendingData,
           status: "new",
           totalFee: fee,
           totalPaid: 0,
           due: fee,
+          shortId,
           submittedAt: serverTimestamp(),
         })
       );
-      const shortId = docRef.id.slice(0, 8).toUpperCase();
-      await withTimeout(updateDoc(doc(getFirebaseDb(), "admissions", docRef.id), { shortId }));
       setApplicationId(docRef.id);
       setSubmitted(pendingData);
       setStatus("success");
@@ -227,38 +237,45 @@ export default function AdmissionForm() {
 
     setPayStatus("processing");
     try {
-      const newTotalPaid = amount;
-      const newDue = fee - newTotalPaid;
-      await withTimeout(
-        addDoc(collection(getFirebaseDb(), "admissions", applicationId, "payments"), {
-          amount,
-          method: payMethod,
-          monthOrPurpose: "ভর্তি ফি",
-          paidAt: serverTimestamp(),
+      // আগে এখানেও সরাসরি addDoc/updateDoc দিয়ে পেমেন্ট সেভ করার
+      // চেষ্টা হতো, কিন্তু admissions ডকুমেন্ট update করার অনুমতি না
+      // থাকায় (উপরের নোট দেখুন) এই ধাপটাও ব্যর্থ হচ্ছিল — এটাই
+      // "পেমেন্ট সাবমিট করলে error আসে" সমস্যার আসল কারণ। এখন এটা
+      // একটা সার্ভার-সাইড API রুটের মাধ্যমে হচ্ছে (Firebase Admin
+      // দিয়ে, যা Security Rules-এর আওতার বাইরে থেকে নিরাপদে কাজ করে)।
+      const shortId = applicationId.slice(0, 8).toUpperCase();
+      const res = await withTimeout(
+        fetch("/api/public/admission-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "pay",
+            admissionId: applicationId,
+            mobile: submitted.mobile,
+            code: shortId,
+            amount,
+            method: payMethod,
+          }),
         })
       );
-      await withTimeout(
-        updateDoc(doc(getFirebaseDb(), "admissions", applicationId), {
-          totalPaid: newTotalPaid,
-          due: newDue,
-        })
-      );
+      if (!res.ok) throw new Error("payment_failed");
+      const data = await res.json();
       setVoucher({
         studentNameBn: submitted.studentNameBn,
         studentNameEn: submitted.studentNameEn,
-        applicationId: applicationId.slice(0, 8).toUpperCase(),
+        applicationId: shortId,
         className: submitted.className,
         group: submitted.group,
         program: submitted.program,
         mobile: submitted.mobile,
         voucherId: applicationId.slice(0, 6).toUpperCase() + "-V1",
         paymentDate: todayBn(),
-        amountPaidNow: amount,
+        amountPaidNow: data.amount,
         method: payMethod,
         monthOrPurpose: "ভর্তি ফি",
-        totalFee: fee,
-        totalPaid: newTotalPaid,
-        due: newDue,
+        totalFee: data.totalFee,
+        totalPaid: data.totalPaid,
+        due: data.due,
       });
       setPayStatus("done");
     } catch {

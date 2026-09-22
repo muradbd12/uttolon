@@ -23,11 +23,8 @@ export default function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
         {/* Logo mark */}
         <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-sm bg-ink">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M4 20 L11 13 L15 17 L20 4" stroke="var(--gold)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M20 4 L20 9 M20 4 L15 4" stroke="var(--gold)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">
+            <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-full w-full object-contain" />
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-display-bn text-xl text-ink">উত্তোলন</span>

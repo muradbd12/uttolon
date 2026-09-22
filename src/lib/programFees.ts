@@ -8,7 +8,10 @@ export const PROGRAM_FEES: Record<string, number> = {
   "Revision Batch": 2000,
   "Recovery Batch": 1800,
   "Final Preparation Batch": 2500,
-  "SSC / Dakhil Program": 3000,
+  "SSC Program": 3000,
+  "Dakhil Program": 3000,
+  "Alim Program": 3000,
+  "HSC Program": 3000,
   "University Admission Program": 3500,
 };
 

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
-import { getFirebaseDb } from "@/lib/firebase";
 import { AlertCircle, Loader2, Printer, Search } from "lucide-react";
 import { withTimeout } from "@/lib/withTimeout";
 import { toEnglishDigits } from "@/lib/numberInput";
@@ -46,18 +44,26 @@ export default function PaymentLookup() {
     setLookupStatus("loading");
     setRecord(null);
     try {
-      const q = query(
-        collection(getFirebaseDb(), "admissions"),
-        where("mobile", "==", mobile.trim()),
-        where("shortId", "==", code.trim().toUpperCase())
+      // আগে এখানে সরাসরি ব্রাউজার থেকে admissions কালেকশনে query
+      // চালানো হতো, কিন্তু Security Rules-এ এটা শুধু Admin-এর জন্য
+      // খোলা (এটা ইচ্ছাকৃত — নাহলে যে কেউ সবার ফোন নম্বর/তথ্য দেখে
+      // ফেলতে পারত), তাই "তথ্য আনতে সমস্যা হয়েছে" error আসছিল। এখন
+      // এটা একটা সার্ভার-সাইড API-এর মাধ্যমে হচ্ছে, যেটা মোবাইল ও
+      // আইডি দুটোই মিলিয়ে নিরাপদে শুধু প্রয়োজনীয় তথ্যটুকু ফেরত দেয়।
+      const res = await withTimeout(
+        fetch("/api/public/admission-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "lookup", mobile: mobile.trim(), code: code.trim() }),
+        })
       );
-      const snapshot = await withTimeout(getDocs(q));
-      if (snapshot.empty) {
+      if (res.status === 404) {
         setLookupStatus("not-found");
         return;
       }
-      const d = snapshot.docs[0];
-      setRecord({ id: d.id, ...d.data() } as FoundRecord);
+      if (!res.ok) throw new Error("lookup_failed");
+      const data = (await res.json()) as FoundRecord;
+      setRecord(data);
       setLookupStatus("found");
     } catch {
       setLookupStatus("error");
@@ -74,38 +80,38 @@ export default function PaymentLookup() {
 
     setPayStatus("processing");
     try {
-      const newTotalPaid = alreadyPaid + amount;
-      const newDue = fee - newTotalPaid;
-      await withTimeout(
-        addDoc(collection(getFirebaseDb(), "admissions", record.id, "payments"), {
-          amount,
-          method: payMethod,
-          monthOrPurpose: "ভর্তি ফি (কিস্তি)",
-          paidAt: serverTimestamp(),
+      const res = await withTimeout(
+        fetch("/api/public/admission-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "pay",
+            admissionId: record.id,
+            mobile: mobile.trim(),
+            code: code.trim(),
+            amount,
+            method: payMethod,
+          }),
         })
       );
-      await withTimeout(
-        updateDoc(doc(getFirebaseDb(), "admissions", record.id), {
-          totalPaid: newTotalPaid,
-          due: newDue,
-        })
-      );
+      if (!res.ok) throw new Error("payment_failed");
+      const data = await res.json();
       setVoucher({
-        studentNameBn: record.studentNameBn,
-        studentNameEn: record.studentNameEn,
+        studentNameBn: data.studentNameBn,
+        studentNameEn: data.studentNameEn,
         applicationId: code.trim().toUpperCase(),
-        className: record.className,
-        group: record.group,
-        program: record.program,
-        mobile: record.mobile,
-        voucherId: record.id.slice(0, 6).toUpperCase() + "-V" + Math.ceil(newTotalPaid / Math.max(amount, 1)),
+        className: data.className,
+        group: data.group,
+        program: data.program,
+        mobile: data.mobile,
+        voucherId: record.id.slice(0, 6).toUpperCase() + "-V" + Math.ceil(data.totalPaid / Math.max(data.amount, 1)),
         paymentDate: todayBn(),
-        amountPaidNow: amount,
+        amountPaidNow: data.amount,
         method: payMethod,
         monthOrPurpose: "ভর্তি ফি (কিস্তি)",
-        totalFee: fee,
-        totalPaid: newTotalPaid,
-        due: newDue,
+        totalFee: data.totalFee,
+        totalPaid: data.totalPaid,
+        due: data.due,
       });
       setPayStatus("done");
     } catch {

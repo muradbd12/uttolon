@@ -72,6 +72,7 @@ const liveLinks: Record<string, string> = {
 // অ্যাকাউন্ট বনাম পাবলিক প্রোফাইল) — এখানে সেই বাড়তি লিংক রাখা হলো
 const secondaryLinks: Record<string, { label: string; href: string }> = {
   "শিক্ষক": { label: "পাবলিক প্রোফাইল", href: "/admin/teacher-profiles" },
+  "ফি ব্যবস্থাপনা": { label: "সবার বকেয়া", href: "/admin/fees/overview" },
 };
 
 export default function AdminDashboardPage() {

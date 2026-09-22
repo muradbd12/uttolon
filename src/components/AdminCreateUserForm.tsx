@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2, Eye, EyeOff, Info } from "lucide-react";
 
@@ -29,6 +29,7 @@ export default function AdminCreateUserForm() {
   const prefillClass = searchParams.get("prefillClass") || "";
   const prefillGuardianMobile = searchParams.get("prefillGuardianMobile") || "";
   const prefillIdentifier = searchParams.get("prefillIdentifier") || "";
+  const prefillAdmissionId = searchParams.get("prefillAdmissionId") || "";
   const hasPrefill = Boolean(prefillName || prefillClass || prefillGuardianMobile || prefillIdentifier);
 
   const [role, setRole] = useState<"student" | "guardian" | "teacher">("student");
@@ -38,8 +39,10 @@ export default function AdminCreateUserForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [errorCode, setErrorCode] = useState("");
   const [errorDetails, setErrorDetails] = useState("");
-  const [created, setCreated] = useState<{ identifier: string; password: string } | null>(null);
+  const [created, setCreated] = useState<{ identifier: string; password: string; linkWarning?: boolean } | null>(null);
   const [students, setStudents] = useState<StudentOption[] | null>(null);
+  const [selectedStudentUids, setSelectedStudentUids] = useState<string[]>([]);
+  const [studentSearch, setStudentSearch] = useState("");
 
   useEffect(() => {
     if (role !== "guardian" || students !== null) return;
@@ -73,6 +76,13 @@ export default function AdminCreateUserForm() {
     const identifier = form.get("identifier") as string;
     const password = form.get("password") as string;
 
+    if (role === "guardian" && selectedStudentUids.length === 0) {
+      setStatus("error");
+      setErrorMsg(errorMessages.linked_student_required);
+      setErrorCode("linked_student_required");
+      return;
+    }
+
     try {
       const authInstance = getFirebaseAuth();
       const token = await authInstance.currentUser?.getIdToken();
@@ -94,9 +104,7 @@ export default function AdminCreateUserForm() {
           guardianMobile: form.get("guardianMobile") || undefined,
           className: form.get("className") || undefined,
           subject: form.get("subject") || undefined,
-          linkedStudentUids: role === "guardian" && form.get("linkedStudentUid")
-            ? [form.get("linkedStudentUid") as string]
-            : undefined,
+          linkedStudentUids: role === "guardian" ? selectedStudentUids : undefined,
         }),
       });
 
@@ -112,6 +120,22 @@ export default function AdminCreateUserForm() {
       setCreated({ identifier, password });
       setStatus("success");
       (e.target as HTMLFormElement).reset();
+      setSelectedStudentUids([]);
+
+      // ভর্তি আবেদন থেকে স্টুডেন্ট অ্যাকাউন্ট তৈরি করা হলে, নতুন
+      // অ্যাকাউন্টের uid-টা আবেদনের সাথে যুক্ত করে দেওয়া হচ্ছে —
+      // এতে পরে স্টুডেন্ট/গার্ডিয়ান নিজের ড্যাশবোর্ড থেকে ভর্তি ফি
+      // বকেয়া দেখতে ও পরিশোধ করতে পারবেন।
+      if (role === "student" && prefillAdmissionId && data.uid) {
+        try {
+          await updateDoc(doc(getFirebaseDb(), "admissions", prefillAdmissionId), {
+            studentUid: data.uid,
+          });
+        } catch (err) {
+          console.error("[create-user] admission link failed:", err);
+          setCreated((prev) => (prev ? { ...prev, linkWarning: true } : prev));
+        }
+      }
     } catch {
       setStatus("error");
       setErrorMsg(errorMessages.server_error);
@@ -133,6 +157,13 @@ export default function AdminCreateUserForm() {
               <p>লগইন: {created.identifier}</p>
               <p>পাসওয়ার্ড: {created.password}</p>
             </div>
+            {created.linkWarning && (
+              <p className="mt-3 flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
+                <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু এটাকে ভর্তি আবেদনের সাথে যুক্ত করা যায়নি — তাই
+                ভর্তি ফি ড্যাশবোর্ডে নাও দেখা যেতে পারে। আবার চেষ্টা করতে চাইলে জানান।
+              </p>
+            )}
             <button
               type="button"
               onClick={() => setStatus("idle")}
@@ -252,26 +283,63 @@ export default function AdminCreateUserForm() {
       </label>
 
       {role === "guardian" && (
-        <label className="block">
+        <div>
           <span className="text-sm font-medium text-ink">
-            কোন শিক্ষার্থীর সাথে যুক্ত <span className="text-clay">*</span>
+            কোন কোন শিক্ষার্থীর সাথে যুক্ত <span className="text-clay">*</span>{" "}
+            <span className="font-normal text-ink-soft/60">(একাধিক বাছাই করা যাবে)</span>
           </span>
-          <select required name="linkedStudentUid" className={`mt-1.5 ${inputClass}`} defaultValue="">
-            <option value="" disabled>
-              {students === null ? "লোড হচ্ছে..." : students.length === 0 ? "কোনো শিক্ষার্থী পাওয়া যায়নি" : "নির্বাচন করুন"}
-            </option>
-            {students?.map((s) => (
-              <option key={s.uid} value={s.uid}>
-                {s.name} ({s.identifier})
-              </option>
-            ))}
-          </select>
-          {students !== null && students.length === 0 && (
+
+          {students === null ? (
+            <p className="mt-1.5 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
+          ) : students.length === 0 ? (
             <p className="mt-1.5 text-xs text-ink-soft/60">
               আগে অন্তত একজন শিক্ষার্থীর অ্যাকাউন্ট তৈরি করুন, তারপর তার গার্ডিয়ান যুক্ত করুন।
             </p>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                placeholder="নাম দিয়ে খুঁজুন"
+                className={`mt-1.5 ${inputClass}`}
+              />
+              <div className="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-sm border border-line p-2">
+                {students
+                  .filter((s) =>
+                    studentSearch.trim()
+                      ? s.name.toLowerCase().includes(studentSearch.trim().toLowerCase())
+                      : true
+                  )
+                  .map((s) => {
+                    const checked = selectedStudentUids.includes(s.uid);
+                    return (
+                      <label
+                        key={s.uid}
+                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-paper-raised"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            setSelectedStudentUids((prev) =>
+                              checked ? prev.filter((uid) => uid !== s.uid) : [...prev, s.uid]
+                            )
+                          }
+                        />
+                        <span className="text-ink">
+                          {s.name} <span className="text-ink-soft/60">({s.identifier})</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+              </div>
+              {selectedStudentUids.length > 0 && (
+                <p className="mt-1.5 text-xs text-teal-deep">{selectedStudentUids.length} জন নির্বাচিত</p>
+              )}
+            </>
           )}
-        </label>
+        </div>
       )}
 
       {role === "student" && (
@@ -305,7 +373,7 @@ export default function AdminCreateUserForm() {
 
       <button
         type="submit"
-        disabled={status === "loading"}
+        disabled={status === "loading" || (role === "guardian" && selectedStudentUids.length === 0)}
         className="flex items-center gap-2 rounded-sm bg-ink px-6 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
       >
         {status === "loading" && <Loader2 size={14} className="animate-spin" />}

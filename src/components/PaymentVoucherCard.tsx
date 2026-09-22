@@ -32,7 +32,7 @@ function Item({ label, value }: { label: string; value?: string }) {
   );
 }
 
-export default function PaymentVoucherCard({ data }: { data: VoucherData }) {
+export default function PaymentVoucherCard({ data, id = "printable-voucher" }: { data: VoucherData; id?: string }) {
   const isFullyPaid = data.due <= 0;
   const isPartial = data.due > 0 && data.totalPaid > 0;
   const statusLabel = isFullyPaid ? "সম্পূর্ণ পরিশোধ" : isPartial ? "আংশিক পরিশোধ" : "বকেয়া";
@@ -43,7 +43,7 @@ export default function PaymentVoucherCard({ data }: { data: VoucherData }) {
     : "bg-clay-soft text-clay";
 
   return (
-    <div id="printable-voucher" className="rounded-sm border border-line bg-paper p-3 text-[10.5px] sm:p-4 print:mt-0 print:border-none print:p-0">
+    <div id={id} className="rounded-sm border border-line bg-paper p-3 text-[10.5px] sm:p-4 print:mt-0 print:border-none print:p-0">
       <div className="flex items-center justify-between border-b-2 border-teal-deep pb-1.5 print:break-inside-avoid">
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}

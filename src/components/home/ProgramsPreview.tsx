@@ -24,9 +24,29 @@ const programs = [
     desc: "পরীক্ষার আগে নিবিড় রিভিশন ও মডেল টেস্ট।",
   },
   {
-    title: "SSC / Dakhil Program",
-    bn: "SSC / দাখিল প্রোগ্রাম",
-    desc: "Class 9, Class 10, SSC ও দাখিল শিক্ষার্থীদের জন্য।",
+    title: "SSC Program",
+    bn: "SSC প্রোগ্রাম",
+    desc: "Class 9, Class 10 ও SSC শিক্ষার্থীদের জন্য।",
+  },
+  {
+    title: "Dakhil Program",
+    bn: "দাখিল প্রোগ্রাম",
+    desc: "দাখিল শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+  },
+  {
+    title: "Alim Program",
+    bn: "আলিম প্রোগ্রাম",
+    desc: "আলিম শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+  },
+  {
+    title: "HSC Program",
+    bn: "HSC প্রোগ্রাম",
+    desc: "HSC শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+  },
+  {
+    title: "University Admission Program",
+    bn: "বিশ্ববিদ্যালয় ভর্তি প্রোগ্রাম",
+    desc: "বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য বিশেষ প্রস্তুতি।",
   },
 ];
 

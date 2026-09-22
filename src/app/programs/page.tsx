@@ -4,7 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "প্রোগ্রাম | Uttolon",
-  description: "উত্তোলনের সকল একাডেমিক প্রোগ্রাম — Regular, Revision, Recovery, Final Preparation ও SSC/Dakhil।",
+  description: "উত্তোলনের সকল একাডেমিক প্রোগ্রাম — Regular, Revision, Recovery, Final Preparation, SSC, Dakhil, Alim, HSC ও University Admission।",
 };
 
 const programs = [
@@ -30,9 +30,29 @@ const programs = [
     desc: "পরীক্ষার আগে নিবিড় রিভিশন, মডেল টেস্ট, গুরুত্বপূর্ণ টপিক, exam strategy, ভুল বিশ্লেষণ ও সময় ব্যবস্থাপনা।",
   },
   {
-    bn: "SSC / দাখিল প্রোগ্রাম",
-    en: "SSC / Dakhil Program",
-    desc: "Class 9, Class 10, SSC ও দাখিল শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+    bn: "SSC প্রোগ্রাম",
+    en: "SSC Program",
+    desc: "Class 9, Class 10 ও SSC শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+  },
+  {
+    bn: "দাখিল প্রোগ্রাম",
+    en: "Dakhil Program",
+    desc: "দাখিল শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+  },
+  {
+    bn: "আলিম প্রোগ্রাম",
+    en: "Alim Program",
+    desc: "আলিম শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+  },
+  {
+    bn: "HSC প্রোগ্রাম",
+    en: "HSC Program",
+    desc: "HSC শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
+  },
+  {
+    bn: "বিশ্ববিদ্যালয় ভর্তি প্রোগ্রাম",
+    en: "University Admission Program",
+    desc: "বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য বিশেষভাবে সাজানো প্রস্তুতি।",
   },
 ];
 

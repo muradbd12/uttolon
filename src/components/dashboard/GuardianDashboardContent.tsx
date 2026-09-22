@@ -17,6 +17,7 @@ import { useAssessments } from "@/lib/useAssessments";
 import { getFirebaseDb } from "@/lib/firebase";
 import RecentNotices from "@/components/dashboard/RecentNotices";
 import FeeSummary from "@/components/dashboard/FeeSummary";
+import AdmissionFeeSummary from "@/components/dashboard/AdmissionFeeSummary";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 import { demoUpcomingExams } from "@/content/guardian-demo";
 
@@ -224,6 +225,7 @@ export default function GuardianDashboardContent() {
 
             {/* Fees — real */}
             <FeeSummary studentUid={selectedUid} />
+            <AdmissionFeeSummary studentUid={selectedUid} />
 
             <RecentNotices />
           </div>

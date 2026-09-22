@@ -174,6 +174,7 @@ export default function AdminAdmissionsList() {
       prefillClass: a.className || "",
       prefillGuardianMobile: a.guardianMobile || "",
       prefillIdentifier: a.mobile || "",
+      prefillAdmissionId: a.id,
     });
     router.push(`/admin/users?${params.toString()}`);
   }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
 import AdminAdmissionsList from "@/components/AdminAdmissionsList";
+import AdminBackfillButton from "@/components/AdminBackfillButton";
 
 export const metadata: Metadata = {
   title: "ভর্তি আবেদন | Admin | Uttolon",
@@ -24,6 +25,9 @@ export default function AdminAdmissionsPage() {
           <p className="mt-2 text-sm text-ink-soft">
             ওয়েবসাইট থেকে জমা হওয়া সব আবেদন — সবচেয়ে নতুনটা উপরে।
           </p>
+          <div className="mt-6">
+            <AdminBackfillButton />
+          </div>
           <div className="mt-8">
             <AdminAdmissionsList />
           </div>

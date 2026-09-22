@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimest
 import { getFirebaseDb } from "@/lib/firebase";
 import { AlertCircle, Loader2, Printer, Search } from "lucide-react";
 import { withTimeout } from "@/lib/withTimeout";
+import { toEnglishDigits } from "@/lib/numberInput";
 import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
 import { printIsolated } from "@/lib/printReceipt";
 
@@ -187,12 +188,11 @@ export default function PaymentLookup() {
 
             {payChoice === "partial" && (
               <input
-                type="number"
-                min={1}
-                max={due}
+                type="text"
+                inputMode="numeric"
                 value={payAmount}
-                onChange={(e) => setPayAmount(e.target.value)}
-                placeholder="কত টাকা দিচ্ছেন লিখুন"
+                onChange={(e) => setPayAmount(toEnglishDigits(e.target.value))}
+                placeholder="কত টাকা দিচ্ছেন লিখুন (বাংলা বা ইংরেজি সংখ্যায়)"
                 className={`mt-3 sm:w-64 ${inputClass}`}
               />
             )}

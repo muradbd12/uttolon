@@ -9,6 +9,7 @@ import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
 import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
 import { printIsolated } from "@/lib/printReceipt";
 import { getProgramFee } from "@/lib/programFees";
+import { toEnglishDigits } from "@/lib/numberInput";
 
 const classes = [
   "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8",
@@ -327,12 +328,11 @@ export default function AdmissionForm() {
 
             {payChoice === "partial" && (
               <input
-                type="number"
-                min={1}
-                max={fee}
+                type="text"
+                inputMode="numeric"
                 value={payAmount}
-                onChange={(e) => setPayAmount(e.target.value)}
-                placeholder="কত টাকা দিচ্ছেন লিখুন"
+                onChange={(e) => setPayAmount(toEnglishDigits(e.target.value))}
+                placeholder="কত টাকা দিচ্ছেন লিখুন (বাংলা বা ইংরেজি সংখ্যায়)"
                 className="mt-3 w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink sm:w-64"
               />
             )}
@@ -433,14 +433,14 @@ export default function AdmissionForm() {
           <Field label="ছাত্র/ছাত্রী আইডি (যদি থাকে)">
             <input name="studentIdNumber" type="text" className={inputClass} placeholder="আইডি লিখুন" />
           </Field>
-          <Field label="ধর্ম" required>
-            <select required name="religion" className={inputClass} defaultValue="">
+          <Field label="ধর্ম">
+            <select name="religion" className={inputClass} defaultValue="">
               <option value="" disabled>নির্বাচন করুন</option>
               {religions.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </Field>
-          <Field label="জাতীয়তা" required>
-            <select required name="nationality" className={inputClass} defaultValue="বাংলাদেশী">
+          <Field label="জাতীয়তা">
+            <select name="nationality" className={inputClass} defaultValue="বাংলাদেশী">
               {nationalities.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </Field>
@@ -501,8 +501,8 @@ export default function AdmissionForm() {
       <fieldset className="space-y-5 border-t border-line pt-8">
         <SectionHeader number="০৪" title="একাডেমিক তথ্য" />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field label="পূর্ববর্তী প্রতিষ্ঠান" required>
-            <input required name="previousInstitution" type="text" className={inputClass} />
+          <Field label="পূর্ববর্তী প্রতিষ্ঠান">
+            <input name="previousInstitution" type="text" className={inputClass} />
           </Field>
           <Field label="পরীক্ষার নাম">
             <select name="examName" className={inputClass} defaultValue="">

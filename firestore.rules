@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.adminLevel == 'super';
+    }
+
+    function isTeacher() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function isGuardianOf(studentUid) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUid == studentUid ||
+          (
+            'linkedStudentUids' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedStudentUids.hasAny([studentUid])
+          )
+        );
+    }
+
+    match /admissions/{applicationId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+
+      // এই রুলটাই আগে মিসিং ছিল — ভর্তি ফি পেমেন্ট আসলে এই
+      // সাব-কালেকশনে (admissions/{id}/payments) সেভ হয়, কিন্তু এর
+      // জন্য আলাদা কোনো rule না থাকায় Firestore ডিফল্ট ভাবে সব
+      // read/write বন্ধ রাখছিল — এই কারণেই পেমেন্ট সাবমিট করলে error
+      // আসছিল। উপরের admissions rule নিচের সাব-কালেকশনে এমনিতে
+      // প্রযোজ্য হয় না, তাই আলাদা করে লিখতে হয়েছে।
+      match /payments/{paymentId} {
+        allow create: if true;
+        allow read, update, delete: if isAdmin();
+      }
+    }
+
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId)
+        || isAdmin()
+        || (isTeacher() && resource.data.role == 'student')
+        || isGuardianOf(userId);
+      allow write: if false;
+    }
+
+    match /attendance/{attendanceId} {
+      allow create, update: if isAdmin() || isTeacher();
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /assessments/{assessmentId} {
+      allow create, update: if isAdmin() || isTeacher();
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /homework/{homeworkId} {
+      allow create, update, delete: if isAdmin() || isTeacher();
+      allow read: if request.auth != null;
+    }
+
+    match /fees/{feeId} {
+      // আগে এখানে read-এর জন্যও isSuperAdmin() লাগত — অ্যাডমিন
+      // ড্যাশবোর্ড (AdminStats) এবং "ফি ব্যবস্থাপনা" পেজ যেকোনো
+      // isAdmin()-এর জন্য fees কালেকশন পড়ার চেষ্টা করে, কিন্তু
+      // যে অ্যাডমিন Super Admin না তার জন্য এটা permission-denied
+      // দিচ্ছিল — এই কারণেই ড্যাশবোর্ডের টোটাল সংখ্যাগুলো (মোট
+      // শিক্ষার্থী/শিক্ষক ইত্যাদি) দেখা যাচ্ছিল না, কারণ একসাথে
+      // ৫টা কালেকশন লোড করার চেষ্টায় এই একটা ব্যর্থ হলে বাকি
+      // সবগুলোও ব্যর্থ দেখাচ্ছিল। টাকা তৈরি/এডিট/ডিলিট এখনো শুধু
+      // Super Admin-ই করতে পারবেন — শুধু "পড়া" (read) খুলে দেওয়া
+      // হয়েছে সব অ্যাডমিনের জন্য।
+      allow create, update, delete: if isSuperAdmin();
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+    }
+
+    match /schedule/{scheduleId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if request.auth != null;
+    }
+
+    match /successStories/{storyId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if resource.data.published == true || isAdmin();
+    }
+
+    match /scholarshipApplications/{applicationId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /blogPosts/{slug} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /contactMessages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /practicalLearning/{entryId} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

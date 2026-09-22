@@ -9,6 +9,7 @@ import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
 import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
 import { printIsolated } from "@/lib/printReceipt";
 import { withTimeout } from "@/lib/withTimeout";
+import { toEnglishDigits } from "@/lib/numberInput";
 
 type Application = {
   id: string;
@@ -499,9 +500,10 @@ export default function AdminAdmissionsList() {
                         <p className="text-sm font-medium text-ink">প্রথমে ফি নির্ধারণ করুন</p>
                         <div className="mt-2 flex items-center gap-2">
                           <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={feeInput}
-                            onChange={(e) => setFeeInput(e.target.value)}
+                            onChange={(e) => setFeeInput(toEnglishDigits(e.target.value))}
                             placeholder="মোট ফি লিখুন"
                             className="w-32 rounded-sm border border-line bg-paper-raised px-2 py-1.5 text-sm text-ink outline-none focus:border-ink"
                           />
@@ -548,11 +550,10 @@ export default function AdminAdmissionsList() {
                         </div>
                         {payChoice === "partial" && (
                           <input
-                            type="number"
-                            min={1}
-                            max={a.due || 0}
+                            type="text"
+                            inputMode="numeric"
                             value={payAmount}
-                            onChange={(e) => setPayAmount(e.target.value)}
+                            onChange={(e) => setPayAmount(toEnglishDigits(e.target.value))}
                             placeholder="কত টাকা"
                             className="mt-2 w-40 rounded-sm border border-line bg-paper-raised px-2 py-1.5 text-sm text-ink outline-none focus:border-ink"
                           />

@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
+import { toEnglishDigits } from "@/lib/numberInput";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 type StudentOption = { uid: string; name: string; className: string | null };
@@ -107,10 +108,10 @@ export default function AdminFeeForm() {
       setStatus("error");
       return;
     }
-    const amountDue = Number(form.get("amountDue")) || 0;
-    const discount = Number(form.get("discount")) || 0;
-    const fine = Number(form.get("fine")) || 0;
-    const amountPaid = Number(form.get("amountPaid")) || 0;
+    const amountDue = Number(toEnglishDigits((form.get("amountDue") as string) || "")) || 0;
+    const discount = Number(toEnglishDigits((form.get("discount") as string) || "")) || 0;
+    const fine = Number(toEnglishDigits((form.get("fine") as string) || "")) || 0;
+    const amountPaid = Number(toEnglishDigits((form.get("amountPaid") as string) || "")) || 0;
 
     try {
       const authInstance = getFirebaseAuth();
@@ -232,19 +233,19 @@ export default function AdminFeeForm() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <label className="block">
                 <span className="text-xs text-ink-soft">বকেয়া (Due)</span>
-                <input required name="amountDue" type="number" min={0} className={`mt-1 ${inputClass}`} />
+                <input required name="amountDue" type="text" inputMode="numeric" className={`mt-1 ${inputClass}`} />
               </label>
               <label className="block">
                 <span className="text-xs text-ink-soft">ছাড় (Discount)</span>
-                <input name="discount" type="number" min={0} defaultValue={0} className={`mt-1 ${inputClass}`} />
+                <input name="discount" type="text" inputMode="numeric" defaultValue={0} className={`mt-1 ${inputClass}`} />
               </label>
               <label className="block">
                 <span className="text-xs text-ink-soft">জরিমানা (Fine)</span>
-                <input name="fine" type="number" min={0} defaultValue={0} className={`mt-1 ${inputClass}`} />
+                <input name="fine" type="text" inputMode="numeric" defaultValue={0} className={`mt-1 ${inputClass}`} />
               </label>
               <label className="block">
                 <span className="text-xs text-ink-soft">পরিশোধিত (Paid)</span>
-                <input name="amountPaid" type="number" min={0} defaultValue={0} className={`mt-1 ${inputClass}`} />
+                <input name="amountPaid" type="text" inputMode="numeric" defaultValue={0} className={`mt-1 ${inputClass}`} />
               </label>
             </div>
 

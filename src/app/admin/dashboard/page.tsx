@@ -24,6 +24,7 @@ import {
 import { demoManagementAreas } from "@/content/admin-demo";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
 import AdminStats from "@/components/dashboard/AdminStats";
+import AdminCharts from "@/components/dashboard/AdminCharts";
 import AdminPendingActions from "@/components/dashboard/AdminPendingActions";
 
 export const metadata: Metadata = {
@@ -80,24 +81,19 @@ export default function AdminDashboardPage() {
     <RequireRoleAuth role="admin" loginPath="/admin/login">
     <section className="bg-paper-raised">
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        {/* Preview notice */}
-        <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
-          <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
-          <p className="text-sm leading-relaxed text-ink">
-            লগইন <span className="font-medium">Firebase Authentication</span> দিয়ে সুরক্ষিত, আর
-            নিচের সংখ্যাগুলো এখন সত্যিকারের ডেটাবেস থেকে হিসাব করা।
-          </p>
-        </div>
-
         {/* Header */}
-        <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
           <div>
             <p className="font-label text-xs uppercase tracking-[0.2em] text-gold-deep">
               Admin Dashboard
             </p>
-            <h1 className="mt-2 font-display-bn text-2xl text-ink sm:text-3xl">
+            <h1 className="mt-2 font-display-bn text-3xl text-ink sm:text-4xl">
               নিয়ন্ত্রণ কেন্দ্র
             </h1>
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-soft/60">
+              <Sparkles size={12} className="text-gold-deep" />
+              নিচের সব সংখ্যা সত্যিকারের ডেটাবেস থেকে হিসাব করা
+            </p>
           </div>
           {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? (
             <a
@@ -117,8 +113,36 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
+        {/* Quick actions */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          {[
+            { label: "নতুন ভর্তি", href: "/admin/admissions", icon: FileCheck2 },
+            { label: "ইউজার তৈরি", href: "/admin/users", icon: Users },
+            { label: "নোটিশ দিন", href: "/admin/notices", icon: Bell },
+            { label: "ফি ব্যবস্থাপনা", href: "/admin/fees", icon: Wallet },
+            { label: "সবার বকেয়া", href: "/admin/fees/overview", icon: ClipboardList },
+          ].map((action) => {
+            const ActionIcon = action.icon;
+            return (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink transition-colors hover:border-gold-deep hover:text-gold-deep"
+              >
+                <ActionIcon size={14} />
+                {action.label}
+              </Link>
+            );
+          })}
+        </div>
+
         {/* Stats row — real */}
         <AdminStats />
+
+        {/* Charts */}
+        <div className="mt-8">
+          <AdminCharts />
+        </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Management areas */}
@@ -132,9 +156,11 @@ export default function AdminDashboardPage() {
                 return (
                   <div
                     key={area.title}
-                    className="flex flex-col rounded-sm border border-line bg-paper p-5"
+                    className="flex flex-col rounded-sm border border-line bg-paper p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <Icon size={18} className="text-gold-deep" />
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
+                      <Icon size={16} />
+                    </span>
                     <h3 className="mt-3 font-display-bn text-base text-ink">{area.title}</h3>
                     <p className="mt-1.5 flex-1 text-sm leading-relaxed text-ink-soft">
                       {area.desc}

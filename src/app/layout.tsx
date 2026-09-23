@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Hind_Siliguri, Inter, Noto_Serif_Bengali, Tiro_Bangla } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import SiteChrome from "@/components/SiteChrome";
 import { SITE_URL } from "@/lib/site";
 
 const fraunces = Fraunces({
@@ -79,9 +78,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hindSiliguri.variable} ${inter.variable} ${notoSerifBengali.variable} ${tiroBangla.variable}`}
     >
       <body className="antialiased">
-        <Header />
-        <main>{children}</main>
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

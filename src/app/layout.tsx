@@ -45,6 +45,29 @@ const title = "উত্তোলন | Uttolon Learning System";
 const description =
   "শুধু পড়ানো নয়, শেখার একটি সম্পূর্ণ ব্যবস্থা। Concept, Practice, Assessment, Recovery ও Result-ভিত্তিক শিক্ষা ব্যবস্থা — উত্তোলন।";
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: "Uttolon",
+  alternateName: ["উত্তোলন", "Uttolon Learning System", "UttolonBD", "Uttolon BD"],
+  url: SITE_URL,
+  logo: `${SITE_URL}/uttolon-logo.png`,
+  image: `${SITE_URL}/uttolon-logo.png`,
+  description,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Qatari Tower, College Road, Amishapara, Sonaimuri",
+    addressLocality: "Noakhali",
+    addressCountry: "BD",
+  },
+  telephone: "+8801824020933",
+  email: "info@uttolonbd.com",
+  sameAs: [
+    "https://www.facebook.com/share/1GjxNBcK3u/",
+    "https://www.youtube.com/@uttolon",
+  ],
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -78,6 +101,10 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hindSiliguri.variable} ${inter.variable} ${notoSerifBengali.variable} ${tiroBangla.variable}`}
     >
       <body className="antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>

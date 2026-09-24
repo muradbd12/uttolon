@@ -136,7 +136,7 @@ export default function AdminAdmissionsList() {
   const [editDraft, setEditDraft] = useState<Application | null>(null);
   const [payingId, setPayingId] = useState<string | null>(null);
   const [feeInput, setFeeInput] = useState("");
-  const [payChoice, setPayChoice] = useState<"full" | "partial" | null>(null);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
   const [payBusy, setPayBusy] = useState(false);
@@ -230,13 +230,14 @@ export default function AdminAdmissionsList() {
   function startPay(a: Application) {
     setPayingId(a.id);
     setFeeInput(a.totalFee ? String(a.totalFee) : "");
-    setPayChoice(null);
-    setPayAmount("");
+    setEditingFeeId(null);
+    setPayAmount(a.due ? String(a.due) : "");
     setVoucher(null);
   }
 
   function cancelPay() {
     setPayingId(null);
+    setEditingFeeId(null);
     setVoucher(null);
   }
 
@@ -246,8 +247,11 @@ export default function AdminAdmissionsList() {
     setPayBusy(true);
     try {
       const paid = a.totalPaid || 0;
-      await updateDoc(doc(getFirebaseDb(), "admissions", a.id), { totalFee: fee, due: fee - paid });
-      setApps((prev) => (prev ? prev.map((x) => (x.id === a.id ? { ...x, totalFee: fee, due: fee - paid } : x)) : prev));
+      const newDue = fee - paid;
+      await updateDoc(doc(getFirebaseDb(), "admissions", a.id), { totalFee: fee, due: newDue });
+      setApps((prev) => (prev ? prev.map((x) => (x.id === a.id ? { ...x, totalFee: fee, due: newDue } : x)) : prev));
+      setEditingFeeId(null);
+      setPayAmount(newDue > 0 ? String(newDue) : "");
     } catch {
       setError(true);
     } finally {
@@ -259,7 +263,7 @@ export default function AdminAdmissionsList() {
     const fee = a.totalFee || 0;
     const alreadyPaid = a.totalPaid || 0;
     const due = a.due ?? fee - alreadyPaid;
-    const amount = payChoice === "full" ? due : Math.min(Math.max(Math.round(Number(payAmount) || 0), 0), due);
+    const amount = Math.min(Math.max(Math.round(Number(payAmount) || 0), 0), due);
     if (amount <= 0) return;
 
     setPayBusy(true);
@@ -521,66 +525,96 @@ export default function AdminAdmissionsList() {
                           </button>
                         </div>
                       </div>
-                    ) : (a.due || 0) <= 0 ? (
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-teal-deep">সম্পূর্ণ পরিশোধিত — কোনো বকেয়া নেই।</p>
-                        <button type="button" onClick={cancelPay} className="text-xs text-ink-soft underline">
-                          বন্ধ করুন
-                        </button>
-                      </div>
                     ) : (
                       <div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <p className="text-ink-soft">
+                            মোট ফি: <span className="font-medium text-ink">৳{(a.totalFee || 0).toLocaleString("bn-BD")}</span>
+                          </p>
                           <button
                             type="button"
-                            onClick={() => { setPayChoice("full"); setPayAmount(String(a.due || 0)); }}
-                            className={`rounded-sm border px-3 py-1.5 text-xs ${payChoice === "full" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
+                            onClick={() => setEditingFeeId(editingFeeId === a.id ? null : a.id)}
+                            className="text-xs text-ink-soft underline"
                           >
-                            সম্পূর্ণ বকেয়া (৳{(a.due || 0).toLocaleString("bn-BD")})
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setPayChoice("partial"); setPayAmount(""); }}
-                            className={`rounded-sm border px-3 py-1.5 text-xs ${payChoice === "partial" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
-                          >
-                            আংশিক
-                          </button>
-                          <button type="button" onClick={cancelPay} className="text-xs text-ink-soft underline">
-                            বাতিল
+                            {editingFeeId === a.id ? "বন্ধ করুন" : "ফি বাড়ান/কমান"}
                           </button>
                         </div>
-                        {payChoice === "partial" && (
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={payAmount}
-                            onChange={(e) => setPayAmount(toEnglishDigits(e.target.value))}
-                            placeholder="কত টাকা"
-                            className="mt-2 w-40 rounded-sm border border-line bg-paper-raised px-2 py-1.5 text-sm text-ink outline-none focus:border-ink"
-                          />
-                        )}
-                        {payChoice && (
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <select
-                              value={payMethod}
-                              onChange={(e) => setPayMethod(e.target.value)}
-                              className="rounded-sm border border-line bg-paper-raised px-2 py-1.5 text-xs text-ink outline-none focus:border-ink"
-                            >
-                              <option>ক্যাশ (হাতে হাতে)</option>
-                              <option>বিকাশ</option>
-                              <option>নগদ (Nagad)</option>
-                              <option>রকেট</option>
-                              <option>ব্যাংক ট্রান্সফার</option>
-                              <option>অন্যান্য</option>
-                            </select>
+
+                        {editingFeeId === a.id && (
+                          <div className="mt-2 flex items-center gap-2 rounded-sm border border-line bg-paper-raised p-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={feeInput}
+                              onChange={(e) => setFeeInput(toEnglishDigits(e.target.value))}
+                              placeholder="নতুন মোট ফি লিখুন"
+                              className="w-32 rounded-sm border border-line bg-paper px-2 py-1.5 text-sm text-ink outline-none focus:border-ink"
+                            />
                             <button
                               type="button"
-                              onClick={() => handleRecordPayment(a)}
-                              disabled={payBusy || (payChoice === "partial" && (!payAmount || Number(payAmount) <= 0))}
-                              className="flex items-center gap-1.5 rounded-sm bg-teal-deep px-4 py-1.5 text-xs font-medium text-paper hover:opacity-90 disabled:opacity-50"
+                              onClick={() => handleSetFee(a)}
+                              disabled={payBusy}
+                              className="rounded-sm bg-teal-deep px-3 py-1.5 text-xs font-medium text-paper hover:opacity-90 disabled:opacity-50"
                             >
-                              {payBusy && <Loader2 size={12} className="animate-spin" />} পেমেন্ট নিশ্চিত করুন
+                              ফি আপডেট করুন
                             </button>
+                          </div>
+                        )}
+
+                        {(a.due || 0) <= 0 ? (
+                          <div className="mt-3 flex items-center justify-between">
+                            <p className="text-sm text-teal-deep">সম্পূর্ণ পরিশোধিত — কোনো বকেয়া নেই।</p>
+                            <button type="button" onClick={cancelPay} className="text-xs text-ink-soft underline">
+                              বন্ধ করুন
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="mt-3">
+                            <label className="text-xs text-ink-soft">
+                              কত টাকা নিচ্ছেন (বকেয়া ৳{(a.due || 0).toLocaleString("bn-BD")})
+                            </label>
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={payAmount}
+                                onChange={(e) => setPayAmount(toEnglishDigits(e.target.value))}
+                                placeholder="কত টাকা"
+                                className="w-32 rounded-sm border border-line bg-paper-raised px-2 py-1.5 text-sm text-ink outline-none focus:border-ink"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setPayAmount(String(a.due || 0))}
+                                className="rounded-sm border border-line px-2 py-1.5 text-xs text-ink-soft hover:border-ink hover:text-ink"
+                              >
+                                সম্পূর্ণ বকেয়া বসান
+                              </button>
+                            </div>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <select
+                                value={payMethod}
+                                onChange={(e) => setPayMethod(e.target.value)}
+                                className="rounded-sm border border-line bg-paper-raised px-2 py-1.5 text-xs text-ink outline-none focus:border-ink"
+                              >
+                                <option>ক্যাশ (হাতে হাতে)</option>
+                                <option>বিকাশ</option>
+                                <option>নগদ (Nagad)</option>
+                                <option>রকেট</option>
+                                <option>ব্যাংক ট্রান্সফার</option>
+                                <option>অন্যান্য</option>
+                              </select>
+                              <button
+                                type="button"
+                                onClick={() => handleRecordPayment(a)}
+                                disabled={payBusy || !payAmount || Number(payAmount) <= 0}
+                                className="flex items-center gap-1.5 rounded-sm bg-teal-deep px-4 py-1.5 text-xs font-medium text-paper hover:opacity-90 disabled:opacity-50"
+                              >
+                                {payBusy && <Loader2 size={12} className="animate-spin" />} পেমেন্ট নিশ্চিত করুন
+                              </button>
+                              <button type="button" onClick={cancelPay} className="text-xs text-ink-soft underline">
+                                বাতিল
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>

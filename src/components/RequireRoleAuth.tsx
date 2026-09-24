@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, signOut, type User, type Auth } from "firebase/auth";
+import Link from "next/link";
+import { onAuthStateChanged, signOut, type Auth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
-import { LogOut, Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
+import { LogOut, Loader2, AlertTriangle, ShieldAlert, Home } from "lucide-react";
 
 type Role = "admin" | "student" | "guardian" | "teacher";
 
@@ -30,7 +31,7 @@ export default function RequireRoleAuth({
 }) {
   const router = useRouter();
   const [state, setState] = useState<"checking" | "denied" | "config-error" | "ok">("checking");
-  const [user, setUser] = useState<User | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const authRef = useRef<Auth | null>(null);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function RequireRoleAuth({
             router.replace(loginPath);
             return;
           }
-          setUser(u);
+          setDisplayName(snap.exists() ? (snap.data().name as string) || null : null);
           setState("ok");
         } catch {
           setState("config-error");
@@ -107,15 +108,23 @@ export default function RequireRoleAuth({
       <div className="border-b border-line bg-paper">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 sm:px-8">
           <p className="text-sm text-ink-soft">
-            {roleLabel[role]} হিসেবে লগইন করা আছে: <span className="text-ink">{user?.email}</span>
+            {roleLabel[role]} হিসেবে লগইন করা আছে: <span className="text-ink">{displayName || roleLabel[role]}</span>
           </p>
-          <button
-            type="button"
-            onClick={() => authRef.current && signOut(authRef.current)}
-            className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-sm text-ink-soft hover:border-ink hover:text-ink"
-          >
-            <LogOut size={14} /> লগ আউট
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-sm text-ink-soft hover:border-ink hover:text-ink"
+            >
+              <Home size={14} /> হোম পেজ
+            </Link>
+            <button
+              type="button"
+              onClick={() => authRef.current && signOut(authRef.current)}
+              className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-sm text-ink-soft hover:border-ink hover:text-ink"
+            >
+              <LogOut size={14} /> লগ আউট
+            </button>
+          </div>
         </div>
       </div>
       {children}

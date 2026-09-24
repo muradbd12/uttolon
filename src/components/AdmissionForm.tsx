@@ -131,7 +131,6 @@ export default function AdmissionForm() {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<AdmissionData | null>(null);
   const [pendingData, setPendingData] = useState<AdmissionData | null>(null);
-  const [payChoice, setPayChoice] = useState<"full" | "partial" | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
@@ -184,6 +183,7 @@ export default function AdmissionForm() {
     };
 
     setPendingData(data);
+    setPayAmount(String(getProgramFee(data.program)));
     setStatus("review");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -195,8 +195,7 @@ export default function AdmissionForm() {
   async function handleConfirmSubmit() {
     if (!pendingData) return;
     const fee = getProgramFee(pendingData.program);
-    const amount =
-      payChoice === "full" ? fee : Math.min(Math.max(Math.round(Number(payAmount) || 0), 0), fee);
+    const amount = Math.max(Math.round(Number(payAmount) || 0), 0);
     if (amount <= 0) return;
 
     setStatus("loading");
@@ -531,62 +530,52 @@ export default function AdmissionForm() {
 
           {(() => {
             const fee = getProgramFee(pendingData.program);
-            const amount =
-              payChoice === "full" ? fee : Math.min(Math.max(Math.round(Number(payAmount) || 0), 0), fee);
+            const amount = Math.max(Math.round(Number(payAmount) || 0), 0);
             const canSubmit = amount > 0 && status !== "loading";
             return (
               <div className="mt-6 rounded-sm border-2 border-gold-soft bg-gold-soft/20 p-5">
                 <h4 className="font-display-bn text-lg text-ink">পেমেন্ট করুন</h4>
                 <p className="mt-1 text-sm text-ink-soft">
-                  এই প্রোগ্রামের ফি: <strong className="text-ink">৳{fee.toLocaleString("bn-BD")}</strong> — জমা
-                  দেওয়ার জন্য কমপক্ষে কিছু টাকা এখনই পরিশোধ করতে হবে; বাকিটা পরে যেকোনো সময় পরিশোধ
-                  করা যাবে।
+                  এই প্রোগ্রামের নির্ধারিত ফি: <strong className="text-ink">৳{fee.toLocaleString("bn-BD")}</strong> —
+                  নিচে কত টাকা এখনই পরিশোধ করছেন তা লিখুন (কমাতে বা বাড়াতে পারবেন)। জমা দেওয়ার
+                  জন্য কমপক্ষে ১ টাকা হলেও পরিশোধ করতে হবে; বাকিটা পরে যেকোনো সময় পরিশোধ করা যাবে।
                 </p>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setPayChoice("full"); setPayAmount(String(fee)); }}
-                    className={`rounded-sm border px-4 py-2 text-sm ${payChoice === "full" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
-                  >
-                    সম্পূর্ণ পরিশোধ করুন (৳{fee.toLocaleString("bn-BD")})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setPayChoice("partial"); setPayAmount(""); }}
-                    className={`rounded-sm border px-4 py-2 text-sm ${payChoice === "partial" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
-                  >
-                    আংশিক পরিশোধ করুন
-                  </button>
-                </div>
-
-                {payChoice === "partial" && (
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={payAmount}
-                    onChange={(e) => setPayAmount(toEnglishDigits(e.target.value))}
-                    placeholder="কত টাকা দিচ্ছেন লিখুন (বাংলা বা ইংরেজি সংখ্যায়)"
-                    className="mt-3 w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink sm:w-64"
-                  />
-                )}
-
-                {payChoice && (
-                  <div className="mt-3">
-                    <select
-                      value={payMethod}
-                      onChange={(e) => setPayMethod(e.target.value)}
-                      className="rounded-sm border border-line bg-paper-raised px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+                <label className="mt-4 block">
+                  <span className="text-sm font-medium text-ink">কত টাকা দিচ্ছেন</span>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={payAmount}
+                      onChange={(e) => setPayAmount(toEnglishDigits(e.target.value))}
+                      placeholder="টাকার পরিমাণ লিখুন (বাংলা বা ইংরেজি সংখ্যায়)"
+                      className="w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink sm:w-64"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPayAmount(String(fee))}
+                      className="rounded-sm border border-line px-3 py-2 text-xs text-ink-soft hover:border-ink hover:text-ink"
                     >
-                      <option>ক্যাশ (হাতে হাতে)</option>
-                      <option>বিকাশ</option>
-                      <option>নগদ (Nagad)</option>
-                      <option>রকেট</option>
-                      <option>ব্যাংক ট্রান্সফার</option>
-                      <option>অন্যান্য</option>
-                    </select>
+                      সম্পূর্ণ ফি (৳{fee.toLocaleString("bn-BD")}) বসান
+                    </button>
                   </div>
-                )}
+                </label>
+
+                <div className="mt-3">
+                  <select
+                    value={payMethod}
+                    onChange={(e) => setPayMethod(e.target.value)}
+                    className="rounded-sm border border-line bg-paper-raised px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+                  >
+                    <option>ক্যাশ (হাতে হাতে)</option>
+                    <option>বিকাশ</option>
+                    <option>নগদ (Nagad)</option>
+                    <option>রকেট</option>
+                    <option>ব্যাংক ট্রান্সফার</option>
+                    <option>অন্যান্য</option>
+                  </select>
+                </div>
 
                 <div className="mt-5 flex flex-wrap gap-3">
                   <button

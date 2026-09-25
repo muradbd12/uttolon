@@ -1,45 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Users, GraduationCap, BookOpen, ClipboardCheck } from "lucide-react";
 
-type Stats = { students: number; teachers: number; courses: number; assessments: number };
+type PublicStats = { students: number; teachers: number; courses: number; assessments: number };
 
-const labels: { key: keyof Stats; label: string }[] = [
-  { key: "students", label: "শিক্ষার্থী" },
-  { key: "teachers", label: "শিক্ষক" },
-  { key: "courses", label: "কোর্স" },
-  { key: "assessments", label: "সম্পন্ন মূল্যায়ন" },
-];
+const BN_DIGITS: Record<string, string> = {
+  "0": "০", "1": "১", "2": "২", "3": "৩", "4": "৪",
+  "5": "৫", "6": "৬", "7": "৭", "8": "৮", "9": "৯",
+};
+function toBn(n: number) {
+  return String(n).split("").map((c) => BN_DIGITS[c] ?? c).join("");
+}
 
 export default function TrustStats() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<PublicStats | null>(null);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/public/stats");
-        if (!res.ok) throw new Error("unavailable");
-        setStats(await res.json());
-      } catch {
-        setStats(null);
-      }
-    }
-    load();
+    let cancelled = false;
+    fetch("/api/public/stats")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setStats(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  const items = [
+    { icon: Users, value: stats ? `${toBn(stats.students)}+` : "…", label: "শিক্ষার্থী" },
+    { icon: GraduationCap, value: stats ? `${toBn(stats.teachers)}+` : "…", label: "শিক্ষক" },
+    { icon: BookOpen, value: stats ? toBn(stats.courses) : "…", label: "প্রোগ্রাম" },
+    { icon: ClipboardCheck, value: stats ? `${toBn(stats.assessments)}+` : "…", label: "মূল্যায়ন সম্পন্ন" },
+  ];
+
   return (
-    <section className="border-b border-line bg-paper-raised">
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-8">
-          {labels.map(({ key, label }) => (
-            <div key={key} className="border-l border-line pl-4">
-              <div className="font-display-en text-3xl text-ink">
-                {stats ? stats[key] : "—"}
-              </div>
-              <div className="mt-1 text-sm text-ink-soft">{label}</div>
+    <section className="border-b border-line bg-ink">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-paper/10 px-5 sm:px-8 md:grid-cols-4">
+        {items.map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.label} className="flex flex-col items-center gap-2 bg-ink px-4 py-8 text-center">
+              <Icon size={20} className="text-gold" />
+              <p className="font-display-en text-2xl font-semibold text-paper sm:text-3xl">{s.value}</p>
+              <p className="text-xs text-paper/60 sm:text-sm">{s.label}</p>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </section>
   );

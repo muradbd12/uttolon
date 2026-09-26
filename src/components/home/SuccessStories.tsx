@@ -64,7 +64,10 @@ export default function SuccessStories() {
             ))
           ) : (
             stories.map((s) => (
-              <div key={s.id} className="rounded-sm border border-line bg-paper p-7">
+              <div
+                key={s.id}
+                className="rounded-sm border border-line bg-paper p-7 transition-all hover:-translate-y-0.5 hover:border-gold/30 hover:shadow-sm"
+              >
                 <Quote size={20} className="text-gold-deep/50" />
                 <p className="mt-4 text-sm leading-relaxed text-ink">{s.testimonial}</p>
                 <div className="mt-4 border-t border-line pt-3">

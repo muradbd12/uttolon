@@ -12,15 +12,23 @@ export default function ContactBlock() {
               প্রশ্ন আছে? কথা বলুন আমাদের সাথে
             </h2>
             <div className="mt-6 space-y-3 text-sm text-ink-soft">
-              <p className="flex items-center gap-2">
-                <Phone size={15} className="text-gold-deep" /> 01824-020933 · 01577-886349
+              <p className="flex items-center gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
+                  <Phone size={14} />
+                </span>
+                01824-020933 · 01577-886349
               </p>
-              <p className="flex items-center gap-2">
-                <Mail size={15} className="text-gold-deep" /> info@uttolonbd.com
+              <p className="flex items-center gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
+                  <Mail size={14} />
+                </span>
+                info@uttolonbd.com
               </p>
-              <p className="flex items-start gap-2">
-                <MapPin size={15} className="mt-0.5 shrink-0 text-gold-deep" /> Qatari Tower, College Road,
-                Amishapara, Sonaimuri, Noakhali
+              <p className="flex items-start gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
+                  <MapPin size={14} />
+                </span>
+                <span className="pt-1.5">Qatari Tower, College Road, Amishapara, Sonaimuri, Noakhali</span>
               </p>
             </div>
           </div>

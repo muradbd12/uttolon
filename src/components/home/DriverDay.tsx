@@ -1,28 +1,35 @@
+import { Leaf, Sun, Languages, Globe2, ClipboardCheck } from "lucide-react";
+
 const days = [
   {
     title: "Life Learning Day",
     bn: "লাইফ লার্নিং ডে",
     desc: "Science ও জীবনঘনিষ্ঠ বিষয়ের শিক্ষা।",
+    icon: Leaf,
   },
   {
     title: "Nature Learning Day",
     bn: "নেচার লার্নিং ডে",
     desc: "Physics, Chemistry ও প্রাকৃতিক ঘটনা।",
+    icon: Sun,
   },
   {
     title: "Language Learning Day",
     bn: "ল্যাঙ্গুয়েজ লার্নিং ডে",
     desc: "বাংলা, English ও Arabic।",
+    icon: Languages,
   },
   {
     title: "Society Learning Day",
     bn: "সোসাইটি লার্নিং ডে",
     desc: "History, Geography ও সামাজিক উপলব্ধি।",
+    icon: Globe2,
   },
   {
     title: "Assessment & Recovery Day",
     bn: "অ্যাসেসমেন্ট ও রিকভারি ডে",
     desc: "সাপ্তাহিক মূল্যায়ন, দুর্বলতা শনাক্তকরণ, Recovery ও Guardian ফিডব্যাক।",
+    icon: ClipboardCheck,
   },
 ];
 
@@ -42,15 +49,24 @@ export default function DriverDay() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-          {days.map((d) => (
-            <div key={d.title} className="rounded-sm border border-line p-5">
-              <h3 className="font-display-bn text-base text-ink">{d.bn}</h3>
-              <p className="font-label mt-1 text-[11px] uppercase tracking-wide text-ink-soft/60">
-                {d.title}
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-ink-soft">{d.desc}</p>
-            </div>
-          ))}
+          {days.map((d) => {
+            const Icon = d.icon;
+            return (
+              <div
+                key={d.title}
+                className="rounded-sm border border-line p-5 transition-all hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-sm"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
+                  <Icon size={16} />
+                </span>
+                <h3 className="mt-3.5 font-display-bn text-base text-ink">{d.bn}</h3>
+                <p className="font-label mt-1 text-[11px] uppercase tracking-wide text-ink-soft/60">
+                  {d.title}
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-ink-soft">{d.desc}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

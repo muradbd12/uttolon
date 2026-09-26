@@ -94,8 +94,13 @@ export default function PracticalLearningTeaser() {
                 );
               })
             : fallbackItems.map(({ icon: Icon, bn, desc }) => (
-                <div key={bn} className="rounded-sm border border-line p-6">
-                  <Icon size={22} className="text-teal" strokeWidth={1.6} />
+                <div
+                  key={bn}
+                  className="rounded-sm border border-line p-6 transition-all hover:-translate-y-0.5 hover:border-teal/30 hover:shadow-sm"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-soft text-teal-deep">
+                    <Icon size={20} strokeWidth={1.6} />
+                  </span>
                   <h3 className="mt-4 font-display-bn text-base text-ink">{bn}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-ink-soft">{desc}</p>
                 </div>

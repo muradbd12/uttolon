@@ -73,8 +73,8 @@ export default function ProgramsPreview() {
           {programs.map((p) => (
             <div
               key={p.title}
-              className={`rounded-sm border p-6 ${
-                p.highlight ? "border-gold bg-ink text-paper" : "border-line bg-paper"
+              className={`rounded-sm border p-6 transition-all hover:-translate-y-0.5 hover:shadow-sm ${
+                p.highlight ? "border-gold bg-ink text-paper" : "border-line bg-paper hover:border-gold/30"
               }`}
             >
               <h3 className="font-display-bn text-lg">{p.bn}</h3>

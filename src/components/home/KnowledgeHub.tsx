@@ -54,11 +54,17 @@ export default function KnowledgeHub() {
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="group rounded-sm border border-line bg-paper-raised p-5 transition-colors hover:border-ink"
+              className="group rounded-sm border border-line bg-paper-raised p-5 transition-all hover:-translate-y-0.5 hover:border-ink hover:shadow-sm"
             >
-              <span className="font-label w-fit rounded-full bg-teal-soft px-2.5 py-1 text-[10px] uppercase tracking-wide text-teal-deep">
-                {post.category}
-              </span>
+              <div className="flex items-start justify-between gap-2">
+                <span className="font-label w-fit rounded-full bg-teal-soft px-2.5 py-1 text-[10px] uppercase tracking-wide text-teal-deep">
+                  {post.category}
+                </span>
+                <ArrowUpRight
+                  size={14}
+                  className="mt-1 shrink-0 text-ink-soft/30 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-gold-deep"
+                />
+              </div>
               <h3 className="mt-3 font-display-bn text-base leading-snug text-ink">{post.title}</h3>
             </Link>
           ))}

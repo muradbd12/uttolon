@@ -12,8 +12,16 @@ const steps = [
 
 export default function LearningSystem() {
   return (
-    <section id="uls" className="scroll-mt-20 border-b border-line bg-ink text-paper">
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
+    <section id="uls" className="relative scroll-mt-20 overflow-hidden border-b border-line bg-ink text-paper">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, var(--gold) 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
+        }}
+      />
+      <div className="relative mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
         <div className="max-w-xl">
           <p className="font-label text-xs uppercase tracking-[0.2em] text-gold">
             ULS — Uttolon Learning System
@@ -27,9 +35,13 @@ export default function LearningSystem() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-sm bg-paper/10 sm:grid-cols-3">
+        <div className="relative mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-sm bg-paper/10 sm:grid-cols-3">
           {steps.map((s) => (
-            <div key={s.n} className="bg-ink p-6 sm:p-7">
+            <div
+              key={s.n}
+              className="group relative bg-ink p-6 transition-colors hover:bg-paper/[0.04] sm:p-7"
+            >
+              <span className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-gold transition-transform group-hover:scale-x-100" />
               <span className="font-display-en text-sm text-gold">{s.n}</span>
               <h3 className="mt-3 font-display-bn text-lg text-paper">
                 {s.bn} <span className="font-label text-xs text-paper/40">({s.en})</span>

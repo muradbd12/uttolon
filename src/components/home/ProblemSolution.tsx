@@ -1,3 +1,5 @@
+import { XCircle } from "lucide-react";
+
 const problems = [
   "পড়ছে, কিন্তু বুঝছে না",
   "বুঝছে, কিন্তু প্রয়োগ করতে পারছে না",
@@ -11,7 +13,7 @@ const solution = ["Concept", "Practice", "Assessment", "Recovery", "Revision", "
 
 export default function ProblemSolution() {
   return (
-    <section className="border-b border-line">
+    <section className="border-b border-line bg-paper">
       <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
         <div className="max-w-xl">
           <p className="font-label text-xs uppercase tracking-[0.2em] text-clay">শিক্ষার্থীর বাস্তবতা</p>
@@ -24,9 +26,9 @@ export default function ProblemSolution() {
           {problems.map((p) => (
             <div
               key={p}
-              className="flex items-start gap-3 rounded-sm border border-line bg-paper-raised p-5"
+              className="flex items-start gap-3 rounded-sm border border-line bg-paper-raised p-5 transition-all hover:-translate-y-0.5 hover:border-clay/30 hover:shadow-sm"
             >
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />
+              <XCircle size={16} className="mt-0.5 shrink-0 text-clay" />
               <p className="text-[15px] leading-relaxed text-ink">{p}</p>
             </div>
           ))}
@@ -41,7 +43,10 @@ export default function ProblemSolution() {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             {solution.map((s, i) => (
               <div key={s} className="flex items-center gap-3">
-                <span className="rounded-sm border border-teal/30 bg-teal-soft px-4 py-2 text-sm font-medium text-teal-deep">
+                <span className="flex items-center gap-2 rounded-sm border border-teal/30 bg-teal-soft px-4 py-2 text-sm font-medium text-teal-deep">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-deep text-[11px] font-semibold text-paper">
+                    {i + 1}
+                  </span>
                   {s}
                 </span>
                 {i < solution.length - 1 && <span className="text-ink-soft/50">→</span>}

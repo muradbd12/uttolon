@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { GraduationCap, PiggyBank, HeartHandshake } from "lucide-react";
 
 const options = [
-  "সম্পূর্ণ বিনামূল্যে শিক্ষা (Free Education)",
-  "আংশিক বৃত্তি (Partial Scholarship)",
-  "প্রয়োজনভিত্তিক সহায়তা (Need-based Support)",
+  { icon: GraduationCap, text: "সম্পূর্ণ বিনামূল্যে শিক্ষা (Free Education)" },
+  { icon: PiggyBank, text: "আংশিক বৃত্তি (Partial Scholarship)" },
+  { icon: HeartHandshake, text: "প্রয়োজনভিত্তিক সহায়তা (Need-based Support)" },
 ];
 
 export default function Scholarship() {
@@ -31,14 +32,18 @@ export default function Scholarship() {
           </div>
 
           <ul className="space-y-3">
-            {options.map((o) => (
-              <li
-                key={o}
-                className="rounded-sm border border-paper/15 px-5 py-4 text-sm text-paper/85"
-              >
-                {o}
-              </li>
-            ))}
+            {options.map((o) => {
+              const Icon = o.icon;
+              return (
+                <li
+                  key={o.text}
+                  className="flex items-center gap-3 rounded-sm border border-paper/15 px-5 py-4 text-sm text-paper/85 transition-colors hover:border-gold/40 hover:bg-paper/5"
+                >
+                  <Icon size={17} className="shrink-0 text-gold" />
+                  {o.text}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

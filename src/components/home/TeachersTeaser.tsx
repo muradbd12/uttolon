@@ -50,8 +50,11 @@ export default function TeachersTeaser() {
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
           {profiles && profiles.length > 0
             ? profiles.map((p, i) => (
-                <div key={i} className="flex flex-col items-center rounded-sm border border-line bg-paper p-8 text-center">
-                  <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-paper-raised text-ink-soft/40">
+                <div
+                  key={i}
+                  className="flex flex-col items-center rounded-sm border border-line bg-paper p-8 text-center transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                >
+                  <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-paper-raised text-ink-soft/40 ring-2 ring-gold-soft">
                     {p.photoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.photoUrl} alt={p.name} className="h-full w-full object-cover" />

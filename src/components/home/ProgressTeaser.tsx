@@ -1,3 +1,5 @@
+import { TrendingUp } from "lucide-react";
+
 const rows = [
   { label: "Concept", value: 82 },
   { label: "Practice", value: 76 },
@@ -21,9 +23,14 @@ export default function ProgressTeaser() {
           </p>
         </div>
 
-        <div className="rounded-sm border border-line bg-paper-raised p-6">
+        <div className="rounded-sm border border-line bg-paper-raised p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="font-display-bn text-lg text-ink">Mathematics</h3>
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
+                <TrendingUp size={15} />
+              </span>
+              <h3 className="font-display-bn text-lg text-ink">Mathematics</h3>
+            </div>
             <span className="rounded-sm bg-teal-soft px-2.5 py-1 text-xs font-medium text-teal-deep">
               Recovery: Active
             </span>

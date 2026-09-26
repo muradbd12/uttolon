@@ -88,20 +88,29 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-paper/10">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-5 py-5 text-xs text-paper/50 sm:px-8">
-          <span>© {new Date().getFullYear()} Uttolon Learning System. All Rights Reserved.</span>
-          <span>
-            Developed by{" "}
-            <a
-              href="https://murad.uttolonbd.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-paper/70 hover:text-gold"
-            >
-              Mosharraf Hossain Murad
-            </a>
-            , Electrical Engineer &amp; IT Specialist
-          </span>
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-xs text-paper/50 sm:px-8">
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <Link href="/faq" className="hover:text-gold">FAQ</Link>
+            <Link href="/admission-policy" className="hover:text-gold">ভর্তি নীতিমালা</Link>
+            <Link href="/refund-policy" className="hover:text-gold">রিফান্ড পলিসি</Link>
+            <Link href="/terms" className="hover:text-gold">শর্তাবলী</Link>
+            <Link href="/privacy-policy" className="hover:text-gold">প্রাইভেসি পলিসি</Link>
+          </nav>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>© {new Date().getFullYear()} Uttolon Learning System. All Rights Reserved.</span>
+            <span>
+              Developed by{" "}
+              <a
+                href="https://murad.uttolonbd.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-paper/70 hover:text-gold"
+              >
+                Mosharraf Hossain Murad
+              </a>
+              , Electrical Engineer &amp; IT Specialist
+            </span>
+          </div>
         </div>
       </div>
     </footer>

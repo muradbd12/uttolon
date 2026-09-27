@@ -13,6 +13,10 @@ export const PROGRAM_FEES: Record<string, number> = {
   "Alim Program": 3000,
   "HSC Program": 3000,
   "University Admission Program": 3500,
+  "IELTS Program": 4000,
+  "Arabic Language Program": 2000,
+  "Mathematics Olympiad Program": 2000,
+  "Quran Learning Program": 1500,
 };
 
 export function getProgramFee(program: string): number {

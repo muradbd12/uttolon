@@ -20,7 +20,7 @@ export async function GET() {
     return NextResponse.json({
       students: studentsCount.data().count,
       teachers: teachersCount.data().count,
-      courses: 9, // batch-02: SSC/Dakhil/Alim/HSC split + University Admission Program যোগ হওয়ার পর ৯টা স্থায়ী প্রোগ্রাম
+      courses: 13, // batch-14: IELTS/Arabic/Math Olympiad/Quran Learning যোগ হওয়ার পর ১৩টা স্থায়ী প্রোগ্রাম
       assessments: assessmentsCount.data().count,
     });
   } catch (err) {

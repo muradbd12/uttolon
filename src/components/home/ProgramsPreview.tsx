@@ -48,6 +48,26 @@ const programs = [
     bn: "বিশ্ববিদ্যালয় ভর্তি প্রোগ্রাম",
     desc: "বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য বিশেষ প্রস্তুতি।",
   },
+  {
+    title: "IELTS Program",
+    bn: "IELTS প্রোগ্রাম",
+    desc: "Listening, Reading, Writing ও Speaking-এ দক্ষতা বাড়ানোর জন্য প্রশিক্ষণ।",
+  },
+  {
+    title: "Arabic Language Program",
+    bn: "আরবি ভাষা প্রোগ্রাম",
+    desc: "আরবি ভাষা, ব্যাকরণ ও বোধগম্যতা শেখার প্রোগ্রাম।",
+  },
+  {
+    title: "Mathematics Olympiad Program",
+    bn: "গণিত অলিম্পিয়াড প্রোগ্রাম",
+    desc: "মেধাবী শিক্ষার্থীদের জন্য গণিত অলিম্পিয়াডের বিশেষ প্রস্তুতি।",
+  },
+  {
+    title: "Quran Learning Program",
+    bn: "কুরআন শিক্ষা প্রোগ্রাম",
+    desc: "সঠিক উচ্চারণ ও অর্থসহ কুরআন শেখার প্রোগ্রাম — অফলাইন ও অনলাইন উভয়ভাবে।",
+  },
 ];
 
 export default function ProgramsPreview() {

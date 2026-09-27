@@ -41,6 +41,8 @@ const programs = [
   "Regular Academic Program", "Revision Batch", "Recovery Batch",
   "Final Preparation Batch", "SSC Program", "Dakhil Program",
   "Alim Program", "HSC Program", "University Admission Program",
+  "IELTS Program", "Arabic Language Program", "Mathematics Olympiad Program",
+  "Quran Learning Program",
 ];
 
 const batchOptions = ["সকাল ব্যাচ", "দুপুর ব্যাচ", "বিকাল ব্যাচ", "সন্ধ্যা ব্যাচ", "উইকেন্ড ব্যাচ"];

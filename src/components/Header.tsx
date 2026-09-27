@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, ArrowUpRight, User2 } from "lucide-react";
+import { Menu, X, ArrowUpRight, User2, Wallet } from "lucide-react";
 import SiteSearch from "@/components/SiteSearch";
 
 const navLinks = [
@@ -49,6 +49,13 @@ export default function Header() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <SiteSearch />
+          <Link
+            href="/payment"
+            className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
+          >
+            <Wallet size={13} />
+            পেমেন্ট করুন
+          </Link>
           <Link
             href="/student/login"
             className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
@@ -102,6 +109,13 @@ export default function Header() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
+            <Link
+              href="/payment"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:text-ink"
+            >
+              <Wallet size={13} /> পেমেন্ট করুন
+            </Link>
             <Link
               href="/student/login"
               onClick={() => setOpen(false)}

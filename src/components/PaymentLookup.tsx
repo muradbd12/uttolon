@@ -28,7 +28,9 @@ function todayBn() {
 }
 
 export default function PaymentLookup() {
+  const [lookupMode, setLookupMode] = useState<"mobile" | "name">("mobile");
   const [mobile, setMobile] = useState("");
+  const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "found" | "not-found" | "error">("idle");
   const [record, setRecord] = useState<FoundRecord | null>(null);
@@ -54,7 +56,11 @@ export default function PaymentLookup() {
         fetch("/api/public/admission-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "lookup", mobile: mobile.trim(), code: code.trim() }),
+          body: JSON.stringify(
+            lookupMode === "mobile"
+              ? { action: "lookup", mobile: mobile.trim(), code: code.trim() }
+              : { action: "lookup", name: name.trim(), code: code.trim() }
+          ),
         })
       );
       if (res.status === 404) {
@@ -87,7 +93,7 @@ export default function PaymentLookup() {
           body: JSON.stringify({
             action: "pay",
             admissionId: record.id,
-            mobile: mobile.trim(),
+            ...(lookupMode === "mobile" ? { mobile: mobile.trim() } : { name: name.trim() }),
             code: code.trim(),
             amount,
             method: payMethod,
@@ -240,17 +246,53 @@ export default function PaymentLookup() {
 
   return (
     <form onSubmit={handleLookup} className="space-y-5 rounded-sm border border-line bg-paper p-6">
-      <div>
-        <label className="block text-sm font-medium text-ink">মোবাইল নম্বর</label>
-        <input
-          required
-          type="tel"
-          value={mobile}
-          onChange={(e) => setMobile(e.target.value)}
-          placeholder="01XXXXXXXXX"
-          className={`mt-1.5 ${inputClass}`}
-        />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setLookupMode("mobile")}
+          className={`rounded-sm border px-3.5 py-1.5 text-xs font-medium ${
+            lookupMode === "mobile" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"
+          }`}
+        >
+          মোবাইল দিয়ে খুঁজুন
+        </button>
+        <button
+          type="button"
+          onClick={() => setLookupMode("name")}
+          className={`rounded-sm border px-3.5 py-1.5 text-xs font-medium ${
+            lookupMode === "name" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"
+          }`}
+        >
+          নাম দিয়ে খুঁজুন
+        </button>
       </div>
+
+      {lookupMode === "mobile" ? (
+        <div>
+          <label className="block text-sm font-medium text-ink">মোবাইল নম্বর</label>
+          <input
+            required
+            type="tel"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+            placeholder="01XXXXXXXXX"
+            className={`mt-1.5 ${inputClass}`}
+          />
+        </div>
+      ) : (
+        <div>
+          <label className="block text-sm font-medium text-ink">শিক্ষার্থীর নাম</label>
+          <input
+            required
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="ভর্তি ফর্মে যে নাম দেওয়া হয়েছিল"
+            className={`mt-1.5 ${inputClass}`}
+          />
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-ink">আবেদন আইডি</label>
         <input
@@ -264,7 +306,10 @@ export default function PaymentLookup() {
       </div>
 
       {lookupStatus === "not-found" && (
-        <p className="text-sm text-clay">এই তথ্যে কোনো আবেদন পাওয়া যায়নি — মোবাইল ও আইডি আবার মিলিয়ে দেখুন।</p>
+        <p className="text-sm text-clay">
+          এই তথ্যে কোনো আবেদন পাওয়া যায়নি — {lookupMode === "mobile" ? "মোবাইল" : "নাম"} ও আইডি আবার
+          মিলিয়ে দেখুন।
+        </p>
       )}
       {lookupStatus === "error" && (
         <p className="text-sm text-clay">তথ্য আনতে সমস্যা হয়েছে — আবার চেষ্টা করুন।</p>

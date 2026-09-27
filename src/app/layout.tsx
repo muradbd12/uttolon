@@ -105,15 +105,12 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hindSiliguri.variable} ${inter.variable} ${notoSerifBengali.variable} ${tiroBangla.variable}`}
     >
       <body className="antialiased">
-        {/* Google Analytics (GA4) Tracking Scripts */}
+        {/* Google Analytics GA4 Scripts */}
         <Script
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-KH0T4YW75D"
         />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
-        >
+        <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -122,6 +119,7 @@ export default function RootLayout({
           `}
         </Script>
 
+        {/* Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

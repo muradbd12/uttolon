@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Fraunces, Hind_Siliguri, Inter, Noto_Serif_Bengali, Tiro_Bangla } from "next/font/google";
 import "./globals.css";
 import SiteChrome from "@/components/SiteChrome";
@@ -104,6 +105,23 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hindSiliguri.variable} ${inter.variable} ${notoSerifBengali.variable} ${tiroBangla.variable}`}
     >
       <body className="antialiased">
+        {/* Google Analytics (GA4) Tracking Scripts */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-KH0T4YW75D"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+        >
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-KH0T4YW75D');
+          `}
+        </Script>
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

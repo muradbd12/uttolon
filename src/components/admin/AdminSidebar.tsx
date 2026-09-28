@@ -20,6 +20,7 @@ import {
   MessageSquare,
   KeyRound,
   Settings,
+  BookOpen,
   Menu,
   X,
 } from "lucide-react";
@@ -62,6 +63,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/resources", label: "রিসোর্স", icon: FolderOpen },
       { href: "/admin/scholarships", label: "স্কলারশিপ", icon: Award },
       { href: "/admin/success-stories", label: "সাফল্যের গল্প", icon: Star },
+      { href: "/admin/books", label: "বই ব্যবস্থাপনা", icon: BookOpen },
     ],
   },
   {

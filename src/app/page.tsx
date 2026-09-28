@@ -12,24 +12,25 @@ import Scholarship from "@/components/home/Scholarship";
 import KnowledgeHub from "@/components/home/KnowledgeHub";
 import AdmissionCTA from "@/components/home/AdmissionCTA";
 import ContactBlock from "@/components/home/ContactBlock";
+import Reveal from "@/components/Reveal";
 
 export default function Home() {
   return (
     <>
       <Hero />
-      <TrustStats />
-      <ProblemSolution />
-      <LearningSystem />
-      <DriverDay />
-      <ProgramsPreview />
-      <PracticalLearningTeaser />
-      <TeachersTeaser />
-      <ProgressTeaser />
-      <SuccessStories />
-      <Scholarship />
-      <KnowledgeHub />
-      <AdmissionCTA />
-      <ContactBlock />
+      <Reveal><TrustStats /></Reveal>
+      <Reveal><ProblemSolution /></Reveal>
+      <Reveal><LearningSystem /></Reveal>
+      <Reveal><DriverDay /></Reveal>
+      <Reveal><ProgramsPreview /></Reveal>
+      <Reveal><PracticalLearningTeaser /></Reveal>
+      <Reveal><TeachersTeaser /></Reveal>
+      <Reveal><ProgressTeaser /></Reveal>
+      <Reveal><SuccessStories /></Reveal>
+      <Reveal><Scholarship /></Reveal>
+      <Reveal><KnowledgeHub /></Reveal>
+      <Reveal><AdmissionCTA /></Reveal>
+      <Reveal><ContactBlock /></Reveal>
     </>
   );
 }

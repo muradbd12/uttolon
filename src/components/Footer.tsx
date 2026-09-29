@@ -51,6 +51,7 @@ export default function Footer() {
             <li><Link href="/about" className="hover:text-gold">উত্তোলন সম্পর্কে</Link></li>
             <li><Link href="/programs" className="hover:text-gold">প্রোগ্রাম</Link></li>
             <li><Link href="/books" className="hover:text-gold">বই সংগ্রহ</Link></li>
+            <li><Link href="/gallery" className="hover:text-gold">গ্যালারি</Link></li>
             <li><Link href="/teachers" className="hover:text-gold">শিক্ষক</Link></li>
             <li><Link href="/admission" className="hover:text-gold">ভর্তি</Link></li>
             <li><Link href="/blog" className="hover:text-gold">ব্লগ</Link></li>

@@ -10,6 +10,7 @@ const iconByType = {
   blog: BookOpen,
   resource: FolderOpen,
   teacher: User2,
+  book: FileText,
 };
 
 export default function SiteSearch() {

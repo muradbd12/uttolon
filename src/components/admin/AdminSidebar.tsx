@@ -21,6 +21,7 @@ import {
   KeyRound,
   Settings,
   BookOpen,
+  Image as ImageIcon,
   Menu,
   X,
 } from "lucide-react";
@@ -64,6 +65,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/scholarships", label: "স্কলারশিপ", icon: Award },
       { href: "/admin/success-stories", label: "সাফল্যের গল্প", icon: Star },
       { href: "/admin/books", label: "বই ব্যবস্থাপনা", icon: BookOpen },
+      { href: "/admin/gallery", label: "গ্যালারি ব্যবস্থাপনা", icon: ImageIcon },
     ],
   },
   {

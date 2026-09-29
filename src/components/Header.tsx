@@ -11,6 +11,7 @@ const navLinks = [
   { label: "লার্নিং সিস্টেম", href: "/#uls" },
   { label: "প্রোগ্রাম", href: "/programs" },
   { label: "বই সংগ্রহ", href: "/books" },
+  { label: "গ্যালারি", href: "/gallery" },
   { label: "শিক্ষক", href: "/teachers" },
   { label: "ব্লগ", href: "/blog" },
   { label: "যোগাযোগ", href: "/contact" },

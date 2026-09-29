@@ -124,5 +124,10 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
+
+    match /gallery/{photoId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

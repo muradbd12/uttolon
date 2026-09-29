@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/programs",
     "/admission",
     "/books",
+    "/gallery",
     "/contact",
     "/teachers",
     "/blog",

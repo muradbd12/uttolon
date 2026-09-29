@@ -5,7 +5,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
 
 export type SearchItem = {
-  type: "notice" | "blog" | "resource" | "teacher";
+  type: "notice" | "blog" | "resource" | "teacher" | "book";
   typeLabel: string;
   title: string;
   subtitle: string;
@@ -16,7 +16,10 @@ const staticPages: SearchItem[] = [
   { type: "resource", typeLabel: "পেজ", title: "উত্তোলন সম্পর্কে", subtitle: "About", href: "/about" },
   { type: "resource", typeLabel: "পেজ", title: "প্রোগ্রাম", subtitle: "Programs", href: "/programs" },
   { type: "resource", typeLabel: "পেজ", title: "ভর্তি আবেদন", subtitle: "Admission", href: "/admission" },
+  { type: "resource", typeLabel: "পেজ", title: "বই সংগ্রহ", subtitle: "Book Shop", href: "/books" },
+  { type: "resource", typeLabel: "পেজ", title: "গ্যালারি", subtitle: "Gallery", href: "/gallery" },
   { type: "resource", typeLabel: "পেজ", title: "বৃত্তি আবেদন", subtitle: "Scholarship", href: "/scholarship" },
+  { type: "resource", typeLabel: "পেজ", title: "সাধারণ জিজ্ঞাসা", subtitle: "FAQ", href: "/faq" },
   { type: "resource", typeLabel: "পেজ", title: "যোগাযোগ", subtitle: "Contact", href: "/contact" },
 ];
 
@@ -30,11 +33,12 @@ export function useSiteSearch() {
     async function load() {
       try {
         const db = getFirebaseDb();
-        const [noticesSnap, blogSnap, resourcesSnap, teachersSnap] = await Promise.all([
+        const [noticesSnap, blogSnap, resourcesSnap, teachersSnap, booksSnap] = await Promise.all([
           getDocs(collection(db, "notices")),
           getDocs(query(collection(db, "blogPosts"), where("published", "==", true))),
           getDocs(collection(db, "resources")),
           getDocs(query(collection(db, "teacherProfiles"), where("published", "==", true))),
+          getDocs(collection(db, "books")),
         ]);
 
         const notices: SearchItem[] = noticesSnap.docs.map((d) => ({
@@ -69,7 +73,15 @@ export function useSiteSearch() {
           href: "/teachers",
         }));
 
-        setItems([...staticPages, ...notices, ...blogs, ...resources, ...teachers]);
+        const books: SearchItem[] = booksSnap.docs.map((d) => ({
+          type: "book",
+          typeLabel: "বই",
+          title: (d.data().title as string) || "",
+          subtitle: `${d.data().level || ""} · ${d.data().subject || ""}`,
+          href: `/books/${d.id}`,
+        }));
+
+        setItems([...staticPages, ...notices, ...blogs, ...resources, ...teachers, ...books]);
       } catch {
         setItems(staticPages);
       }

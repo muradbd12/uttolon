@@ -1,26 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
-import { getFirebaseDb } from "@/lib/firebase";
-import { Trash2, Loader2, AlertCircle, ImageOff, Plus } from "lucide-react";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { getFirebaseDb, getFirebaseStorage } from "@/lib/firebase";
+import { Trash2, Loader2, AlertCircle, ImageOff, UploadCloud, CheckCircle2 } from "lucide-react";
 
-type Photo = { id: string; imageUrl: string; caption?: string };
+type Photo = { id: string; imageUrl: string; storagePath?: string; caption?: string };
+type UploadItem = { name: string; progress: number; status: "uploading" | "done" | "error" };
+
+const MAX_FILES = 10;
 
 export default function AdminGalleryManager() {
   const [photos, setPhotos] = useState<Photo[] | null>(null);
-  const [error, setError] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
-  const [caption, setCaption] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     try {
       const snap = await getDocs(collection(getFirebaseDb(), "gallery"));
       setPhotos(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Photo, "id">) })));
     } catch {
-      setError(true);
+      setError("তালিকা আনা যায়নি।");
     }
   }
 
@@ -28,76 +31,132 @@ export default function AdminGalleryManager() {
     load();
   }, []);
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!imageUrl.trim()) return;
-    setSaving(true);
-    try {
-      await addDoc(collection(getFirebaseDb(), "gallery"), {
-        imageUrl: imageUrl.trim(),
-        caption: caption.trim() || null,
-        createdAt: serverTimestamp(),
-      });
-      setImageUrl("");
-      setCaption("");
-      await load();
-    } catch {
-      setError(true);
-    } finally {
-      setSaving(false);
+  async function handleFilesSelected(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    setError(null);
+
+    const files = Array.from(fileList).slice(0, MAX_FILES);
+    if (fileList.length > MAX_FILES) {
+      setError(`একসাথে সর্বোচ্চ ${MAX_FILES}টা ছবি আপলোড করা যাবে — প্রথম ${MAX_FILES}টা নেওয়া হয়েছে।`);
     }
+
+    setUploads(files.map((f) => ({ name: f.name, progress: 0, status: "uploading" as const })));
+
+    const storage = getFirebaseStorage();
+    const db = getFirebaseDb();
+
+    await Promise.all(
+      files.map(
+        (file, index) =>
+          new Promise<void>((resolve) => {
+            const path = `gallery/${Date.now()}_${index}_${file.name}`;
+            const storageRef = ref(storage, path);
+            const task = uploadBytesResumable(storageRef, file);
+
+            task.on(
+              "state_changed",
+              (snap) => {
+                const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                setUploads((prev) =>
+                  prev.map((u, i) => (i === index ? { ...u, progress: pct } : u))
+                );
+              },
+              () => {
+                setUploads((prev) =>
+                  prev.map((u, i) => (i === index ? { ...u, status: "error" } : u))
+                );
+                resolve();
+              },
+              async () => {
+                try {
+                  const url = await getDownloadURL(storageRef);
+                  await addDoc(collection(db, "gallery"), {
+                    imageUrl: url,
+                    storagePath: path,
+                    caption: null,
+                    createdAt: serverTimestamp(),
+                  });
+                  setUploads((prev) =>
+                    prev.map((u, i) => (i === index ? { ...u, status: "done", progress: 100 } : u))
+                  );
+                } catch {
+                  setUploads((prev) =>
+                    prev.map((u, i) => (i === index ? { ...u, status: "error" } : u))
+                  );
+                }
+                resolve();
+              }
+            );
+          })
+      )
+    );
+
+    await load();
+    if (inputRef.current) inputRef.current.value = "";
   }
 
-  async function handleDelete(id: string) {
-    setDeletingId(id);
+  async function handleDelete(photo: Photo) {
+    setDeletingId(photo.id);
     try {
-      await deleteDoc(doc(getFirebaseDb(), "gallery", id));
-      setPhotos((prev) => (prev ? prev.filter((p) => p.id !== id) : prev));
+      await deleteDoc(doc(getFirebaseDb(), "gallery", photo.id));
+      if (photo.storagePath) {
+        try {
+          await deleteObject(ref(getFirebaseStorage(), photo.storagePath));
+        } catch {
+          // ছবি Storage থেকে মুছতে না পারলেও তালিকা থেকে বাদ দেওয়া হয়ে গেছে — সমস্যা নেই
+        }
+      }
+      setPhotos((prev) => (prev ? prev.filter((p) => p.id !== photo.id) : prev));
     } catch {
-      setError(true);
+      setError("মুছে ফেলা যায়নি।");
     } finally {
       setDeletingId(null);
     }
   }
 
+  const isUploading = uploads.some((u) => u.status === "uploading");
+
   return (
     <div>
-      <form onSubmit={handleAdd} className="rounded-sm border border-line bg-paper p-5">
-        <h2 className="font-display-bn text-lg text-ink">নতুন ছবি যোগ করুন</h2>
-        <p className="mt-1 text-xs text-ink-soft/60">
-          ছবি Google Drive/Imgur-এর মতো কোথাও আপলোড করে তার সরাসরি লিংক (URL) এখানে বসান।
-        </p>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <input
-            required
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="ছবির লিংক (https://...)"
-            className="rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-sm text-ink outline-none focus:border-ink"
-          />
-          <input
-            type="text"
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="ক্যাপশন (ঐচ্ছিক)"
-            className="rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-sm text-ink outline-none focus:border-ink"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={saving}
-          className="mt-4 flex items-center gap-2 rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
-        >
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-          যোগ করুন
-        </button>
+      <div className="rounded-sm border-2 border-dashed border-line bg-paper p-6 text-center">
+        <UploadCloud size={26} className="mx-auto text-gold-deep" strokeWidth={1.4} />
+        <p className="mt-2 text-sm text-ink">একসাথে সর্বোচ্চ {MAX_FILES}টা ছবি বেছে নিয়ে আপলোড করুন</p>
+        <p className="mt-1 text-xs text-ink-soft/60">প্রতিটা ছবি সর্বোচ্চ ৮ MB, JPG/PNG</p>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          disabled={isUploading}
+          onChange={(e) => handleFilesSelected(e.target.files)}
+          className="mt-4 text-sm text-ink-soft file:mr-3 file:rounded-sm file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-medium file:text-paper hover:file:bg-gold-deep"
+        />
+
+        {uploads.length > 0 && (
+          <div className="mt-5 space-y-2 text-left">
+            {uploads.map((u, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <span className="w-32 shrink-0 truncate text-ink-soft">{u.name}</span>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
+                  <div
+                    className={`h-1.5 rounded-full transition-all ${u.status === "error" ? "bg-clay" : "bg-teal"}`}
+                    style={{ width: `${u.progress}%` }}
+                  />
+                </div>
+                {u.status === "done" && <CheckCircle2 size={14} className="text-teal-deep" />}
+                {u.status === "error" && <AlertCircle size={14} className="text-clay" />}
+                {u.status === "uploading" && <Loader2 size={14} className="animate-spin text-ink-soft" />}
+              </div>
+            ))}
+          </div>
+        )}
+
         {error && (
-          <p className="mt-3 flex items-center gap-1.5 text-sm text-clay">
-            <AlertCircle size={14} /> একটা সমস্যা হয়েছে, আবার চেষ্টা করুন।
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-sm text-clay">
+            <AlertCircle size={14} /> {error}
           </p>
         )}
-      </form>
+      </div>
 
       <div className="mt-8">
         {photos === null ? (
@@ -115,11 +174,10 @@ export default function AdminGalleryManager() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.imageUrl} alt={p.caption || ""} className="h-full w-full object-cover" />
                 </div>
-                <div className="flex items-center justify-between gap-2 p-2.5">
-                  <p className="line-clamp-1 text-xs text-ink-soft">{p.caption || "—"}</p>
+                <div className="flex items-center justify-end p-2">
                   <button
                     type="button"
-                    onClick={() => handleDelete(p.id)}
+                    onClick={() => handleDelete(p)}
                     disabled={deletingId === p.id}
                     className="shrink-0 text-clay hover:text-clay/70 disabled:opacity-50"
                     aria-label="মুছে ফেলুন"

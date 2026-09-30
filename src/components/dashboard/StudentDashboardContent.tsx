@@ -16,6 +16,7 @@ import { useTodaySchedule } from "@/lib/useTodaySchedule";
 import RecentNotices from "@/components/dashboard/RecentNotices";
 import FeeSummary from "@/components/dashboard/FeeSummary";
 import AdmissionFeeSummary from "@/components/dashboard/AdmissionFeeSummary";
+import ProgressReport from "@/components/dashboard/ProgressReport";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 
 export default function StudentDashboardContent() {
@@ -180,6 +181,14 @@ export default function StudentDashboardContent() {
             <AdmissionFeeSummary studentUid={profile?.uid} />
 
             <RecentNotices />
+          </div>
+
+          <div className="mt-6">
+            <ProgressReport
+              studentUid={profile?.uid}
+              studentName={profile?.name}
+              className={profile?.className}
+            />
           </div>
         </div>
       </div>

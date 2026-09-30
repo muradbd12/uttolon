@@ -18,6 +18,7 @@ import { getFirebaseDb } from "@/lib/firebase";
 import RecentNotices from "@/components/dashboard/RecentNotices";
 import FeeSummary from "@/components/dashboard/FeeSummary";
 import AdmissionFeeSummary from "@/components/dashboard/AdmissionFeeSummary";
+import ProgressReport from "@/components/dashboard/ProgressReport";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 import { demoUpcomingExams } from "@/content/guardian-demo";
 
@@ -228,6 +229,14 @@ export default function GuardianDashboardContent() {
             <AdmissionFeeSummary studentUid={selectedUid} />
 
             <RecentNotices />
+          </div>
+
+          <div className="mt-6">
+            <ProgressReport
+              studentUid={selectedUid}
+              studentName={selectedChild?.name}
+              className={selectedChild?.className}
+            />
           </div>
         </div>
       </div>

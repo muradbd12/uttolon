@@ -132,3 +132,48 @@ body {
   }
 }
 
+/* "ভর্তি হোন" বাটনে প্রতি ১০ সেকেন্ডে একবার হালকা আলোর ঝলক (shine) বয়ে
+   যায় — বাকি সময় বাটন স্বাভাবিক থাকে, শুধু চোখ টানার জন্য এই সংক্ষিপ্ত
+   প্রিমিয়াম টাচ। prefers-reduced-motion চালু থাকলে সম্পূর্ণ বন্ধ থাকবে। */
+@keyframes admission-shine-sweep {
+  0% {
+    left: -60%;
+  }
+  8% {
+    left: 130%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+.admission-cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.admission-cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  height: 100%;
+  width: 45%;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: admission-shine-sweep 10s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admission-cta::after {
+    animation: none;
+    display: none;
+  }
+}
+

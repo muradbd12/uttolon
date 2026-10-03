@@ -139,11 +139,14 @@ body {
   0% {
     left: -60%;
   }
-  8% {
+  9% {
     left: 130%;
   }
+  18% {
+    left: -60%;
+  }
   100% {
-    left: 130%;
+    left: -60%;
   }
 }
 
@@ -167,7 +170,7 @@ body {
   );
   transform: skewX(-20deg);
   pointer-events: none;
-  animation: admission-shine-sweep 10s ease-in-out infinite;
+  animation: admission-shine-sweep 9s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

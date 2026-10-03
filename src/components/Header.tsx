@@ -38,23 +38,23 @@ export default function Header() {
         </Link>
 
         {/* Desktop nav — xl+ only, so it never has to squeeze into a cramped 1024–1280px range */}
-        <nav className="hidden items-center gap-4 xl:flex">
+        <nav className="hidden items-center gap-5 xl:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap text-sm text-ink-soft transition-colors hover:text-ink"
+              className="whitespace-nowrap text-[15px] font-semibold text-ink transition-colors hover:text-gold-deep"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-1 xl:flex">
+        <div className="hidden items-center gap-1.5 xl:flex">
           <SiteSearch />
           <Link
             href="/payment"
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2.5 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-ink-soft transition-all hover:bg-paper-raised hover:text-ink"
           >
             <Wallet size={13} />
             পেমেন্ট
@@ -66,18 +66,26 @@ export default function Header() {
               type="button"
               onClick={() => setLoginOpen((v) => !v)}
               onBlur={() => setTimeout(() => setLoginOpen(false), 150)}
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2.5 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition-all hover:bg-paper-raised hover:text-ink ${
+                loginOpen ? "bg-paper-raised text-ink" : "text-ink-soft"
+              }`}
             >
               <User2 size={13} />
               লগইন
               <ChevronDown size={12} className={`transition-transform ${loginOpen ? "rotate-180" : ""}`} />
             </button>
             {loginOpen && (
-              <div className="absolute right-0 top-full mt-1 w-44 rounded-sm border border-line bg-paper py-1 shadow-md">
-                <Link href="/student/login" className="block px-3.5 py-2 text-sm text-ink hover:bg-paper-raised">
+              <div className="absolute right-0 top-full mt-1.5 w-48 overflow-hidden rounded-sm border border-line bg-paper py-1 shadow-lg">
+                <Link
+                  href="/student/login"
+                  className="block px-4 py-2.5 text-sm text-ink transition-colors hover:bg-gold-soft/50 hover:text-gold-deep"
+                >
                   স্টুডেন্ট লগইন
                 </Link>
-                <Link href="/guardian/login" className="block px-3.5 py-2 text-sm text-ink hover:bg-paper-raised">
+                <Link
+                  href="/guardian/login"
+                  className="block px-4 py-2.5 text-sm text-ink transition-colors hover:bg-gold-soft/50 hover:text-gold-deep"
+                >
                   গার্ডিয়ান লগইন
                 </Link>
               </div>
@@ -93,12 +101,18 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Mobile/tablet toggle — covers everything below xl now */}
-        <div className="flex items-center gap-1 xl:hidden">
+        {/* Mobile/tablet: always-visible compact Admission CTA + search + menu toggle */}
+        <div className="flex items-center gap-1.5 xl:hidden">
           <SiteSearch />
+          <Link
+            href="/admission"
+            className="admission-cta whitespace-nowrap rounded-full bg-ink px-3.5 py-2 text-xs font-semibold text-paper"
+          >
+            ভর্তি হোন
+          </Link>
           <button
             type="button"
-            className="flex items-center justify-center p-2"
+            className="flex items-center justify-center rounded-full p-2 text-ink-soft transition-all hover:bg-paper-raised hover:text-ink"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
           >
@@ -116,7 +130,7 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-sm px-2 py-2.5 text-[15px] text-ink hover:bg-paper-raised"
+                className="rounded-sm px-2 py-2.5 text-[15px] font-medium text-ink hover:bg-paper-raised"
               >
                 {link.label}
               </Link>
@@ -126,30 +140,23 @@ export default function Header() {
             <Link
               href="/payment"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:text-ink"
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:bg-paper-raised hover:text-ink"
             >
               <Wallet size={13} /> পেমেন্ট করুন
             </Link>
             <Link
               href="/student/login"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:text-ink"
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:bg-paper-raised hover:text-ink"
             >
               <User2 size={13} /> স্টুডেন্ট লগইন
             </Link>
             <Link
               href="/guardian/login"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:text-ink"
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:bg-paper-raised hover:text-ink"
             >
               <User2 size={13} /> গার্ডিয়ান লগইন
-            </Link>
-            <Link
-              href="/admission"
-              onClick={() => setOpen(false)}
-              className="admission-cta flex items-center justify-center gap-1.5 rounded-sm bg-ink px-4 py-3 text-sm font-medium text-paper"
-            >
-              ভর্তি হোন <ArrowUpRight size={15} />
             </Link>
           </div>
         </div>

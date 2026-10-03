@@ -50,7 +50,7 @@ export default function SiteSearch() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="সাইট খুঁজুন"
-        className="flex items-center gap-1.5 rounded-sm px-2.5 py-2 text-ink-soft transition-colors hover:text-ink"
+        className="flex items-center justify-center rounded-full p-2.5 text-ink-soft transition-all hover:scale-105 hover:bg-paper-raised hover:text-gold-deep"
       >
         <Search size={17} />
       </button>

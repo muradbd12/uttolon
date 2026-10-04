@@ -25,13 +25,13 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
         {/* Logo mark */}
-        <Link href="/" className="flex shrink-0 items-center gap-3" onClick={() => setOpen(false)}>
+        <Link href="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-3" onClick={() => setOpen(false)}>
           <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">
             <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-full w-full object-contain" />
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-display-bn text-xl text-ink">উত্তোলন</span>
-            <span className="font-label text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+            <span className="font-label hidden text-[10px] uppercase tracking-[0.18em] text-ink-soft sm:block">
               Uttolon Learning System
             </span>
           </span>
@@ -54,9 +54,9 @@ export default function Header() {
           <SiteSearch />
           <Link
             href="/payment"
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-ink-soft transition-all hover:bg-paper-raised hover:text-ink"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-[15px] font-semibold text-ink transition-all hover:bg-paper-raised hover:text-gold-deep"
           >
-            <Wallet size={13} />
+            <Wallet size={14} />
             পেমেন্ট
           </Link>
 
@@ -66,11 +66,11 @@ export default function Header() {
               type="button"
               onClick={() => setLoginOpen((v) => !v)}
               onBlur={() => setTimeout(() => setLoginOpen(false), 150)}
-              className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition-all hover:bg-paper-raised hover:text-ink ${
-                loginOpen ? "bg-paper-raised text-ink" : "text-ink-soft"
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-[15px] font-semibold transition-all hover:bg-paper-raised hover:text-gold-deep ${
+                loginOpen ? "bg-paper-raised text-gold-deep" : "text-ink"
               }`}
             >
-              <User2 size={13} />
+              <User2 size={14} />
               লগইন
               <ChevronDown size={12} className={`transition-transform ${loginOpen ? "rotate-180" : ""}`} />
             </button>
@@ -102,17 +102,17 @@ export default function Header() {
         </div>
 
         {/* Mobile/tablet: always-visible compact Admission CTA + search + menu toggle */}
-        <div className="flex items-center gap-1.5 xl:hidden">
+        <div className="flex shrink-0 items-center gap-1 xl:hidden">
           <SiteSearch />
           <Link
             href="/admission"
-            className="admission-cta whitespace-nowrap rounded-full bg-ink px-3.5 py-2 text-xs font-semibold text-paper"
+            className="admission-cta whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-paper"
           >
             ভর্তি হোন
           </Link>
           <button
             type="button"
-            className="flex items-center justify-center rounded-full p-2 text-ink-soft transition-all hover:bg-paper-raised hover:text-ink"
+            className="flex shrink-0 items-center justify-center rounded-full p-1.5 text-ink transition-all hover:bg-paper-raised hover:text-gold-deep"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "মেনু বন্ধ করুন" : "মেনু খুলুন"}
           >
@@ -140,21 +140,21 @@ export default function Header() {
             <Link
               href="/payment"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:bg-paper-raised hover:text-ink"
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-[15px] font-semibold text-ink hover:bg-paper-raised hover:text-gold-deep"
             >
               <Wallet size={13} /> পেমেন্ট করুন
             </Link>
             <Link
               href="/student/login"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:bg-paper-raised hover:text-ink"
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-[15px] font-semibold text-ink hover:bg-paper-raised hover:text-gold-deep"
             >
               <User2 size={13} /> স্টুডেন্ট লগইন
             </Link>
             <Link
               href="/guardian/login"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-sm text-ink-soft hover:bg-paper-raised hover:text-ink"
+              className="flex items-center gap-1.5 rounded-sm px-2 py-2 text-[15px] font-semibold text-ink hover:bg-paper-raised hover:text-gold-deep"
             >
               <User2 size={13} /> গার্ডিয়ান লগইন
             </Link>

@@ -1,4 +1,6 @@
 export type ReceiptData = {
+  photoUrl?: string;
+  signatureUrl?: string;
   studentNameBn?: string;
   studentNameEn?: string;
   dob?: string;
@@ -78,15 +80,25 @@ export default function AdmissionReceiptCard({
             <p className="font-display-en text-[9px] tracking-wide text-ink-soft">Uttolon Learning System</p>
           </div>
         </div>
-        <div className="text-right">
-          <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[8.5px] font-bold uppercase text-gold-deep">
-            অফিস কপি (Office Copy)
-          </span>
-          <p className="mt-0.5 font-display-en text-[10.5px] text-ink">
-            {applicationId && <>আইডি: {applicationId}</>}
-            {applicationId && dateLabel && " · "}
-            {dateLabel && <>জমা: {dateLabel}</>}
-          </p>
+        <div className="flex items-center gap-2">
+          <div className="text-right">
+            <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[8.5px] font-bold uppercase text-gold-deep">
+              অফিস কপি (Office Copy)
+            </span>
+            <p className="mt-0.5 font-display-en text-[10.5px] text-ink">
+              {applicationId && <>আইডি: {applicationId}</>}
+              {applicationId && dateLabel && " · "}
+              {dateLabel && <>জমা: {dateLabel}</>}
+            </p>
+          </div>
+          {data.photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={data.photoUrl}
+              alt="আবেদনকারীর ছবি"
+              className="h-14 w-11 shrink-0 rounded-sm border border-line object-cover"
+            />
+          )}
         </div>
       </div>
 
@@ -145,9 +157,15 @@ export default function AdmissionReceiptCard({
         উল্লেখিত সকল তথ্য সঠিক ও নির্ভুল। কোর্স চলাকালীন সময়ে কর্তৃপক্ষের যাবতীয়
         নিয়ম-শৃঙ্খলা মানিয়া চলিব এবং নির্ধারিত ফি পরিশোধে বাধ্য থাকিব।
         <div className="mt-2 flex justify-end">
-          <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
-            ছাত্র/ছাত্রী বা অভিভাবকের স্বাক্ষর
-          </span>
+          <div className="flex flex-col items-center">
+            {data.signatureUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={data.signatureUrl} alt="স্বাক্ষর" className="mb-0.5 h-8 max-w-[120px] object-contain" />
+            )}
+            <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
+              ছাত্র/ছাত্রী বা অভিভাবকের স্বাক্ষর
+            </span>
+          </div>
         </div>
       </div>
 

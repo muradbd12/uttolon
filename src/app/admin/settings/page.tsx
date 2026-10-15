@@ -3,6 +3,7 @@ import Link from "next/link";
 import { KeyRound, Info } from "lucide-react";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
 import AdminBackup from "@/components/AdminBackup";
+import AdminAssignStudentIds from "@/components/AdminAssignStudentIds";
 
 export const metadata: Metadata = {
   title: "Settings | Admin | Uttolon",
@@ -19,6 +20,7 @@ export default function AdminSettingsPage() {
 
           <div className="mt-8 space-y-4">
             <AdminBackup />
+            <AdminAssignStudentIds />
 
             <Link
               href="/admin/reset-password"

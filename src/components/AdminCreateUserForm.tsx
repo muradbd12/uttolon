@@ -39,7 +39,7 @@ export default function AdminCreateUserForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [errorCode, setErrorCode] = useState("");
   const [errorDetails, setErrorDetails] = useState("");
-  const [created, setCreated] = useState<{ identifier: string; password: string; linkWarning?: boolean } | null>(null);
+  const [created, setCreated] = useState<{ identifier: string; password: string; studentId?: string | null; linkWarning?: boolean } | null>(null);
   const [students, setStudents] = useState<StudentOption[] | null>(null);
   const [selectedStudentUids, setSelectedStudentUids] = useState<string[]>([]);
   const [studentSearch, setStudentSearch] = useState("");
@@ -117,7 +117,7 @@ export default function AdminCreateUserForm() {
         return;
       }
 
-      setCreated({ identifier, password });
+      setCreated({ identifier, password, studentId: data.studentId || null });
       setStatus("success");
       (e.target as HTMLFormElement).reset();
       setSelectedStudentUids([]);
@@ -156,6 +156,7 @@ export default function AdminCreateUserForm() {
             <div className="mt-3 space-y-1 rounded-sm bg-paper px-4 py-3 font-display-en text-sm">
               <p>লগইন: {created.identifier}</p>
               <p>পাসওয়ার্ড: {created.password}</p>
+              {created.studentId && <p>স্টুডেন্ট আইডি: {created.studentId}</p>}
             </div>
             {created.linkWarning && (
               <p className="mt-3 flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">

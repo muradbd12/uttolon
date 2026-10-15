@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { allocateStudentId } from "@/lib/studentId";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { identifierToEmail } from "@/lib/identifier";
 
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
 
     await adminAuth.setCustomUserClaims(userRecord.uid, { role });
 
+    const studentId = role === "student" ? await allocateStudentId(db) : null;
     await db
       .collection("users")
       .doc(userRecord.uid)
@@ -124,9 +126,10 @@ export async function POST(req: NextRequest) {
         linkedStudentUids: role === "guardian" ? linkedStudentUids : null,
         adminLevel: role === "admin" ? adminLevel : null,
         createdAt: new Date().toISOString(),
+        ...(studentId ? { studentId } : {}),
       });
 
-    return NextResponse.json({ uid: userRecord.uid, email });
+    return NextResponse.json({ uid: userRecord.uid, email, studentId });
   } catch (err: unknown) {
     console.error("[create-user] unexpected error:", err);
     const code = (err as { errorInfo?: { code?: string }; code?: string })?.errorInfo?.code

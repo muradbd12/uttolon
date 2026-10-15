@@ -22,10 +22,12 @@ function toBn(n: number) {
 export default function ProgressReport({
   studentUid,
   studentName,
+  studentId,
   className,
 }: {
   studentUid: string | null | undefined;
   studentName?: string | null;
+  studentId?: string | null;
   className?: string | null;
 }) {
   const assessments = useAssessments(studentUid);
@@ -71,6 +73,9 @@ export default function ProgressReport({
         <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
           <p><span className="text-ink-soft">শিক্ষার্থীর নাম:</span> <span className="text-ink">{studentName || "—"}</span></p>
           <p><span className="text-ink-soft">শ্রেণি:</span> <span className="text-ink">{className || "—"}</span></p>
+          {studentId && (
+            <p><span className="text-ink-soft">স্টুডেন্ট আইডি:</span> <span className="text-ink">{studentId}</span></p>
+          )}
         </div>
 
         <div className="mt-5">

@@ -10,6 +10,7 @@ import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVouche
 import { printIsolated } from "@/lib/printReceipt";
 import { getProgramFee } from "@/lib/programFees";
 import { toEnglishDigits } from "@/lib/numberInput";
+import PhotoSignatureFields from "@/components/PhotoSignatureFields";
 
 const classes = [
   "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8",
@@ -58,6 +59,8 @@ const requiredDocs = [
 ];
 
 type AdmissionData = {
+  photoUrl?: string;
+  signatureUrl?: string;
   studentNameBn: string;
   studentNameEn: string;
   dob: string;
@@ -134,6 +137,9 @@ export default function AdmissionForm() {
   const [submitted, setSubmitted] = useState<AdmissionData | null>(null);
   const [pendingData, setPendingData] = useState<AdmissionData | null>(null);
   const [payAmount, setPayAmount] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [signatureUrl, setSignatureUrl] = useState("");
+  const [uploadBusy, setUploadBusy] = useState(false);
   const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
 
@@ -143,6 +149,8 @@ export default function AdmissionForm() {
     const get = (name: string) => (form.get(name) as string) || "";
 
     const data: AdmissionData = {
+      photoUrl,
+      signatureUrl,
       studentNameBn: get("studentNameBn"),
       studentNameEn: get("studentNameEn"),
       dob: get("dob"),
@@ -483,6 +491,17 @@ export default function AdmissionForm() {
         </fieldset>
       </div>
 
+      <div className="border-t border-line pt-8">
+        <SectionHeader number="০৭" title="ছবি ও স্বাক্ষর (ঐচ্ছিক)" />
+        <div className="mt-5">
+          <PhotoSignatureFields
+            onPhotoChange={setPhotoUrl}
+            onSignatureChange={setSignatureUrl}
+            onBusyChange={setUploadBusy}
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 border-t border-line pt-8 sm:grid-cols-2">
         <div>
           <h4 className="font-display-bn text-base text-ink">প্রয়োজনীয় ডকুমেন্ট</h4>
@@ -508,9 +527,10 @@ export default function AdmissionForm() {
 
       <button
         type="submit"
-        className="flex w-full items-center justify-center gap-2 rounded-sm bg-ink py-3.5 text-sm font-medium text-paper transition-colors hover:bg-gold-deep sm:w-auto sm:px-10"
+        disabled={uploadBusy}
+        className="flex w-full items-center justify-center gap-2 rounded-sm bg-ink py-3.5 text-sm font-medium text-paper transition-colors hover:bg-gold-deep disabled:opacity-60 sm:w-auto sm:px-10"
       >
-        পর্যালোচনা করুন
+        {uploadBusy ? "ছবি/স্বাক্ষর আপলোড হচ্ছে..." : "পর্যালোচনা করুন"}
       </button>
       </div>
 

@@ -22,7 +22,7 @@ import ProgressReport from "@/components/dashboard/ProgressReport";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 import { demoUpcomingExams } from "@/content/guardian-demo";
 
-type ChildProfile = { uid: string; name?: string; className?: string; identifier?: string };
+type ChildProfile = { uid: string; name?: string; className?: string; identifier?: string; studentId?: string };
 
 export default function GuardianDashboardContent() {
   const profile = useUserProfile();
@@ -83,7 +83,7 @@ export default function GuardianDashboardContent() {
               স্বাগতম, {profile?.name || "..."}
             </h1>
             <p className="mt-1 text-sm text-ink-soft">
-              সন্তান: {selectedChild?.name || "..."} {selectedChild?.className ? `· ${selectedChild.className}` : ""}
+              সন্তান: {selectedChild?.name || "..."} {selectedChild?.className ? `· ${selectedChild.className}` : ""}{selectedChild?.studentId ? ` · ID: ${selectedChild.studentId}` : ""}
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-sm border border-line bg-paper px-4 py-2 text-sm text-ink-soft">
@@ -235,6 +235,7 @@ export default function GuardianDashboardContent() {
             <ProgressReport
               studentUid={selectedUid}
               studentName={selectedChild?.name}
+              studentId={selectedChild?.studentId}
               className={selectedChild?.className}
             />
           </div>

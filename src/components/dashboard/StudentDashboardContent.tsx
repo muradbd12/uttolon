@@ -47,7 +47,7 @@ export default function StudentDashboardContent() {
             <h1 className="mt-2 font-display-bn text-2xl text-ink sm:text-3xl">
               স্বাগতম, {profile?.name || "..."}
             </h1>
-            <p className="mt-1 text-sm text-ink-soft">{profile?.className || "ক্লাস যুক্ত হয়নি"}</p>
+            <p className="mt-1 text-sm text-ink-soft">{profile?.className || "ক্লাস যুক্ত হয়নি"}{profile?.studentId ? ` · ID: ${profile.studentId}` : ""}</p>
           </div>
           <div className="flex items-center gap-2 rounded-sm border border-line bg-paper px-4 py-2 text-sm text-ink-soft">
             <UserRound size={15} className="text-gold-deep" />
@@ -187,6 +187,7 @@ export default function StudentDashboardContent() {
             <ProgressReport
               studentUid={profile?.uid}
               studentName={profile?.name}
+              studentId={profile?.studentId}
               className={profile?.className}
             />
           </div>

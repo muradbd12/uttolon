@@ -10,6 +10,7 @@ export type UserProfile = {
   name?: string;
   role?: string;
   identifier?: string;
+  studentId?: string | null;
   guardianMobile?: string | null;
   className?: string | null;
   subject?: string | null;

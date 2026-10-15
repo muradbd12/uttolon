@@ -33,15 +33,21 @@ export function useSiteSearch() {
     async function load() {
       try {
         const db = getFirebaseDb();
-        const [noticesSnap, blogSnap, resourcesSnap, teachersSnap, booksSnap] = await Promise.all([
+        // allSettled: one collection failing (e.g. a missing security rule) must not
+        // blank out every other search result.
+        const results = await Promise.allSettled([
           getDocs(collection(db, "notices")),
           getDocs(query(collection(db, "blogPosts"), where("published", "==", true))),
           getDocs(collection(db, "resources")),
           getDocs(query(collection(db, "teacherProfiles"), where("published", "==", true))),
           getDocs(collection(db, "books")),
         ]);
+        type DocLike = { id: string; data: () => Record<string, unknown> };
+        const docsOf = (r: PromiseSettledResult<{ docs: DocLike[] }>): DocLike[] =>
+          r.status === "fulfilled" ? r.value.docs : [];
+        const [noticeDocs, blogDocs, resourceDocs, teacherDocs, bookDocs] = results.map(docsOf);
 
-        const notices: SearchItem[] = noticesSnap.docs.map((d) => ({
+        const notices: SearchItem[] = noticeDocs.map((d) => ({
           type: "notice",
           typeLabel: "নোটিশ",
           title: (d.data().title as string) || "",
@@ -49,7 +55,7 @@ export function useSiteSearch() {
           href: "/notices",
         }));
 
-        const blogs: SearchItem[] = blogSnap.docs.map((d) => ({
+        const blogs: SearchItem[] = blogDocs.map((d) => ({
           type: "blog",
           typeLabel: "ব্লগ",
           title: (d.data().title as string) || "",
@@ -57,7 +63,7 @@ export function useSiteSearch() {
           href: `/blog/${d.data().slug}`,
         }));
 
-        const resources: SearchItem[] = resourcesSnap.docs.map((d) => ({
+        const resources: SearchItem[] = resourceDocs.map((d) => ({
           type: "resource",
           typeLabel: "রিসোর্স",
           title: (d.data().title as string) || "",
@@ -65,7 +71,7 @@ export function useSiteSearch() {
           href: "/resources",
         }));
 
-        const teachers: SearchItem[] = teachersSnap.docs.map((d) => ({
+        const teachers: SearchItem[] = teacherDocs.map((d) => ({
           type: "teacher",
           typeLabel: "শিক্ষক",
           title: (d.data().name as string) || "",
@@ -73,7 +79,7 @@ export function useSiteSearch() {
           href: "/teachers",
         }));
 
-        const books: SearchItem[] = booksSnap.docs.map((d) => ({
+        const books: SearchItem[] = bookDocs.map((d) => ({
           type: "book",
           typeLabel: "বই",
           title: (d.data().title as string) || "",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { KeyRound, Info } from "lucide-react";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
+import AdminBackup from "@/components/AdminBackup";
 
 export const metadata: Metadata = {
   title: "Settings | Admin | Uttolon",
@@ -17,6 +18,8 @@ export default function AdminSettingsPage() {
           <p className="mt-2 text-sm text-ink-soft">অ্যাকাউন্ট ও সিস্টেম-সংক্রান্ত সেটিংস।</p>
 
           <div className="mt-8 space-y-4">
+            <AdminBackup />
+
             <Link
               href="/admin/reset-password"
               className="flex items-center gap-3 rounded-sm border border-line bg-paper p-4 hover:border-ink"

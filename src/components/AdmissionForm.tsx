@@ -218,13 +218,16 @@ export default function AdmissionForm() {
       const docRef = doc(collection(db, "admissions"));
       const shortId = docRef.id.slice(0, 8).toUpperCase();
       const totalPaid = amount;
-      const due = fee - totalPaid;
+      // If the amount typed is more than the listed fee, the fee is raised to that amount
+      // (so 'due' never goes negative and the receipt totals stay consistent).
+      const totalFee = Math.max(fee, amount);
+      const due = totalFee - totalPaid;
 
       const batch = writeBatch(db);
       batch.set(docRef, {
         ...pendingData,
         status: "new",
-        totalFee: fee,
+        totalFee,
         totalPaid,
         due,
         shortId,
@@ -254,7 +257,7 @@ export default function AdmissionForm() {
         amountPaidNow: amount,
         method: payMethod,
         monthOrPurpose: "ভর্তি ফি",
-        totalFee: fee,
+        totalFee,
         totalPaid,
         due,
       });

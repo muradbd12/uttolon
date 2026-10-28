@@ -1,4 +1,5 @@
 export type VoucherData = {
+  idLabel?: string;
   studentNameBn?: string;
   studentNameEn?: string;
   applicationId?: string;
@@ -67,7 +68,7 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1 border border-t-0 border-line p-1.5 sm:grid-cols-4 print:break-inside-avoid">
         <Item label="নাম (বাংলায়)" value={data.studentNameBn} />
         <Item label="নাম (ইংরেজি)" value={data.studentNameEn} />
-        <Item label="আবেদন আইডি" value={data.applicationId} />
+        <Item label={data.idLabel || "আবেদন আইডি"} value={data.applicationId} />
         <Item label="মোবাইল" value={data.mobile} />
         <Item label="শ্রেণি / গ্রুপ" value={`${data.className || ""}${data.group ? " / " + data.group : ""}`} />
         <Item label="প্রোগ্রাম" value={data.program} />
@@ -141,7 +142,7 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
       </div>
       <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 rounded-sm border border-line p-1.5 text-[10px] sm:grid-cols-4 print:break-inside-avoid">
         <Item label="নাম" value={data.studentNameBn || data.studentNameEn} />
-        <Item label="আবেদন আইডি" value={data.applicationId} />
+        <Item label={data.idLabel || "আবেদন আইডি"} value={data.applicationId} />
         <Item label="জমার পরিমাণ" value={fmtTaka(data.amountPaidNow)} />
         <Item label="উদ্দেশ্য / মাস" value={data.monthOrPurpose} />
       </dl>

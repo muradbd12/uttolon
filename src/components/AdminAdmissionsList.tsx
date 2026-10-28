@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, type Timestamp } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc, runTransaction, serverTimestamp, type Timestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { AlertTriangle, Inbox, Loader2, ChevronDown, ChevronUp, Check, X, UserPlus, Printer, XCircle, Pencil, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, Inbox, Loader2, ChevronDown, ChevronUp, Check, X, UserPlus, Printer, XCircle, Pencil, Trash2, Wallet, AlertCircle } from "lucide-react";
 import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
 import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
 import { printIsolated } from "@/lib/printReceipt";
@@ -140,6 +140,7 @@ export default function AdminAdmissionsList() {
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
   const [payBusy, setPayBusy] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
 
   useEffect(() => {
@@ -228,6 +229,7 @@ export default function AdminAdmissionsList() {
   }
 
   function startPay(a: Application) {
+    setPayError(null);
     setPayingId(a.id);
     setFeeInput(a.totalFee ? String(a.totalFee) : "");
     setEditingFeeId(null);
@@ -236,6 +238,7 @@ export default function AdminAdmissionsList() {
   }
 
   function cancelPay() {
+    setPayError(null);
     setPayingId(null);
     setEditingFeeId(null);
     setVoucher(null);
@@ -253,36 +256,55 @@ export default function AdminAdmissionsList() {
       setEditingFeeId(null);
       setPayAmount(newDue > 0 ? String(newDue) : "");
     } catch {
-      setError(true);
+      setPayError("ফি আপডেট করা যায়নি — আবার চেষ্টা করুন।");
     } finally {
       setPayBusy(false);
     }
   }
 
   async function handleRecordPayment(a: Application) {
-    const fee = a.totalFee || 0;
-    const alreadyPaid = a.totalPaid || 0;
-    const due = a.due ?? fee - alreadyPaid;
-    const amount = Math.min(Math.max(Math.round(Number(payAmount) || 0), 0), due);
-    if (amount <= 0) return;
+    const wanted = Math.round(Number(payAmount) || 0);
+    if (wanted <= 0) return;
 
     setPayBusy(true);
+    setPayError(null);
     try {
-      const newTotalPaid = alreadyPaid + amount;
-      const newDue = fee - newTotalPaid;
-      await withTimeout(
-        addDoc(collection(getFirebaseDb(), "admissions", a.id, "payments"), {
-          amount,
-          method: payMethod,
-          monthOrPurpose: "কিস্তি (অ্যাডমিন কর্তৃক)",
-          paidAt: serverTimestamp(),
+      const db = getFirebaseDb();
+      const ref = doc(db, "admissions", a.id);
+      const existing = await withTimeout(getDocs(collection(db, "admissions", a.id, "payments")));
+      const paymentNo = existing.size + 1;
+
+      // Latest totals are read inside a transaction, so a payment made elsewhere
+      // (e.g. by the guardian) is never overwritten by stale numbers on screen.
+      const result = await withTimeout(
+        runTransaction(db, async (tx) => {
+          const snap = await tx.get(ref);
+          if (!snap.exists()) throw new Error("not_found");
+          const cur = snap.data();
+          const curFee = Number(cur.totalFee) || 0;
+          const curPaid = Number(cur.totalPaid) || 0;
+          const curDue = Math.max(curFee - curPaid, 0);
+          const pay = Math.min(wanted, curDue);
+          if (pay <= 0) throw new Error("nothing_due");
+          const newPaid = curPaid + pay;
+          const newDue = curFee - newPaid;
+          tx.set(doc(collection(db, "admissions", a.id, "payments")), {
+            amount: pay,
+            method: payMethod,
+            monthOrPurpose: "ভর্তি ফি (কিস্তি)",
+            paidAt: serverTimestamp(),
+          });
+          tx.update(ref, { totalPaid: newPaid, due: newDue });
+          return { pay, fee: curFee, newPaid, newDue };
         })
       );
-      await withTimeout(
-        updateDoc(doc(getFirebaseDb(), "admissions", a.id), { totalPaid: newTotalPaid, due: newDue })
-      );
+
       setApps((prev) =>
-        prev ? prev.map((x) => (x.id === a.id ? { ...x, totalPaid: newTotalPaid, due: newDue } : x)) : prev
+        prev
+          ? prev.map((x) =>
+              x.id === a.id ? { ...x, totalFee: result.fee, totalPaid: result.newPaid, due: result.newDue } : x
+            )
+          : prev
       );
       setVoucher({
         studentNameBn: a.studentNameBn,
@@ -292,17 +314,23 @@ export default function AdminAdmissionsList() {
         group: a.group,
         program: a.program,
         mobile: a.mobile,
-        voucherId: a.id.slice(0, 6).toUpperCase() + "-" + Date.now().toString().slice(-4),
+        voucherId: `${(a.shortId || a.id).slice(0, 6).toUpperCase()}-V${paymentNo}`,
         paymentDate: new Date().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" }),
-        amountPaidNow: amount,
+        amountPaidNow: result.pay,
         method: payMethod,
         monthOrPurpose: "কিস্তি (অ্যাডমিন কর্তৃক)",
-        totalFee: fee,
-        totalPaid: newTotalPaid,
-        due: newDue,
+        totalFee: result.fee,
+        totalPaid: result.newPaid,
+        due: result.newDue,
       });
-    } catch {
-      setError(true);
+      setPayAmount("");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      setPayError(
+        msg === "nothing_due"
+          ? "এই আবেদনে আর কোনো বকেয়া নেই — পেজ রিফ্রেশ করে দেখুন।"
+          : "পেমেন্ট সেভ করা যায়নি — ইন্টারনেট দেখে আবার চেষ্টা করুন।"
+      );
     } finally {
       setPayBusy(false);
     }
@@ -481,6 +509,11 @@ export default function AdminAdmissionsList() {
 
                 {payingId === a.id && (
                   <div className="mt-2 rounded-sm border border-gold-soft bg-gold-soft/20 p-3">
+                    {payError && (
+                      <p className="mb-2 flex items-start gap-1.5 rounded-sm border border-clay/30 bg-clay-soft px-2.5 py-1.5 text-xs text-clay">
+                        <AlertCircle size={13} className="mt-0.5 shrink-0" /> {payError}
+                      </p>
+                    )}
                     {voucher ? (
                       <div>
                         <div className="flex items-center justify-between">

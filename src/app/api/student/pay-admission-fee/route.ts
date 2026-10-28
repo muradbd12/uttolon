@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
 
     const result = await db.runTransaction(async (tx) => {
       const docSnap = await tx.get(ref);
+      const existingPayments = await tx.get(ref.collection("payments"));
       if (!docSnap.exists) {
         throw new Error("not_found");
       }
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
       tx.update(ref, { totalPaid: newTotalPaid, due: newDue });
 
       return {
+        paymentNo: existingPayments.size + 1,
         amount,
         totalFee: fee,
         totalPaid: newTotalPaid,

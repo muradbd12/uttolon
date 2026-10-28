@@ -110,7 +110,7 @@ export default function PaymentLookup() {
         group: data.group,
         program: data.program,
         mobile: data.mobile,
-        voucherId: record.id.slice(0, 6).toUpperCase() + "-V" + Math.ceil(data.totalPaid / Math.max(data.amount, 1)),
+        voucherId: code.trim().toUpperCase().slice(0, 6) + "-V" + (data.paymentNo ?? 1),
         paymentDate: todayBn(),
         amountPaidNow: data.amount,
         method: payMethod,

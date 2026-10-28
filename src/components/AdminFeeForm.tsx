@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   collection,
   getDocs,
@@ -12,10 +12,19 @@ import {
 } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { toEnglishDigits } from "@/lib/numberInput";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Printer, X, Receipt } from "lucide-react";
+import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
+import { printIsolated } from "@/lib/printReceipt";
 
-type StudentOption = { uid: string; name: string; className: string | null };
+type StudentOption = {
+  uid: string;
+  name: string;
+  className: string | null;
+  studentId: string | null;
+  identifier: string | null;
+};
 type FeeEntry = {
+  updatedAt?: { toDate?: () => Date };
   month: string;
   amountDue: number;
   discount: number;
@@ -50,8 +59,44 @@ const statusClass: Record<FeeEntry["status"], string> = {
   due: "bg-clay-soft text-clay",
 };
 
+function todayBn() {
+  return new Date().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" });
+}
+
+function buildMonthlyReceipt(en: FeeEntry, student?: StudentOption): VoucherData {
+  const payable = Math.max((en.amountDue || 0) - (en.discount || 0) + (en.fine || 0), 0);
+  const paidOn = en.updatedAt?.toDate
+    ? en.updatedAt.toDate().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })
+    : todayBn();
+  const method = en.paymentMethod || "—";
+  return {
+    idLabel: student?.studentId ? "স্টুডেন্ট আইডি" : "লগইন আইডি",
+    studentNameBn: student?.name || "",
+    studentNameEn: "",
+    applicationId: student?.studentId || student?.identifier || "",
+    className: student?.className || "",
+    group: "",
+    program: "",
+    mobile: "",
+    voucherId: `${student?.studentId || (student?.uid || "FEE").slice(0, 6).toUpperCase()}-${en.month}`,
+    paymentDate: paidOn,
+    amountPaidNow: en.amountPaid || 0,
+    method: en.transactionNumber ? `${method} (${en.transactionNumber})` : method,
+    monthOrPurpose: `মাসিক ফি — ${en.month}`,
+    totalFee: payable,
+    totalPaid: en.amountPaid || 0,
+    due: Math.max(payable - (en.amountPaid || 0), 0),
+  };
+}
+
 export default function AdminFeeForm() {
   const [students, setStudents] = useState<StudentOption[] | null>(null);
+  const [receiptEntry, setReceiptEntry] = useState<FeeEntry | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (receiptEntry) receiptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [receiptEntry]);
   const [selectedUid, setSelectedUid] = useState("");
   const [entries, setEntries] = useState<FeeEntry[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -67,6 +112,8 @@ export default function AdminFeeForm() {
             uid: d.id,
             name: (d.data().name as string) || "নাম নেই",
             className: (d.data().className as string) || null,
+          studentId: (d.data().studentId as string) || null,
+          identifier: (d.data().identifier as string) || null,
           }))
         );
       } catch {
@@ -133,6 +180,18 @@ export default function AdminFeeForm() {
       });
       (e.target as HTMLFormElement).reset();
       setStatus("saved");
+      if (amountPaid > 0) {
+        setReceiptEntry({
+          month,
+          amountDue,
+          discount,
+          fine,
+          amountPaid,
+          paymentMethod: (form.get("paymentMethod") as string) || "",
+          transactionNumber: (form.get("transactionNumber") as string)?.trim() || "",
+          status: computeStatus(amountDue, discount, fine, amountPaid),
+        });
+      }
     } catch {
       setStatus("error");
     }
@@ -188,6 +247,7 @@ export default function AdminFeeForm() {
                       <th className="px-4 py-2 font-normal">জরিমানা</th>
                       <th className="px-4 py-2 font-normal">পরিশোধিত</th>
                       <th className="px-4 py-2 font-normal">অবস্থা</th>
+                      <th className="px-4 py-2 font-normal">রশিদ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -203,12 +263,56 @@ export default function AdminFeeForm() {
                             {statusLabel[en.status]}
                           </span>
                         </td>
+                        <td className="px-4 py-2">
+                          {en.amountPaid > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => setReceiptEntry(en)}
+                              className="flex items-center gap-1 rounded-sm border border-line px-2 py-1 text-xs text-ink-soft hover:border-ink hover:text-ink"
+                            >
+                              <Receipt size={12} /> রশিদ
+                            </button>
+                          ) : (
+                            <span className="text-ink-soft/40">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </>
+          )}
+
+          {receiptEntry && (
+            <div ref={receiptRef} className="rounded-sm border border-line bg-paper p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+                  <Receipt size={15} /> মানি রিসিট — {receiptEntry.month}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => printIsolated("printable-voucher")}
+                    className="flex items-center gap-1.5 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep"
+                  >
+                    <Printer size={14} /> প্রিন্ট করুন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReceiptEntry(null)}
+                    className="flex items-center gap-1 rounded-sm border border-line px-3 py-2 text-sm text-ink-soft hover:border-ink"
+                  >
+                    <X size={14} /> বন্ধ করুন
+                  </button>
+                </div>
+              </div>
+              <div className="mt-4">
+                <PaymentVoucherCard
+                  data={buildMonthlyReceipt(receiptEntry, students?.find((st) => st.uid === selectedUid))}
+                />
+              </div>
+            </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4 rounded-sm border border-line bg-paper p-6">

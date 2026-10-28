@@ -8,9 +8,8 @@ import { getFirebaseDb } from "@/lib/firebase";
 // ২টা সাধারণ চার্ট বানানো হয়েছে — নতুন কোনো npm প্যাকেজ লাগে না।
 // রঙগুলো globals.css-এর টোকেনের সাথে মিলিয়ে সরাসরি hex হিসেবে বসানো
 // (SVG-তে CSS var() সবসময় নির্ভরযোগ্যভাবে কাজ নাও করতে পারে)।
-const TEAL_DEEP = "#123f33";
-const TEAL = "#1e6b58";
-const GOLD_DEEP = "#96691c";
+const TEAL_DEEP = "#2563eb";
+const TEAL = "#1d4ed8";
 const LINE = "#dcddd2";
 const INK_SOFT = "#4b5566";
 
@@ -134,11 +133,17 @@ function AttendanceLineChart({ points }: { points: { date: string; rate: number 
     .map((c) => `${c.x},${c.y}`)
     .join(" ");
 
-  const hasAnyData = coords.some((c) => c.y !== null);
+  const plotted = coords.filter((c) => c.y !== null);
+  const baseY = padTop + plotH;
+  const areaPoints =
+    plotted.length > 1
+      ? `${plotted[0].x},${baseY} ${linePoints} ${plotted[plotted.length - 1].x},${baseY}`
+      : "";
+  const hasAnyData = plotted.length > 0;
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-5">
-      <h3 className="font-display-bn text-base text-ink">উপস্থিতির ট্রেন্ড (গত ৭ দিন)</h3>
+    <div className="rounded-xl border border-line bg-white p-5 shadow-sm" style={{ borderTop: "4px solid #3b82f6" }}>
+      <h3 className="flex items-center gap-2 font-display-bn text-base text-ink"><span className="h-2.5 w-2.5 rounded-full" style={{ background: "#3b82f6" }} />উপস্থিতির ট্রেন্ড (গত ৭ দিন)</h3>
       {!hasAnyData ? (
         <p className="mt-6 text-sm text-ink-soft/60">এই সপ্তাহে এখনো উপস্থিতির কোনো তথ্য নেই।</p>
       ) : (
@@ -154,7 +159,14 @@ function AttendanceLineChart({ points }: { points: { date: string; rate: number 
               </g>
             );
           })}
-          <polyline points={linePoints} fill="none" stroke={TEAL_DEEP} strokeWidth={2} />
+          <defs>
+            <linearGradient id="att-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {areaPoints && <polygon points={areaPoints} fill="url(#att-area)" />}
+          <polyline points={linePoints} fill="none" stroke={TEAL_DEEP} strokeWidth={2.5} />
           {coords.map((c, i) =>
             c.y !== null ? <circle key={i} cx={c.x} cy={c.y} r={3} fill={TEAL} /> : null
           )}
@@ -183,12 +195,18 @@ function FeeBarChart({ bars }: { bars: { month: string; amount: number }[] }) {
   const hasAnyData = bars.some((b) => b.amount > 0);
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-5">
-      <h3 className="font-display-bn text-base text-ink">মাসিক ফি সংগ্রহ (গত ৬ মাস)</h3>
+    <div className="rounded-xl border border-line bg-white p-5 shadow-sm" style={{ borderTop: "4px solid #10b981" }}>
+      <h3 className="flex items-center gap-2 font-display-bn text-base text-ink"><span className="h-2.5 w-2.5 rounded-full" style={{ background: "#10b981" }} />মাসিক ফি সংগ্রহ (গত ৬ মাস)</h3>
       {!hasAnyData ? (
         <p className="mt-6 text-sm text-ink-soft/60">এখনো কোনো মাসিক ফি সংগ্রহের তথ্য নেই।</p>
       ) : (
         <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 w-full" role="img" aria-label="ফি সংগ্রহ চার্ট">
+          <defs>
+            <linearGradient id="fee-bar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
+          </defs>
           <line x1={padX} x2={W - padX} y1={padTop + plotH} y2={padTop + plotH} stroke={LINE} strokeWidth={1} />
           {bars.map((b, i) => {
             const h = max > 0 ? (b.amount / max) * plotH : 0;
@@ -198,7 +216,7 @@ function FeeBarChart({ bars }: { bars: { month: string; amount: number }[] }) {
             const monthLabel = BN_MONTHS[Number(m) - 1] ?? b.month;
             return (
               <g key={b.month}>
-                <rect x={x} y={y} width={barW} height={h} fill={GOLD_DEEP} rx={2} />
+                <rect x={x} y={y} width={barW} height={h} fill="url(#fee-bar)" rx={4} />
                 <text x={x + barW / 2} y={H - 6} fontSize="8" fill={INK_SOFT} textAnchor="middle">
                   {monthLabel}
                 </text>

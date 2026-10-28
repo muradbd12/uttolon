@@ -25,6 +25,8 @@ import { demoManagementAreas } from "@/content/admin-demo";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
 import AdminStats from "@/components/dashboard/AdminStats";
 import AdminCharts from "@/components/dashboard/AdminCharts";
+import AdminWelcome from "@/components/dashboard/AdminWelcome";
+import { PALETTE, grad } from "@/lib/dashboardColors";
 import AdminPendingActions from "@/components/dashboard/AdminPendingActions";
 
 export const metadata: Metadata = {
@@ -79,22 +81,11 @@ const secondaryLinks: Record<string, { label: string; href: string }> = {
 export default function AdminDashboardPage() {
   return (
     <RequireRoleAuth role="admin" loginPath="/admin/login">
-    <section className="bg-paper-raised">
+    <section style={{ background: "linear-gradient(180deg, #e8effb 0%, #f4f7fc 38%, #fbfbf7 100%)" }}>
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        {/* Header */}
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
-          <div>
-            <p className="font-label text-xs uppercase tracking-[0.2em] text-gold-deep">
-              Admin Dashboard
-            </p>
-            <h1 className="mt-2 font-display-bn text-3xl text-ink sm:text-4xl">
-              নিয়ন্ত্রণ কেন্দ্র
-            </h1>
-            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-soft/60">
-              <Sparkles size={12} className="text-gold-deep" />
-              নিচের সব সংখ্যা সত্যিকারের ডেটাবেস থেকে হিসাব করা
-            </p>
-          </div>
+        {/* Welcome */}
+        <AdminWelcome />
+        <div className="mt-3 flex justify-end">
           {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? (
             <a
               href="https://analytics.google.com/"
@@ -121,15 +112,21 @@ export default function AdminDashboardPage() {
             { label: "নোটিশ দিন", href: "/admin/notices", icon: Bell },
             { label: "ফি ব্যবস্থাপনা", href: "/admin/fees", icon: Wallet },
             { label: "সবার বকেয়া", href: "/admin/fees/overview", icon: ClipboardList },
-          ].map((action) => {
+          ].map((action, i) => {
             const ActionIcon = action.icon;
+            const c = PALETTE[(i * 2 + 1) % PALETTE.length];
             return (
               <Link
                 key={action.href}
                 href={action.href}
-                className="flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink transition-colors hover:border-gold-deep hover:text-gold-deep"
+                className="flex items-center gap-2 rounded-full bg-white py-1.5 pl-1.5 pr-4 text-sm font-medium text-ink shadow-sm ring-1 ring-black/5 transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
-                <ActionIcon size={14} />
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-white"
+                  style={{ background: grad(c) }}
+                >
+                  <ActionIcon size={13} />
+                </span>
                 {action.label}
               </Link>
             );
@@ -149,17 +146,22 @@ export default function AdminDashboardPage() {
           <div className="lg:col-span-2">
             <h2 className="font-display-bn text-lg text-ink">পরিচালনার বিভাগ</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {demoManagementAreas.map((area) => {
+              {demoManagementAreas.map((area, idx) => {
+                const c = PALETTE[idx % PALETTE.length];
                 const Icon = iconMap[area.title] ?? LayoutDashboard;
                 const href = liveLinks[area.title];
                 const secondary = secondaryLinks[area.title];
                 return (
                   <div
                     key={area.title}
-                    className="flex flex-col rounded-sm border border-line bg-paper p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    className="flex flex-col rounded-xl border border-line bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                    style={{ borderTop: `4px solid ${c.from}` }}
                   >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
-                      <Icon size={16} />
+                    <span
+                      className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm"
+                      style={{ background: grad(c) }}
+                    >
+                      <Icon size={18} />
                     </span>
                     <h3 className="mt-3 font-display-bn text-base text-ink">{area.title}</h3>
                     <p className="mt-1.5 flex-1 text-sm leading-relaxed text-ink-soft">
@@ -169,7 +171,8 @@ export default function AdminDashboardPage() {
                     {href ? (
                       <Link
                         href={href}
-                        className="flex w-fit items-center gap-1.5 text-xs font-medium text-ink hover:text-gold-deep"
+                        className="flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                        style={{ background: c.tint, color: c.ink }}
                       >
                         পরিচালনা করুন <ArrowUpRight size={12} />
                       </Link>

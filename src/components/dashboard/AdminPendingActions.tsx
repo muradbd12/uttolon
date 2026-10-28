@@ -43,10 +43,10 @@ export default function AdminPendingActions() {
       {items.map((p) => (
         <div key={p.label} className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Inbox size={15} className="shrink-0 text-ink-soft/50" />
+            <Inbox size={15} className="shrink-0" style={{ color: "#f59e0b" }} />
             <p className="text-sm text-ink-soft">{p.label}</p>
           </div>
-          <span className="rounded-sm bg-line px-2 py-0.5 text-xs font-medium text-ink-soft">
+          <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: "#fef3c7", color: "#b45309" }}>
             {p.count}
           </span>
         </div>

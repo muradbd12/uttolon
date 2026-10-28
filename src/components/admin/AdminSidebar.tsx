@@ -26,6 +26,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { PALETTE, grad } from "@/lib/dashboardColors";
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ size?: number }> };
 type NavGroup = { label: string | null; items: NavItem[] };
@@ -80,6 +81,8 @@ const navGroups: NavGroup[] = [
   },
 ];
 
+const flatItems = navGroups.flatMap((g) => g.items);
+
 function isActive(pathname: string, href: string) {
   if (href === "/admin/fees") return pathname === "/admin/fees";
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -104,18 +107,25 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
             {group.items.map((item) => {
               const active = isActive(pathname, item.href);
               const Icon = item.icon;
+              const c = PALETTE[Math.max(0, flatItems.findIndex((x) => x.href === item.href)) % PALETTE.length];
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
-                  className={`flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-sm transition-colors ${
+                  className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-all ${
                     active
-                      ? "bg-gold-deep/90 text-paper"
-                      : "text-paper/70 hover:bg-paper/10 hover:text-paper"
+                      ? "font-medium text-white shadow-md"
+                      : "text-paper/75 hover:bg-paper/10 hover:text-paper"
                   }`}
+                  style={active ? { background: grad(c) } : undefined}
                 >
-                  <Icon size={16} />
+                  <span
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
+                    style={active ? { background: "rgba(255,255,255,0.22)" } : { background: `${c.from}26`, color: c.from }}
+                  >
+                    <Icon size={14} />
+                  </span>
                   {item.label}
                 </Link>
               );

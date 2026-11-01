@@ -22,6 +22,7 @@ import {
   KeyRound,
   Settings,
   BookOpen,
+  Layers,
   Image as ImageIcon,
   Menu,
   X,
@@ -57,6 +58,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/admin/schedule", label: "ক্লাস শিডিউল", icon: CalendarClock },
       { href: "/admin/practical-learning", label: "Practical Learning", icon: FlaskConical },
+      { href: "/admin/programs", label: "প্রোগ্রাম ও ফি", icon: Layers },
     ],
   },
   {

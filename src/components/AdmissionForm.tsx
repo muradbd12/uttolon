@@ -8,7 +8,7 @@ import { withTimeout } from "@/lib/withTimeout";
 import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
 import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
 import { printIsolated } from "@/lib/printReceipt";
-import { getProgramFee } from "@/lib/programFees";
+import { usePrograms, feeOf } from "@/lib/usePrograms";
 import { toEnglishDigits } from "@/lib/numberInput";
 import PhotoSignatureFields from "@/components/PhotoSignatureFields";
 
@@ -37,14 +37,6 @@ const districts = [
 ];
 
 const examNames = ["জেএসসি (JSC)", "জেডিসি (JDC)", "এসএসসি (SSC)", "দাখিল (Dakhil)", "এইচএসসি (HSC)", "আলিম (Alim)", "প্রযোজ্য নয়", "অন্যান্য"];
-
-const programs = [
-  "Regular Academic Program", "Revision Batch", "Recovery Batch",
-  "Final Preparation Batch", "SSC Program", "Dakhil Program",
-  "Alim Program", "HSC Program", "University Admission Program",
-  "IELTS Program", "Arabic Language Program", "Mathematics Olympiad Program",
-  "Quran Learning Program",
-];
 
 const batchOptions = ["সকাল ব্যাচ", "দুপুর ব্যাচ", "বিকাল ব্যাচ", "সন্ধ্যা ব্যাচ", "উইকেন্ড ব্যাচ"];
 const preferredSubjects = ["সকল বিষয়", "গণিত", "পদার্থবিজ্ঞান", "রসায়ন", "জীববিজ্ঞান", "ইংরেজি", "বাংলা", "আইসিটি", "হিসাববিজ্ঞান", "অন্যান্য"];
@@ -132,6 +124,7 @@ function todayBn() {
 }
 
 export default function AdmissionForm() {
+  const programOptions = usePrograms();
   const [status, setStatus] = useState<"idle" | "review" | "loading" | "success" | "error">("idle");
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<AdmissionData | null>(null);
@@ -193,7 +186,7 @@ export default function AdmissionForm() {
     };
 
     setPendingData(data);
-    setPayAmount(String(getProgramFee(data.program)));
+    setPayAmount(String(feeOf(programOptions, data.program)));
     setStatus("review");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -204,7 +197,7 @@ export default function AdmissionForm() {
 
   async function handleConfirmSubmit() {
     if (!pendingData) return;
-    const fee = getProgramFee(pendingData.program);
+    const fee = feeOf(programOptions, pendingData.program);
     const amount = Math.max(Math.round(Number(payAmount) || 0), 0);
     if (amount <= 0) return;
 
@@ -458,7 +451,7 @@ export default function AdmissionForm() {
           <Field label="প্রোগ্রাম" required>
             <select required name="program" className={inputClass} defaultValue="">
               <option value="" disabled>নির্বাচন করুন</option>
-              {programs.map((p) => <option key={p} value={p}>{p}</option>)}
+              {programOptions.map((p) => <option key={p.title} value={p.title}>{p.title}</option>)}
             </select>
           </Field>
           <Field label="ব্যাচ" required>
@@ -554,7 +547,7 @@ export default function AdmissionForm() {
           </div>
 
           {(() => {
-            const fee = getProgramFee(pendingData.program);
+            const fee = feeOf(programOptions, pendingData.program);
             const amount = Math.max(Math.round(Number(payAmount) || 0), 0);
             const canSubmit = amount > 0 && status !== "loading";
             return (

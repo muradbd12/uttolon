@@ -24,6 +24,7 @@ const COLLECTIONS: { key: string; label: string }[] = [
   { key: "contactMessages", label: "যোগাযোগের বার্তা" },
   { key: "practicalLearning", label: "Practical Learning" },
   { key: "teacherProfiles", label: "শিক্ষক প্রোফাইল" },
+  { key: "programs", label: "প্রোগ্রাম ও ফি" },
   { key: "books", label: "বই" },
   { key: "gallery", label: "গ্যালারি" },
 ];

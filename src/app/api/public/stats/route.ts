@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { DEFAULT_PROGRAMS } from "@/lib/programs";
 
 // হোমপেজের পরিসংখ্যান — এটা ইচ্ছাকৃতভাবে Admin SDK দিয়ে সার্ভার-সাইডে
 // হিসাব করে শুধু সংখ্যাগুলো (aggregate count) ফেরত দেয়, কোনো
@@ -11,16 +12,18 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const db = getAdminDb();
-    const [studentsCount, teachersCount, assessmentsCount] = await Promise.all([
+    const [studentsCount, teachersCount, assessmentsCount, programsSnap] = await Promise.all([
       db.collection("users").where("role", "==", "student").count().get(),
       db.collection("users").where("role", "==", "teacher").count().get(),
       db.collection("assessments").count().get(),
+      db.collection("programs").get().catch(() => null),
     ]);
+    const activePrograms = programsSnap ? programsSnap.docs.filter((d) => d.data().active !== false).length : 0;
 
     return NextResponse.json({
       students: studentsCount.data().count,
       teachers: teachersCount.data().count,
-      courses: 13, // batch-14: IELTS/Arabic/Math Olympiad/Quran Learning যোগ হওয়ার পর ১৩টা স্থায়ী প্রোগ্রাম
+      courses: activePrograms || DEFAULT_PROGRAMS.length, // admin-managed list; falls back to the built-in defaults
       assessments: assessmentsCount.data().count,
     });
   } catch (err) {

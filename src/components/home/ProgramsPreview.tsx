@@ -1,76 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-
-const programs = [
-  {
-    title: "Regular Academic Program",
-    bn: "নিয়মিত একাডেমিক প্রোগ্রাম",
-    desc: "দীর্ঘমেয়াদী, কাঠামোবদ্ধ শিক্ষার জন্য।",
-  },
-  {
-    title: "Revision Batch",
-    bn: "রিভিশন ব্যাচ",
-    desc: "প্রাথমিক পড়াশোনা শেষ, এখন দরকার নিয়মিত পুনরাবৃত্তি।",
-  },
-  {
-    title: "Recovery Batch",
-    bn: "রিকভারি ব্যাচ",
-    desc: "একটি বা একাধিক বিষয়ে দুর্বল শিক্ষার্থীদের জন্য।",
-    highlight: true,
-  },
-  {
-    title: "Final Preparation Batch",
-    bn: "ফাইনাল প্রিপারেশন ব্যাচ",
-    desc: "পরীক্ষার আগে নিবিড় রিভিশন ও মডেল টেস্ট।",
-  },
-  {
-    title: "SSC Program",
-    bn: "SSC প্রোগ্রাম",
-    desc: "Class 9, Class 10 ও SSC শিক্ষার্থীদের জন্য।",
-  },
-  {
-    title: "Dakhil Program",
-    bn: "দাখিল প্রোগ্রাম",
-    desc: "দাখিল শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
-  },
-  {
-    title: "Alim Program",
-    bn: "আলিম প্রোগ্রাম",
-    desc: "আলিম শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
-  },
-  {
-    title: "HSC Program",
-    bn: "HSC প্রোগ্রাম",
-    desc: "HSC শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
-  },
-  {
-    title: "University Admission Program",
-    bn: "বিশ্ববিদ্যালয় ভর্তি প্রোগ্রাম",
-    desc: "বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য বিশেষ প্রস্তুতি।",
-  },
-  {
-    title: "IELTS Program",
-    bn: "IELTS প্রোগ্রাম",
-    desc: "Listening, Reading, Writing ও Speaking-এ দক্ষতা বাড়ানোর জন্য প্রশিক্ষণ।",
-  },
-  {
-    title: "Arabic Language Program",
-    bn: "আরবি ভাষা প্রোগ্রাম",
-    desc: "আরবি ভাষা, ব্যাকরণ ও বোধগম্যতা শেখার প্রোগ্রাম।",
-  },
-  {
-    title: "Mathematics Olympiad Program",
-    bn: "গণিত অলিম্পিয়াড প্রোগ্রাম",
-    desc: "মেধাবী শিক্ষার্থীদের জন্য গণিত অলিম্পিয়াডের বিশেষ প্রস্তুতি।",
-  },
-  {
-    title: "Quran Learning Program",
-    bn: "কুরআন শিক্ষা প্রোগ্রাম",
-    desc: "সঠিক উচ্চারণ ও অর্থসহ কুরআন শেখার প্রোগ্রাম — অফলাইন ও অনলাইন উভয়ভাবে।",
-  },
-];
+import { usePrograms } from "@/lib/usePrograms";
 
 export default function ProgramsPreview() {
+  const programs = usePrograms();
   return (
     <section className="border-b border-line bg-paper-raised">
       <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">

@@ -1,80 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import ProgramsList from "@/components/ProgramsList";
 
 export const metadata: Metadata = {
   title: "প্রোগ্রাম | Uttolon",
   description: "উত্তোলনের সকল একাডেমিক প্রোগ্রাম — Regular, Revision, Recovery, Final Preparation, SSC, Dakhil, Alim, HSC ও University Admission।",
 };
-
-const programs = [
-  {
-    bn: "নিয়মিত একাডেমিক প্রোগ্রাম",
-    en: "Regular Academic Program",
-    desc: "যেসব শিক্ষার্থী দীর্ঘমেয়াদী, কাঠামোবদ্ধ শিক্ষা চায়, তাদের জন্য। Concept থেকে Practice — প্রতিটি বিষয় ধাপে ধাপে গড়ে তোলা হয়।",
-  },
-  {
-    bn: "রিভিশন ব্যাচ",
-    en: "Revision Batch",
-    desc: "যেসব শিক্ষার্থীর প্রাথমিক পড়াশোনা শেষ হয়েছে, কিন্তু নিয়মিত পুনরাবৃত্তি দরকার — তাদের জন্য পরিকল্পিত রিভিশন কাঠামো।",
-  },
-  {
-    bn: "রিকভারি ব্যাচ",
-    en: "Recovery Batch",
-    desc: "একটি বা একাধিক বিষয়ে/অধ্যায়ে দুর্বল শিক্ষার্থীদের জন্য বিশেষায়িত ব্যাচ — উত্তোলনের অন্যতম প্রধান বৈশিষ্ট্য।",
-    highlight: true,
-  },
-  {
-    bn: "ফাইনাল প্রিপারেশন ব্যাচ",
-    en: "Final Preparation Batch",
-    desc: "পরীক্ষার আগে নিবিড় রিভিশন, মডেল টেস্ট, গুরুত্বপূর্ণ টপিক, exam strategy, ভুল বিশ্লেষণ ও সময় ব্যবস্থাপনা।",
-  },
-  {
-    bn: "SSC প্রোগ্রাম",
-    en: "SSC Program",
-    desc: "Class 9, Class 10 ও SSC শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
-  },
-  {
-    bn: "দাখিল প্রোগ্রাম",
-    en: "Dakhil Program",
-    desc: "দাখিল শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
-  },
-  {
-    bn: "আলিম প্রোগ্রাম",
-    en: "Alim Program",
-    desc: "আলিম শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
-  },
-  {
-    bn: "HSC প্রোগ্রাম",
-    en: "HSC Program",
-    desc: "HSC শিক্ষার্থীদের জন্য সম্পূর্ণ সহায়তা।",
-  },
-  {
-    bn: "বিশ্ববিদ্যালয় ভর্তি প্রোগ্রাম",
-    en: "University Admission Program",
-    desc: "বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য বিশেষভাবে সাজানো প্রস্তুতি।",
-  },
-  {
-    bn: "IELTS প্রোগ্রাম",
-    en: "IELTS Program",
-    desc: "Listening, Reading, Writing ও Speaking — চারটি অংশেই দক্ষতা বাড়ানোর জন্য পরিকল্পিত প্রশিক্ষণ।",
-  },
-  {
-    bn: "আরবি ভাষা প্রোগ্রাম",
-    en: "Arabic Language Program",
-    desc: "আরবি ভাষা, ব্যাকরণ, শব্দভাণ্ডার ও বোধগম্যতা শেখার জন্য ধাপে ধাপে সাজানো প্রোগ্রাম।",
-  },
-  {
-    bn: "গণিত অলিম্পিয়াড প্রোগ্রাম",
-    en: "Mathematics Olympiad Program",
-    desc: "মেধাবী ও আগ্রহী শিক্ষার্থীদের জন্য গণিত অলিম্পিয়াড উপযোগী বিশেষ সমস্যা সমাধান ও প্রস্তুতি।",
-  },
-  {
-    bn: "কুরআন শিক্ষা প্রোগ্রাম",
-    en: "Quran Learning Program",
-    desc: "সঠিক উচ্চারণ (তাজবীদ) ও অর্থসহ কুরআন শেখার প্রোগ্রাম — অফলাইন ও অনলাইন উভয় ব্যবস্থায়।",
-  },
-];
 
 const ssc2027 = [
   { bn: "চূড়ান্ত প্রস্তুতি ব্যাচ", en: "Final Preparation" },
@@ -98,32 +30,7 @@ export default function ProgramsPage() {
 
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {programs.map((p) => (
-              <div
-                key={p.en}
-                className={`flex flex-col rounded-sm border p-7 ${
-                  p.highlight ? "border-gold bg-ink text-paper" : "border-line bg-paper-raised"
-                }`}
-              >
-                <h2 className="font-display-bn text-xl">{p.bn}</h2>
-                <p className={`font-label mt-1 text-[11px] uppercase tracking-wide ${p.highlight ? "text-gold" : "text-ink-soft/60"}`}>
-                  {p.en}
-                </p>
-                <p className={`mt-4 flex-1 text-sm leading-relaxed ${p.highlight ? "text-paper/80" : "text-ink-soft"}`}>
-                  {p.desc}
-                </p>
-                <Link
-                  href="/admission"
-                  className={`mt-6 flex w-fit items-center gap-1.5 rounded-sm px-4 py-2 text-sm font-medium ${
-                    p.highlight ? "bg-gold text-ink hover:bg-gold-soft" : "bg-ink text-paper hover:bg-gold-deep"
-                  }`}
-                >
-                  ভর্তি হোন <ArrowUpRight size={14} />
-                </Link>
-              </div>
-            ))}
-          </div>
+          <ProgramsList />
         </div>
       </section>
 

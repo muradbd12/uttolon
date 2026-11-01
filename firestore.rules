@@ -78,6 +78,19 @@ service cloud.firestore {
       allow read: if request.auth != null;
     }
 
+    match /homeworkSubmissions/{submissionId} {
+      allow create: if request.auth != null
+        && request.resource.data.studentUid == request.auth.uid
+        && submissionId == request.resource.data.homeworkId + '_' + request.auth.uid
+        && request.resource.data.checked == false
+        && request.resource.data.imageUrls.size() <= 5;
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+      allow update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
     match /fees/{feeId} {
       allow create, update, delete: if isSuperAdmin();
       allow read: if isAdmin()

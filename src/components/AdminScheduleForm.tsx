@@ -27,6 +27,7 @@ type ScheduleEntry = {
   startTime: string;
   endTime: string;
   room?: string;
+  meetingLink?: string;
 };
 
 const inputClass =
@@ -86,6 +87,7 @@ export default function AdminScheduleForm() {
     const startTime = form.get("startTime") as string;
     const endTime = form.get("endTime") as string;
     const room = (form.get("room") as string)?.trim();
+    const meetingLink = (form.get("meetingLink") as string)?.trim();
 
     if (!className || !subject || !teacherUid || !startTime || !endTime) {
       setStatus("error");
@@ -103,6 +105,7 @@ export default function AdminScheduleForm() {
         startTime,
         endTime,
         room: room || "",
+        meetingLink: meetingLink || "",
       };
       if (editingId) {
         await updateDoc(doc(getFirebaseDb(), "schedule", editingId), fields);
@@ -209,6 +212,13 @@ export default function AdminScheduleForm() {
             placeholder="রুম (ঐচ্ছিক)"
             defaultValue={editingEntry?.room}
             className={inputClass}
+          />
+          <input
+            name="meetingLink"
+            type="url"
+            placeholder="অনলাইন ক্লাসের লিংক — Zoom/Google Meet (ঐচ্ছিক)"
+            defaultValue={editingEntry?.meetingLink}
+            className={`${inputClass} sm:col-span-2`}
           />
         </div>
 

@@ -15,6 +15,7 @@ const COLLECTIONS: { key: string; label: string }[] = [
   { key: "attendance", label: "হাজিরা" },
   { key: "assessments", label: "মূল্যায়ন" },
   { key: "homework", label: "হোমওয়ার্ক" },
+  { key: "homeworkSubmissions", label: "হোমওয়ার্ক জমা" },
   { key: "schedule", label: "ক্লাস শিডিউল" },
   { key: "notices", label: "নোটিশ" },
   { key: "blogPosts", label: "ব্লগ" },

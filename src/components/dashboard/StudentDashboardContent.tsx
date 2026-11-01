@@ -2,7 +2,6 @@
 
 import {
   CalendarDays,
-  CheckCircle2,
   ClipboardList,
   UserRound,
   Sparkles,
@@ -11,19 +10,18 @@ import ProgressRow from "@/components/ProgressRow";
 import { useUserProfile } from "@/lib/useUserProfile";
 import { useAttendanceSummary } from "@/lib/useAttendanceSummary";
 import { useAssessments } from "@/lib/useAssessments";
-import { useHomework } from "@/lib/useHomework";
 import { useTodaySchedule } from "@/lib/useTodaySchedule";
 import RecentNotices from "@/components/dashboard/RecentNotices";
 import FeeSummary from "@/components/dashboard/FeeSummary";
 import AdmissionFeeSummary from "@/components/dashboard/AdmissionFeeSummary";
 import ProgressReport from "@/components/dashboard/ProgressReport";
+import StudentHomework from "@/components/dashboard/StudentHomework";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 
 export default function StudentDashboardContent() {
   const profile = useUserProfile();
   const attendance = useAttendanceSummary(profile?.uid);
   const assessments = useAssessments(profile?.uid);
-  const homework = useHomework(profile?.className);
   const todaySchedule = useTodaySchedule({ field: "className", value: profile?.className });
 
   return (
@@ -86,9 +84,21 @@ export default function StudentDashboardContent() {
                           {c.teacherName} {c.room ? `— ${c.room}` : ""}
                         </p>
                       </div>
-                      <span className="text-xs text-ink-soft">
-                        {c.startTime}–{c.endTime}
-                      </span>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span className="text-xs text-ink-soft">
+                          {c.startTime}–{c.endTime}
+                        </span>
+                        {c.meetingLink && (
+                          <a
+                            href={c.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-full bg-teal-deep px-3 py-1 text-xs font-semibold text-paper hover:opacity-90"
+                          >
+                            ক্লাসে যোগ দিন
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -133,29 +143,7 @@ export default function StudentDashboardContent() {
             </div>
 
             {/* Homework — real */}
-            <div className="rounded-sm border border-line bg-paper p-6">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={17} className="text-gold-deep" />
-                <h2 className="font-display-bn text-lg text-ink">হোমওয়ার্ক</h2>
-              </div>
-              {homework === null ? (
-                <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>
-              ) : homework.length === 0 ? (
-                <p className="mt-4 text-sm text-ink-soft/60">এখনো কোনো হোমওয়ার্ক দেওয়া হয়নি।</p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {homework.map((h) => (
-                    <div key={h.id} className="rounded-sm border border-line px-4 py-3">
-                      <p className="font-label text-[11px] uppercase tracking-wide text-ink-soft/60">
-                        {h.subject}
-                      </p>
-                      <p className="mt-1 text-[15px] text-ink">{h.title}</p>
-                      <p className="mt-1 text-xs text-gold-deep">জমা দেওয়ার সময়সীমা: {h.dueDate}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <StudentHomework className={profile?.className} studentUid={profile?.uid} studentName={profile?.name} />
           </div>
 
           {/* Right column */}

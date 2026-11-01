@@ -12,6 +12,7 @@ export type ScheduleItem = {
   startTime: string;
   endTime: string;
   room?: string;
+  meetingLink?: string;
 };
 
 type Filter = { field: "className" | "teacherUid"; value: string | null | undefined };

@@ -179,12 +179,20 @@ export default function TeacherDashboardContent() {
                   <ClipboardList size={17} className="text-gold-deep" />
                   <h2 className="font-display-bn text-lg text-ink">সাম্প্রতিক হোমওয়ার্ক</h2>
                 </div>
-                <Link
-                  href="/teacher/homework"
-                  className="rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
-                >
-                  নতুন হোমওয়ার্ক দিন
-                </Link>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href="/teacher/submissions"
+                    className="rounded-sm bg-ink px-3 py-1.5 text-xs font-medium text-paper hover:bg-gold-deep"
+                  >
+                    জমা পড়া হোমওয়ার্ক
+                  </Link>
+                  <Link
+                    href="/teacher/homework"
+                    className="rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
+                  >
+                    নতুন হোমওয়ার্ক দিন
+                  </Link>
+                </div>
               </div>
               {homework === null ? (
                 <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>

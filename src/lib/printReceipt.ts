@@ -1,13 +1,15 @@
 /**
- * Prints a single element in isolation: clones it into a fresh node appended
- * directly to <body>, hides everything else in <body> for the duration of
- * the print, then cleans up automatically after printing (or if the user
- * cancels and returns focus to the tab without printing).
+ * Prints ONE element in isolation: clones it into a fresh node appended to
+ * <body>, hides everything else in <body> during the print, and cleans up
+ * after printing.
  *
- * This is more reliable than relying only on `print:hidden` classes, because
- * it doesn't depend on knowing every ancestor/sibling in the page (e.g. an
- * admin dashboard sidebar) — it hides literally everything except the
- * cloned target, regardless of where in the page the original element lives.
+ * Important behaviours (kept deliberately, do not "simplify" them away):
+ *  - If the element is missing we do NOT fall back to window.print() — that
+ *    used to print the whole page (e.g. the full admission form) when only a
+ *    money receipt was wanted. We tell the user instead.
+ *  - Cleanup happens on `afterprint` (or after a long safety timeout), never on
+ *    window `focus`: some browsers fire `focus` just as the print dialog opens,
+ *    which removed the isolation early and printed the whole page.
  */
 export async function printIsolated(elementId: string) {
   if (typeof document === "undefined") return;
@@ -16,13 +18,13 @@ export async function printIsolated(elementId: string) {
     try {
       await document.fonts.ready;
     } catch {
-      // If the font-readiness check fails for any reason, still proceed to print.
+      // proceed anyway
     }
   }
 
   const target = document.getElementById(elementId);
   if (!target) {
-    window.print();
+    window.alert("প্রিন্ট করার মতো রশিদ পাওয়া যায়নি — পেজ রিফ্রেশ করে আবার চেষ্টা করুন।");
     return;
   }
 
@@ -38,15 +40,18 @@ export async function printIsolated(elementId: string) {
   document.body.appendChild(isolatedRoot);
   document.body.classList.add("printing-isolated");
 
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const cleanup = () => {
+    if (timer) clearTimeout(timer);
     document.body.classList.remove("printing-isolated");
     const el = document.getElementById("print-isolated-root");
     if (el) el.remove();
     window.removeEventListener("afterprint", cleanup);
-    window.removeEventListener("focus", cleanup);
   };
   window.addEventListener("afterprint", cleanup);
-  window.addEventListener("focus", cleanup);
+  timer = setTimeout(cleanup, 5 * 60 * 1000);
 
+  // let the browser lay the clone out before the print snapshot is taken
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   window.print();
 }

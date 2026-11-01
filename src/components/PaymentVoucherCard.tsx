@@ -21,14 +21,14 @@ export type VoucherData = {
 };
 
 function fmtTaka(n: number) {
-  return `৳${n.toLocaleString("bn-BD")}`;
+  return `${n.toLocaleString("bn-BD")} টাকা`;
 }
 
 function Item({ label, value }: { label: string; value?: string }) {
   return (
     <div>
-      <dt className="text-[8.5px] text-ink-soft/60">{label}</dt>
-      <dd className="text-[10.5px] leading-tight text-ink">{value || "—"}</dd>
+      <dt className="text-[10.5px] text-ink-soft/60">{label}</dt>
+      <dd className="text-[12.5px] leading-tight text-ink">{value || "—"}</dd>
     </div>
   );
 }
@@ -44,27 +44,27 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
     : "bg-clay-soft text-clay";
 
   return (
-    <div id={id} className="rounded-sm border border-line bg-paper p-3 text-[10.5px] sm:p-4 print:mt-0 print:border-none print:p-0">
+    <div id={id} className="rounded-sm border border-line bg-paper p-3 text-[12.5px] sm:p-4 print:mt-0 print:border-none print:p-0">
       <div className="flex items-center justify-between border-b-2 border-teal-deep pb-1.5 print:break-inside-avoid">
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-8 w-8 object-contain" />
           <div>
-            <p className="font-display-bn text-sm leading-none text-ink">উত্তোলন</p>
-            <p className="font-display-en text-[9px] tracking-wide text-ink-soft">Uttolon Learning System</p>
+            <p className="font-display-bn text-base leading-none text-ink">উত্তোলন</p>
+            <p className="font-display-en text-[11px] tracking-wide text-ink-soft">Uttolon Learning System</p>
           </div>
         </div>
         <div className="text-right">
-          <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[8.5px] font-bold uppercase text-gold-deep">
+          <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[10.5px] font-bold uppercase text-gold-deep">
             মানি রিসিট — অফিস কপি (Office Copy)
           </span>
-          <p className="mt-0.5 font-display-en text-[10.5px] text-ink">
+          <p className="mt-0.5 font-display-en text-[12.5px] text-ink">
             ভাউচার: {data.voucherId} · তারিখ: {data.paymentDate}
           </p>
         </div>
       </div>
 
-      <div className="mt-1.5 rounded-sm bg-teal-deep px-2 py-0.5 text-[9px] font-bold text-paper">শিক্ষার্থীর তথ্য</div>
+      <div className="mt-1.5 rounded-sm bg-teal-deep px-2 py-0.5 text-[11px] font-bold text-paper">শিক্ষার্থীর তথ্য</div>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1 border border-t-0 border-line p-1.5 sm:grid-cols-4 print:break-inside-avoid">
         <Item label="নাম (বাংলায়)" value={data.studentNameBn} />
         <Item label="নাম (ইংরেজি)" value={data.studentNameEn} />
@@ -78,23 +78,23 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
 
       <div className="mt-2 rounded-sm border-2 border-ink p-2 print:break-inside-avoid">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] font-bold uppercase tracking-wide text-ink-soft">এই পেমেন্টে জমা</span>
-          <span className={`rounded-full px-2 py-0.5 text-[8.5px] font-bold ${statusClass}`}>{statusLabel}</span>
+          <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">এই পেমেন্টে জমা</span>
+          <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${statusClass}`}>{statusLabel}</span>
         </div>
         <p className="mt-1 font-display-en text-xl font-bold text-ink">{fmtTaka(data.amountPaidNow)}</p>
 
         <div className="mt-2 grid grid-cols-3 gap-2 border-t border-line pt-2 text-center">
           <div>
-            <p className="text-[8px] text-ink-soft/60">মোট ফি</p>
-            <p className="text-[11px] font-bold text-ink">{fmtTaka(data.totalFee)}</p>
+            <p className="text-[10px] text-ink-soft/60">মোট ফি</p>
+            <p className="text-[13px] font-bold text-ink">{fmtTaka(data.totalFee)}</p>
           </div>
           <div className="border-x border-line">
-            <p className="text-[8px] text-ink-soft/60">সর্বমোট পরিশোধিত</p>
-            <p className="text-[11px] font-bold text-teal-deep">{fmtTaka(data.totalPaid)}</p>
+            <p className="text-[10px] text-ink-soft/60">সর্বমোট পরিশোধিত</p>
+            <p className="text-[13px] font-bold text-teal-deep">{fmtTaka(data.totalPaid)}</p>
           </div>
           <div>
-            <p className="text-[8px] text-ink-soft/60">বর্তমান বকেয়া</p>
-            <p className={`text-[11px] font-bold ${data.due > 0 ? "text-clay" : "text-teal-deep"}`}>
+            <p className="text-[10px] text-ink-soft/60">বর্তমান বকেয়া</p>
+            <p className={`text-[13px] font-bold ${data.due > 0 ? "text-clay" : "text-teal-deep"}`}>
               {fmtTaka(Math.max(data.due, 0))}
             </p>
           </div>
@@ -102,28 +102,28 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
       </div>
 
       {data.note && (
-        <p className="mt-1.5 border border-line p-1.5 text-[10px] text-ink-soft print:break-inside-avoid">
-          <span className="text-[8.5px] text-ink-soft/60">মন্তব্য: </span>{data.note}
+        <p className="mt-1.5 border border-line p-1.5 text-[12px] text-ink-soft print:break-inside-avoid">
+          <span className="text-[10.5px] text-ink-soft/60">মন্তব্য: </span>{data.note}
         </p>
       )}
 
       <div className="mt-3 flex justify-between print:break-inside-avoid">
-        <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
+        <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[11px] font-medium text-ink">
           পরিশোধকারীর স্বাক্ষর
         </span>
-        <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
+        <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[11px] font-medium text-ink">
           টাকা আদায়কারীর স্বাক্ষর (অফিস)
         </span>
       </div>
 
-      <div className="mt-2 flex flex-col items-center gap-0.5 border-t border-line pt-1 text-center text-[8px] text-ink-soft/70 sm:flex-row sm:justify-between">
+      <div className="mt-2 flex flex-col items-center gap-0.5 border-t border-line pt-1 text-center text-[10px] text-ink-soft/70 sm:flex-row sm:justify-between">
         <span>কাতারী টাওয়ার, কলেজ রোড, আমিশাপাড়া, সোনাইমুড়ী, নোয়াখালী</span>
         <span className="font-medium text-ink">www.uttolonbd.com</span>
         <span>info@uttolonbd.com</span>
       </div>
 
       {/* ===== কাটার লাইন ===== */}
-      <p className="mt-3 mb-1.5 text-center text-[8px] tracking-widest text-ink-soft/50 print:break-inside-avoid">
+      <p className="mt-3 mb-1.5 text-center text-[10px] tracking-widest text-ink-soft/50 print:break-inside-avoid">
         ✂ ------------------------------ এখান থেকে কেটে নিন / শিক্ষার্থীর কপি ------------------------------ ✂
       </p>
 
@@ -133,25 +133,25 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-7 w-7 object-contain" />
           <div>
-            <p className="font-display-bn text-[11px] leading-none text-ink">উত্তোলন — মানি রিসিট (Student Copy)</p>
-            <p className="mt-0.5 text-[8.5px] text-ink-soft/60">
+            <p className="font-display-bn text-[13px] leading-none text-ink">উত্তোলন — মানি রিসিট (Student Copy)</p>
+            <p className="mt-0.5 text-[10.5px] text-ink-soft/60">
               ভাউচার: {data.voucherId} · তারিখ: {data.paymentDate}
             </p>
           </div>
         </div>
       </div>
-      <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 rounded-sm border border-line p-1.5 text-[10px] sm:grid-cols-4 print:break-inside-avoid">
+      <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 rounded-sm border border-line p-1.5 text-[12px] sm:grid-cols-4 print:break-inside-avoid">
         <Item label="নাম" value={data.studentNameBn || data.studentNameEn} />
         <Item label={data.idLabel || "আবেদন আইডি"} value={data.applicationId} />
         <Item label="জমার পরিমাণ" value={fmtTaka(data.amountPaidNow)} />
         <Item label="উদ্দেশ্য / মাস" value={data.monthOrPurpose} />
       </dl>
       <div className="mt-1.5 flex justify-end print:break-inside-avoid">
-        <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
+        <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[11px] font-medium text-ink">
           টাকা আদায়কারীর স্বাক্ষর
         </span>
       </div>
-      <p className="mt-1 text-center text-[8px] text-ink-soft/60 print:break-inside-avoid">
+      <p className="mt-1 text-center text-[10px] text-ink-soft/60 print:break-inside-avoid">
         এই কপিটি নিজের কাছে সংরক্ষণ করুন — পরবর্তীতে যেকোনো হিসাব-নিকাশে এটি প্রমাণ হিসেবে কাজ করবে।
       </p>
     </div>

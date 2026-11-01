@@ -17,6 +17,18 @@ type Row = {
   monthlyPaidAllTime: number;
 };
 
+function DueText({ value }: { value: number }) {
+  if (value > 0)
+    return <span className="text-[15px] font-bold text-clay">{value.toLocaleString("bn-BD")} টাকা বকেয়া</span>;
+  if (value < 0)
+    return (
+      <span className="text-[15px] font-bold" style={{ color: "#1d4ed8" }}>
+        {Math.abs(value).toLocaleString("bn-BD")} টাকা অগ্রিম
+      </span>
+    );
+  return <span className="text-[15px] font-semibold text-teal-deep">পরিশোধিত</span>;
+}
+
 export default function AdminDuesOverview() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState(false);
@@ -120,7 +132,8 @@ export default function AdminDuesOverview() {
     ? rows.filter((r) => r.name.toLowerCase().includes(search.trim().toLowerCase()) || (r.className || "").includes(search.trim()))
     : rows;
 
-  const totalAdmissionDue = rows.reduce((s, r) => s + r.admissionDue, 0);
+  const totalAdmissionDue = rows.reduce((s, r) => s + Math.max(r.admissionDue, 0), 0);
+  const advanceCount = rows.filter((r) => r.admissionDue < 0).length;
   const totalMonthlyDue = rows.reduce((s, r) => s + r.latestFeeDue, 0);
   const totalCollected = rows.reduce((s, r) => s + r.admissionPaid + r.monthlyPaidAllTime, 0);
 
@@ -129,17 +142,24 @@ export default function AdminDuesOverview() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-sm border border-line bg-paper p-4">
           <p className="text-xs text-ink-soft/60">মোট সংগ্রহ (ভর্তি + মাসিক)</p>
-          <p className="mt-1 text-xl font-bold text-teal-deep">৳{totalCollected.toLocaleString("bn-BD")}</p>
+          <p className="mt-1 text-xl font-bold text-teal-deep">{totalCollected.toLocaleString("bn-BD")} টাকা</p>
         </div>
         <div className="rounded-sm border border-line bg-paper p-4">
           <p className="text-xs text-ink-soft/60">মোট ভর্তি-ফি বকেয়া</p>
-          <p className="mt-1 text-xl font-bold text-clay">৳{totalAdmissionDue.toLocaleString("bn-BD")}</p>
+          <p className="mt-1 text-xl font-bold text-clay">{totalAdmissionDue.toLocaleString("bn-BD")} টাকা</p>
         </div>
         <div className="rounded-sm border border-line bg-paper p-4">
           <p className="text-xs text-ink-soft/60">মোট চলতি-মাস বকেয়া</p>
-          <p className="mt-1 text-xl font-bold text-clay">৳{totalMonthlyDue.toLocaleString("bn-BD")}</p>
+          <p className="mt-1 text-xl font-bold text-clay">{totalMonthlyDue.toLocaleString("bn-BD")} টাকা</p>
         </div>
       </div>
+
+      {advanceCount > 0 && (
+        <p className="mt-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-3 text-sm text-ink">
+          {advanceCount.toLocaleString("bn-BD")} জন শিক্ষার্থীর ভর্তি-ফি নির্ধারিত ফি-র চেয়ে বেশি দেওয়া আছে — সেগুলো
+          "অগ্রিম" হিসেবে দেখানো হয়েছে এবং মোট বকেয়ার হিসাবে ধরা হয়নি।
+        </p>
+      )}
 
       <div className="mt-5 flex items-center gap-2 rounded-sm border border-line bg-paper px-3 py-2">
         <Search size={15} className="text-ink-soft/50" />
@@ -153,9 +173,9 @@ export default function AdminDuesOverview() {
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse text-sm">
+        <table className="w-full min-w-[720px] border-collapse text-[15px]">
           <thead>
-            <tr className="border-b border-line text-left text-xs text-ink-soft/60">
+            <tr className="border-b-2 border-line text-left text-[13px] font-semibold text-ink-soft">
               <th className="py-2 pr-3">নাম</th>
               <th className="py-2 pr-3">ক্লাস</th>
               <th className="py-2 pr-3">ভর্তি-ফি বকেয়া</th>
@@ -166,14 +186,14 @@ export default function AdminDuesOverview() {
           <tbody>
             {filtered.map((r) => (
               <tr key={r.uid} className="border-b border-line/60">
-                <td className="py-2 pr-3 text-ink">{r.name}</td>
-                <td className="py-2 pr-3 text-ink-soft">{r.className || "—"}</td>
-                <td className={`py-2 pr-3 font-medium ${r.admissionDue > 0 ? "text-clay" : "text-teal-deep"}`}>
-                  ৳{r.admissionDue.toLocaleString("bn-BD")}
+                <td className="py-2.5 pr-3 font-medium text-ink">{r.name}</td>
+                <td className="py-2.5 pr-3 text-ink">{r.className || "—"}</td>
+                <td className="py-2.5 pr-3">
+                  <DueText value={r.admissionDue} />
                 </td>
-                <td className="py-2 pr-3 text-ink-soft">{r.latestFeeMonth || "—"}</td>
-                <td className={`py-2 pr-3 font-medium ${r.latestFeeDue > 0 ? "text-clay" : "text-teal-deep"}`}>
-                  ৳{r.latestFeeDue.toLocaleString("bn-BD")}
+                <td className="py-2.5 pr-3 text-ink">{r.latestFeeMonth || "—"}</td>
+                <td className="py-2.5 pr-3">
+                  {r.latestFeeMonth ? <DueText value={r.latestFeeDue} /> : <span className="text-ink-soft/50">—</span>}
                 </td>
               </tr>
             ))}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc, runTransaction, serverTimestamp, type Timestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { AlertTriangle, Inbox, Loader2, ChevronDown, ChevronUp, Check, X, UserPlus, Printer, XCircle, Pencil, Trash2, Wallet, AlertCircle } from "lucide-react";
+import { AlertTriangle, Inbox, Loader2, ChevronDown, ChevronUp, Check, X, UserPlus, Printer, XCircle, Pencil, Trash2, Wallet, AlertCircle, Receipt } from "lucide-react";
 import AdmissionReceiptCard from "@/components/AdmissionReceiptCard";
 import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
 import { printIsolated } from "@/lib/printReceipt";
@@ -125,6 +125,8 @@ const editableFields: { key: keyof Application; label: string }[] = [
   { key: "referralOther", label: "অন্যান্য (কিভাবে জানলেন)" },
 ];
 
+type PayHistoryRow = { id: string; ts: number; amount: number; method: string; purpose: string };
+
 export default function AdminAdmissionsList() {
   const router = useRouter();
   const [apps, setApps] = useState<Application[] | null>(null);
@@ -141,6 +143,7 @@ export default function AdminAdmissionsList() {
   const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
   const [payBusy, setPayBusy] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+  const [history, setHistory] = useState<PayHistoryRow[] | null>(null);
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
 
   useEffect(() => {
@@ -228,9 +231,60 @@ export default function AdminAdmissionsList() {
     }
   }
 
+  async function loadHistory(a: Application) {
+    setHistory(null);
+    try {
+      const snap = await getDocs(collection(getFirebaseDb(), "admissions", a.id, "payments"));
+      const rows = snap.docs
+        .map((d) => {
+          const x = d.data();
+          return {
+            id: d.id,
+            ts: x.paidAt && typeof x.paidAt.toMillis === "function" ? (x.paidAt.toMillis() as number) : 0,
+            amount: Number(x.amount) || 0,
+            method: (x.method as string) || "",
+            purpose: (x.monthOrPurpose as string) || "",
+          };
+        })
+        .sort((p, q) => p.ts - q.ts);
+      setHistory(rows);
+    } catch {
+      setHistory([]);
+    }
+  }
+
+  // Money receipt for ONE earlier payment (never the admission form).
+  function receiptFromHistory(a: Application, rows: PayHistoryRow[], i: number): VoucherData {
+    const upTo = rows.slice(0, i + 1).reduce((sum, r) => sum + r.amount, 0);
+    const fee = a.totalFee || 0;
+    const r = rows[i];
+    return {
+      studentNameBn: a.studentNameBn,
+      studentNameEn: a.studentNameEn,
+      applicationId: a.shortId || a.id.slice(0, 8).toUpperCase(),
+      className: a.className,
+      group: a.group,
+      program: a.program,
+      mobile: a.mobile,
+      voucherId: `${(a.shortId || a.id).slice(0, 6).toUpperCase()}-V${i + 1}`,
+      paymentDate: (r.ts ? new Date(r.ts) : new Date()).toLocaleDateString("bn-BD", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      amountPaidNow: r.amount,
+      method: r.method || "—",
+      monthOrPurpose: r.purpose || "ভর্তি ফি",
+      totalFee: fee,
+      totalPaid: upTo,
+      due: Math.max(fee - upTo, 0),
+    };
+  }
+
   function startPay(a: Application) {
     setPayError(null);
     setPayingId(a.id);
+    void loadHistory(a);
     setFeeInput(a.totalFee ? String(a.totalFee) : "");
     setEditingFeeId(null);
     setPayAmount(a.due ? String(a.due) : "");
@@ -324,6 +378,7 @@ export default function AdminAdmissionsList() {
         due: result.newDue,
       });
       setPayAmount("");
+      void loadHistory(a);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       setPayError(
@@ -487,16 +542,16 @@ export default function AdminAdmissionsList() {
                   <div className="grid grid-cols-3 gap-2 rounded-sm border border-line bg-paper-raised p-2 text-center text-xs">
                     <div>
                       <p className="text-ink-soft/60">মোট ফি</p>
-                      <p className="font-bold text-ink">৳{a.totalFee.toLocaleString("bn-BD")}</p>
+                      <p className="font-bold text-ink">{a.totalFee.toLocaleString("bn-BD")} টাকা</p>
                     </div>
                     <div className="border-x border-line">
                       <p className="text-ink-soft/60">পরিশোধিত</p>
-                      <p className="font-bold text-teal-deep">৳{(a.totalPaid || 0).toLocaleString("bn-BD")}</p>
+                      <p className="font-bold text-teal-deep">{(a.totalPaid || 0).toLocaleString("bn-BD")} টাকা</p>
                     </div>
                     <div>
                       <p className="text-ink-soft/60">বকেয়া</p>
                       <p className={`font-bold ${(a.due || 0) > 0 ? "text-clay" : "text-teal-deep"}`}>
-                        ৳{Math.max(a.due || 0, 0).toLocaleString("bn-BD")}
+                        {Math.max(a.due || 0, 0).toLocaleString("bn-BD")} টাকা
                       </p>
                     </div>
                   </div>
@@ -517,17 +572,22 @@ export default function AdminAdmissionsList() {
                     {voucher ? (
                       <div>
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-ink">পেমেন্ট রেকর্ড হয়েছে ✓</p>
-                          <button type="button" onClick={cancelPay} className="text-xs text-ink-soft underline">
-                            বন্ধ করুন
-                          </button>
+                          <p className="text-sm font-medium text-ink">টাকার রশিদ (শুধু এই পেমেন্টের) ✓</p>
+                          <div className="flex items-center gap-3">
+                            <button type="button" onClick={() => setVoucher(null)} className="text-xs text-ink-soft underline">
+                              ← পেমেন্ট তালিকা
+                            </button>
+                            <button type="button" onClick={cancelPay} className="text-xs text-ink-soft underline">
+                              বন্ধ করুন
+                            </button>
+                          </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => printIsolated("printable-voucher")}
                           className="mt-2 flex items-center gap-1.5 rounded-sm bg-ink px-4 py-2 text-xs font-medium text-paper hover:bg-gold-deep"
                         >
-                          <Printer size={13} /> ভাউচার প্রিন্ট করুন
+                          <Printer size={13} /> টাকার রশিদ প্রিন্ট করুন
                         </button>
                         <div className="mt-3">
                           <PaymentVoucherCard data={voucher} />
@@ -562,7 +622,7 @@ export default function AdminAdmissionsList() {
                       <div>
                         <div className="flex items-center justify-between text-sm">
                           <p className="text-ink-soft">
-                            মোট ফি: <span className="font-medium text-ink">৳{(a.totalFee || 0).toLocaleString("bn-BD")}</span>
+                            মোট ফি: <span className="font-medium text-ink">{(a.totalFee || 0).toLocaleString("bn-BD")} টাকা</span>
                           </p>
                           <button
                             type="button"
@@ -604,7 +664,7 @@ export default function AdminAdmissionsList() {
                         ) : (
                           <div className="mt-3">
                             <label className="text-xs text-ink-soft">
-                              কত টাকা নিচ্ছেন (বকেয়া ৳{(a.due || 0).toLocaleString("bn-BD")})
+                              কত টাকা নিচ্ছেন (বকেয়া {(a.due || 0).toLocaleString("bn-BD")} টাকা)
                             </label>
                             <div className="mt-1 flex flex-wrap items-center gap-2">
                               <input
@@ -652,6 +712,43 @@ export default function AdminAdmissionsList() {
                         )}
                       </div>
                     )}
+
+                    {!voucher && (
+                      <div className="mt-4 border-t border-gold-soft pt-3">
+                        <p className="text-sm font-semibold text-ink">এ পর্যন্ত পেমেন্ট ও টাকার রশিদ</p>
+                        {history === null ? (
+                          <p className="mt-2 text-xs text-ink-soft/60">লোড হচ্ছে...</p>
+                        ) : history.length === 0 ? (
+                          <p className="mt-2 text-xs text-ink-soft/60">এখনো কোনো পেমেন্ট রেকর্ড নেই।</p>
+                        ) : (
+                          <ul className="mt-2 divide-y divide-line/60">
+                            {history.map((h, i) => (
+                              <li key={h.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                                <span className="text-ink-soft">
+                                  <span className="font-semibold text-ink">পেমেন্ট {(i + 1).toLocaleString("bn-BD")}</span>
+                                  {" · "}
+                                  {h.ts
+                                    ? new Date(h.ts).toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" })
+                                    : "—"}
+                                  {" · "}
+                                  {h.method || "—"}
+                                </span>
+                                <span className="flex items-center gap-2">
+                                  <span className="text-[15px] font-bold text-ink">{h.amount.toLocaleString("bn-BD")} টাকা</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setVoucher(receiptFromHistory(a, history, i))}
+                                    className="flex items-center gap-1 rounded-sm border border-ink px-2.5 py-1 text-xs font-medium text-ink hover:bg-ink hover:text-paper"
+                                  >
+                                    <Receipt size={12} /> রশিদ
+                                  </button>
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -661,7 +758,14 @@ export default function AdminAdmissionsList() {
                     onClick={() => setPrintingApp(a)}
                     className="flex items-center gap-1.5 rounded-sm border border-line px-3 py-1.5 text-xs text-ink-soft hover:border-ink hover:text-ink"
                   >
-                    <Printer size={13} /> রশিদ দেখুন / প্রিন্ট করুন
+                    <Printer size={13} /> ভর্তি ফর্ম প্রিন্ট
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startPay(a)}
+                    className="flex items-center gap-1.5 rounded-sm border border-ink px-3 py-1.5 text-xs font-medium text-ink hover:bg-ink hover:text-paper"
+                  >
+                    <Receipt size={13} /> টাকার রশিদ
                   </button>
                   <button
                     type="button"
@@ -730,7 +834,7 @@ export default function AdminAdmissionsList() {
             onClick={() => printIsolated("printable-receipt")}
             className="flex items-center gap-2 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep"
           >
-            <Printer size={15} /> প্রিন্ট / PDF ডাউনলোড
+            <Printer size={15} /> ভর্তি ফর্ম প্রিন্ট / PDF
           </button>
           <button
             type="button"

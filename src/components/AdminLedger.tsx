@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Download, Loader2, AlertCircle, Search, Info } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Download, Loader2, AlertCircle, Search, Info, Receipt, Printer, X } from "lucide-react";
+import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
+import { printIsolated } from "@/lib/printReceipt";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { withTimeout } from "@/lib/withTimeout";
 
@@ -14,6 +16,20 @@ type Row = {
   method: string;
   ref: string;
   amount: number;
+  receipt: {
+    idLabel: string;
+    applicationId: string;
+    className: string;
+    group: string;
+    program: string;
+    mobile: string;
+    nameEn: string;
+    voucherId: string;
+    purpose: string;
+    totalFee: number;
+    paidUpTo: number;
+    dueAfter: number;
+  };
 };
 
 type LedgerResponse = {
@@ -39,12 +55,41 @@ function csvCell(v: string | number) {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
+function buildVoucher(r: Row): VoucherData {
+  return {
+    idLabel: r.receipt.idLabel,
+    studentNameBn: r.student,
+    studentNameEn: r.receipt.nameEn,
+    applicationId: r.receipt.applicationId,
+    className: r.receipt.className,
+    group: r.receipt.group,
+    program: r.receipt.program,
+    mobile: r.receipt.mobile,
+    voucherId: r.receipt.voucherId,
+    paymentDate: r.ts
+      ? new Date(r.ts).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })
+      : "—",
+    amountPaidNow: r.amount,
+    method: r.ref && r.kind === "monthly" ? `${r.method || "—"} (${r.ref})` : r.method || "—",
+    monthOrPurpose: r.receipt.purpose,
+    totalFee: r.receipt.totalFee,
+    totalPaid: r.receipt.paidUpTo,
+    due: r.receipt.dueAfter,
+  };
+}
+
 export default function AdminLedger() {
   const [data, setData] = useState<LedgerResponse | null>(null);
   const [error, setError] = useState(false);
   const [kind, setKind] = useState<"all" | "admission" | "monthly">("all");
   const [month, setMonth] = useState("");
   const [search, setSearch] = useState("");
+  const [receiptRow, setReceiptRow] = useState<Row | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (receiptRow) receiptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [receiptRow]);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,15 +181,15 @@ export default function AdminLedger() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-sm border border-line bg-paper p-4">
           <p className="text-xs text-ink-soft/60">মোট জমা (সব)</p>
-          <p className="mt-1 text-xl font-bold text-teal-deep">৳{data.totals.all.toLocaleString("bn-BD")}</p>
+          <p className="mt-1 text-xl font-bold text-teal-deep">{data.totals.all.toLocaleString("bn-BD")} টাকা</p>
         </div>
         <div className="rounded-sm border border-line bg-paper p-4">
           <p className="text-xs text-ink-soft/60">ভর্তি ফি বাবদ</p>
-          <p className="mt-1 text-xl font-bold text-ink">৳{data.totals.admission.toLocaleString("bn-BD")}</p>
+          <p className="mt-1 text-xl font-bold text-ink">{data.totals.admission.toLocaleString("bn-BD")} টাকা</p>
         </div>
         <div className="rounded-sm border border-line bg-paper p-4">
           <p className="text-xs text-ink-soft/60">মাসিক ফি বাবদ</p>
-          <p className="mt-1 text-xl font-bold text-ink">৳{data.totals.monthly.toLocaleString("bn-BD")}</p>
+          <p className="mt-1 text-xl font-bold text-ink">{data.totals.monthly.toLocaleString("bn-BD")} টাকা</p>
         </div>
       </div>
 
@@ -189,20 +234,50 @@ export default function AdminLedger() {
       </div>
 
       <p className="mt-3 text-sm text-ink-soft">
-        {filtered.length}টি এন্ট্রি · মোট <span className="font-medium text-ink">৳{filteredTotal.toLocaleString("bn-BD")}</span>
+        {filtered.length}টি এন্ট্রি · মোট <span className="font-medium text-ink">{filteredTotal.toLocaleString("bn-BD")} টাকা</span>
         {data.truncated && <span className="text-ink-soft/60"> (সব লেনদেনের মধ্যে সবচেয়ে নতুন ৫০০টি দেখানো হচ্ছে)</span>}
       </p>
 
+      {receiptRow && (
+        <div ref={receiptRef} className="mt-4 rounded-sm border border-line bg-paper p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+              <Receipt size={15} /> টাকার রশিদ (শুধু এই পেমেন্টের)
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => printIsolated("printable-voucher")}
+                className="flex items-center gap-1.5 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep"
+              >
+                <Printer size={14} /> রশিদ প্রিন্ট করুন
+              </button>
+              <button
+                type="button"
+                onClick={() => setReceiptRow(null)}
+                className="flex items-center gap-1 rounded-sm border border-line px-3 py-2 text-sm text-ink-soft hover:border-ink"
+              >
+                <X size={14} /> বন্ধ করুন
+              </button>
+            </div>
+          </div>
+          <div className="mt-4">
+            <PaymentVoucherCard data={buildVoucher(receiptRow)} />
+          </div>
+        </div>
+      )}
+
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-[720px] border-collapse text-[15px]">
           <thead>
-            <tr className="border-b border-line text-left text-xs text-ink-soft/60">
+            <tr className="border-b-2 border-line text-left text-[13px] font-semibold text-ink-soft">
               <th className="py-2 pr-3 font-normal">তারিখ</th>
               <th className="py-2 pr-3 font-normal">শিক্ষার্থী</th>
               <th className="py-2 pr-3 font-normal">ধরন</th>
               <th className="py-2 pr-3 font-normal">বিবরণ</th>
               <th className="py-2 pr-3 font-normal">পদ্ধতি</th>
-              <th className="py-2 text-right font-normal">টাকা</th>
+              <th className="py-2 pr-3 text-right font-normal">টাকা</th>
+              <th className="py-2 font-normal">রশিদ</th>
             </tr>
           </thead>
           <tbody>
@@ -224,12 +299,21 @@ export default function AdminLedger() {
                 </td>
                 <td className="py-2 pr-3 text-ink-soft">{r.detail || "—"}</td>
                 <td className="py-2 pr-3 text-ink-soft">{r.method || "—"}</td>
-                <td className="py-2 text-right font-medium text-ink">৳{r.amount.toLocaleString("bn-BD")}</td>
+                <td className="py-2 pr-3 text-right text-[15px] font-bold text-ink">{r.amount.toLocaleString("bn-BD")} টাকা</td>
+                <td className="py-2">
+                  <button
+                    type="button"
+                    onClick={() => setReceiptRow(r)}
+                    className="flex items-center gap-1 rounded-sm border border-ink px-2 py-1 text-xs font-medium text-ink hover:bg-ink hover:text-paper"
+                  >
+                    <Receipt size={12} /> রশিদ
+                  </button>
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-ink-soft/60">কোনো এন্ট্রি পাওয়া যায়নি।</td>
+                <td colSpan={7} className="py-8 text-center text-ink-soft/60">কোনো এন্ট্রি পাওয়া যায়নি।</td>
               </tr>
             )}
           </tbody>

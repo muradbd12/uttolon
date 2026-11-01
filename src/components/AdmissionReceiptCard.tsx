@@ -45,15 +45,15 @@ export type ReceiptData = {
 function Item({ label, value }: { label: string; value?: string }) {
   return (
     <div>
-      <dt className="text-[8.5px] text-ink-soft/60">{label}</dt>
-      <dd className="text-[10.5px] leading-tight text-ink">{value || "—"}</dd>
+      <dt className="text-[10.5px] text-ink-soft/60">{label}</dt>
+      <dd className="text-[12.5px] leading-tight text-ink">{value || "—"}</dd>
     </div>
   );
 }
 
 function SectionBar({ title }: { title: string }) {
   return (
-    <div className="mt-1.5 rounded-sm bg-teal-deep px-2 py-0.5 text-[9px] font-bold text-paper print:break-inside-avoid">
+    <div className="mt-1.5 rounded-sm bg-teal-deep px-2 py-0.5 text-[11px] font-bold text-paper print:break-inside-avoid">
       {title}
     </div>
   );
@@ -69,23 +69,23 @@ export default function AdmissionReceiptCard({
   dateLabel?: string;
 }) {
   return (
-    <div id="printable-receipt" className="rounded-sm border border-line bg-paper p-3 text-[10.5px] sm:p-4 print:mt-0 print:border-none print:p-0">
+    <div id="printable-receipt" className="rounded-sm border border-line bg-paper p-3 text-[12.5px] sm:p-4 print:mt-0 print:border-none print:p-0">
       {/* ===== OFFICE COPY ===== */}
       <div className="flex items-center justify-between border-b-2 border-teal-deep pb-1.5 print:break-inside-avoid">
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-8 w-8 object-contain" />
           <div>
-            <p className="font-display-bn text-sm leading-none text-ink">উত্তোলন</p>
-            <p className="font-display-en text-[9px] tracking-wide text-ink-soft">Uttolon Learning System</p>
+            <p className="font-display-bn text-base leading-none text-ink">উত্তোলন</p>
+            <p className="font-display-en text-[11px] tracking-wide text-ink-soft">Uttolon Learning System</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-right">
-            <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[8.5px] font-bold uppercase text-gold-deep">
+            <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[10.5px] font-bold uppercase text-gold-deep">
               অফিস কপি (Office Copy)
             </span>
-            <p className="mt-0.5 font-display-en text-[10.5px] text-ink">
+            <p className="mt-0.5 font-display-en text-[12.5px] text-ink">
               {applicationId && <>আইডি: {applicationId}</>}
               {applicationId && dateLabel && " · "}
               {dateLabel && <>জমা: {dateLabel}</>}
@@ -147,12 +147,12 @@ export default function AdmissionReceiptCard({
         <Item label="কিভাবে জানলেন" value={data.referralSource === "অন্যান্য" ? data.referralOther : data.referralSource} />
       </dl>
       {data.specialComments && (
-        <p className="mt-1 border border-t-0 border-line p-1.5 text-[10px] text-ink-soft">
-          <span className="text-[8.5px] text-ink-soft/60">মন্তব্য: </span>{data.specialComments}
+        <p className="mt-1 border border-t-0 border-line p-1.5 text-[12px] text-ink-soft">
+          <span className="text-[10.5px] text-ink-soft/60">মন্তব্য: </span>{data.specialComments}
         </p>
       )}
 
-      <div className="mt-1.5 rounded-sm border border-gold-soft bg-gold-soft/40 p-1.5 text-[9px] leading-snug text-ink-soft print:break-inside-avoid">
+      <div className="mt-1.5 rounded-sm border border-gold-soft bg-gold-soft/40 p-1.5 text-[11px] leading-snug text-ink-soft print:break-inside-avoid">
         <strong className="text-ink">অঙ্গীকারনামা:</strong> আমি/আমার সন্তান এই মর্মে অঙ্গীকার করিতেছি যে, উপরে
         উল্লেখিত সকল তথ্য সঠিক ও নির্ভুল। কোর্স চলাকালীন সময়ে কর্তৃপক্ষের যাবতীয়
         নিয়ম-শৃঙ্খলা মানিয়া চলিব এবং নির্ধারিত ফি পরিশোধে বাধ্য থাকিব।
@@ -162,7 +162,7 @@ export default function AdmissionReceiptCard({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={data.signatureUrl} alt="স্বাক্ষর" className="mb-0.5 h-8 max-w-[120px] object-contain" />
             )}
-            <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[9px] font-medium text-ink">
+            <span className="border-t border-ink-soft/40 px-6 pt-0.5 text-[11px] font-medium text-ink">
               ছাত্র/ছাত্রী বা অভিভাবকের স্বাক্ষর
             </span>
           </div>
@@ -170,10 +170,10 @@ export default function AdmissionReceiptCard({
       </div>
 
       <div className="mt-1.5 overflow-hidden rounded-sm border-2 border-ink print:break-inside-avoid">
-        <div className="bg-ink py-1 text-center text-[9px] font-bold tracking-wider text-paper">
+        <div className="bg-ink py-1 text-center text-[11px] font-bold tracking-wider text-paper">
           অফিসিয়াল ব্যবহারের জন্য (OFFICIAL USE ONLY)
         </div>
-        <div className="space-y-1.5 bg-paper-raised p-1.5 text-[9px]">
+        <div className="space-y-1.5 bg-paper-raised p-1.5 text-[11px]">
           <div className="grid grid-cols-2 gap-1.5 border-b border-line pb-1 sm:grid-cols-4">
             <div><strong>Batch:</strong> .............</div>
             <div><strong>Roll/ID:</strong> .............</div>
@@ -192,7 +192,7 @@ export default function AdmissionReceiptCard({
             <div><strong>Concession:</strong> .............</div>
             <div><strong>Reference:</strong> .............</div>
           </div>
-          <table className="w-full border-collapse border border-line bg-paper text-center text-[8px]">
+          <table className="w-full border-collapse border border-line bg-paper text-center text-[10px]">
             <thead>
               <tr className="bg-line/40">
                 <th className="border border-line p-0.5">Date</th>
@@ -229,14 +229,14 @@ export default function AdmissionReceiptCard({
         </div>
       </div>
 
-      <div className="mt-1.5 flex flex-col items-center gap-0.5 border-t border-line pt-1 text-center text-[8px] text-ink-soft/70 sm:flex-row sm:justify-between">
+      <div className="mt-1.5 flex flex-col items-center gap-0.5 border-t border-line pt-1 text-center text-[10px] text-ink-soft/70 sm:flex-row sm:justify-between">
         <span>কাতারী টাওয়ার, কলেজ রোড, আমিশাপাড়া, সোনাইমুড়ী, নোয়াখালী</span>
         <span className="font-medium text-ink">www.uttolonbd.com</span>
         <span>info@uttolonbd.com</span>
       </div>
 
       {/* ===== কাটার লাইন ===== */}
-      <p className="mt-3 mb-1.5 text-center text-[8px] tracking-widest text-ink-soft/50 print:break-inside-avoid">
+      <p className="mt-3 mb-1.5 text-center text-[10px] tracking-widest text-ink-soft/50 print:break-inside-avoid">
         ✂ ------------------------------ এখান থেকে কেটে নিন / শিক্ষার্থীর কপি ------------------------------ ✂
       </p>
 
@@ -246,8 +246,8 @@ export default function AdmissionReceiptCard({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-7 w-7 object-contain" />
           <div>
-            <p className="font-display-bn text-[11px] leading-none text-ink">উত্তোলন — শিক্ষার্থীর কপি (Student Copy)</p>
-            <p className="mt-0.5 text-[8.5px] text-ink-soft/60">
+            <p className="font-display-bn text-[13px] leading-none text-ink">উত্তোলন — শিক্ষার্থীর কপি (Student Copy)</p>
+            <p className="mt-0.5 text-[10.5px] text-ink-soft/60">
               {applicationId && <>আইডি: {applicationId}</>}
               {applicationId && dateLabel && " · "}
               {dateLabel && <>জমা: {dateLabel}</>}
@@ -255,7 +255,7 @@ export default function AdmissionReceiptCard({
           </div>
         </div>
       </div>
-      <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 rounded-sm border border-line p-1.5 text-[10px] sm:grid-cols-4 print:break-inside-avoid">
+      <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 rounded-sm border border-line p-1.5 text-[12px] sm:grid-cols-4 print:break-inside-avoid">
         <Item label="নাম" value={data.studentNameBn || data.studentNameEn} />
         <Item label="শ্রেণি / গ্রুপ" value={`${data.className || ""}${data.group ? " / " + data.group : ""}`} />
         <Item label="প্রোগ্রাম" value={data.program} />
@@ -263,7 +263,7 @@ export default function AdmissionReceiptCard({
         <Item label="অভিভাবকের মোবাইল" value={data.guardianMobile} />
         <Item label="মোবাইল" value={data.mobile} />
       </dl>
-      <p className="mt-1 text-center text-[8px] text-ink-soft/60 print:break-inside-avoid">
+      <p className="mt-1 text-center text-[10px] text-ink-soft/60 print:break-inside-avoid">
         এই কপিটি নিজের কাছে সংরক্ষণ করুন — ভর্তি সংক্রান্ত যেকোনো যোগাযোগে এই আইডি প্রয়োজন হবে।
       </p>
     </div>

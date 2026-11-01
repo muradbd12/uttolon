@@ -157,10 +157,9 @@ export default function ProgressReport({
           <div className="mt-1.5 space-y-1 text-sm text-ink-soft">
             {admissionFee && (
               <p>
-                ভর্তি ফি — মোট ৳{admissionFee.totalFee.toLocaleString("bn-BD")}, পরিশোধিত ৳
-                {admissionFee.totalPaid.toLocaleString("bn-BD")}
+                ভর্তি ফি — মোট {admissionFee.totalFee.toLocaleString("bn-BD")} টাকা, পরিশোধিত {admissionFee.totalPaid.toLocaleString("bn-BD")} টাকা
                 {admissionFee.due > 0 ? (
-                  <span className="text-clay"> (বকেয়া ৳{admissionFee.due.toLocaleString("bn-BD")})</span>
+                  <span className="text-clay"> (বকেয়া {admissionFee.due.toLocaleString("bn-BD")} টাকা)</span>
                 ) : (
                   <span className="text-teal-deep"> (সম্পূর্ণ পরিশোধিত)</span>
                 )}

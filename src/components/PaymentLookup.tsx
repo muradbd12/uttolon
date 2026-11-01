@@ -156,16 +156,16 @@ export default function PaymentLookup() {
         <div className="mt-4 grid grid-cols-3 gap-2 rounded-sm border border-line bg-paper-raised p-3 text-center">
           <div>
             <p className="text-xs text-ink-soft/60">মোট ফি</p>
-            <p className="text-base font-bold text-ink">৳{fee.toLocaleString("bn-BD")}</p>
+            <p className="text-base font-bold text-ink">{fee.toLocaleString("bn-BD")} টাকা</p>
           </div>
           <div className="border-x border-line">
             <p className="text-xs text-ink-soft/60">পরিশোধিত</p>
-            <p className="text-base font-bold text-teal-deep">৳{(record.totalPaid || 0).toLocaleString("bn-BD")}</p>
+            <p className="text-base font-bold text-teal-deep">{(record.totalPaid || 0).toLocaleString("bn-BD")} টাকা</p>
           </div>
           <div>
             <p className="text-xs text-ink-soft/60">বকেয়া</p>
             <p className={`text-base font-bold ${due > 0 ? "text-clay" : "text-teal-deep"}`}>
-              ৳{Math.max(due, 0).toLocaleString("bn-BD")}
+              {Math.max(due, 0).toLocaleString("bn-BD")} টাকা
             </p>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function PaymentLookup() {
                 onClick={() => { setPayChoice("full"); setPayAmount(String(due)); }}
                 className={`rounded-sm border px-4 py-2 text-sm ${payChoice === "full" ? "border-ink bg-ink text-paper" : "border-line text-ink-soft"}`}
               >
-                সম্পূর্ণ বকেয়া পরিশোধ করুন (৳{due.toLocaleString("bn-BD")})
+                সম্পূর্ণ বকেয়া পরিশোধ করুন ({due.toLocaleString("bn-BD")} টাকা)
               </button>
               <button
                 type="button"

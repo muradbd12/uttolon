@@ -102,16 +102,16 @@ export default function AdmissionFeeSummary({ studentUid }: { studentUid: string
           <div className="mt-4 grid grid-cols-3 gap-2 rounded-sm border border-line bg-paper-raised p-3 text-center">
             <div>
               <p className="text-xs text-ink-soft/60">মোট ফি</p>
-              <p className="text-base font-bold text-ink">৳{admission.totalFee.toLocaleString("bn-BD")}</p>
+              <p className="text-base font-bold text-ink">{admission.totalFee.toLocaleString("bn-BD")} টাকা</p>
             </div>
             <div className="border-x border-line">
               <p className="text-xs text-ink-soft/60">পরিশোধিত</p>
-              <p className="text-base font-bold text-teal-deep">৳{admission.totalPaid.toLocaleString("bn-BD")}</p>
+              <p className="text-base font-bold text-teal-deep">{admission.totalPaid.toLocaleString("bn-BD")} টাকা</p>
             </div>
             <div>
               <p className="text-xs text-ink-soft/60">বকেয়া</p>
               <p className={`text-base font-bold ${admission.due > 0 ? "text-clay" : "text-teal-deep"}`}>
-                ৳{Math.max(admission.due, 0).toLocaleString("bn-BD")}
+                {Math.max(admission.due, 0).toLocaleString("bn-BD")} টাকা
               </p>
             </div>
           </div>

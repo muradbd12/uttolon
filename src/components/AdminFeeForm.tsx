@@ -229,7 +229,7 @@ export default function AdminFeeForm() {
               <div className="grid grid-cols-2 gap-3 rounded-sm border border-line bg-paper-raised p-4 text-center sm:grid-cols-2">
                 <div>
                   <p className="text-xs text-ink-soft/60">সর্বমোট পরিশোধিত (এ পর্যন্ত)</p>
-                  <p className="mt-1 text-lg font-bold text-teal-deep">৳{allTimePaid.toLocaleString("bn-BD")}</p>
+                  <p className="mt-1 text-lg font-bold text-teal-deep">{allTimePaid.toLocaleString("bn-BD")} টাকা</p>
                 </div>
                 <div className="border-l border-line">
                   <p className="text-xs text-ink-soft/60">বকেয়া মাসের সংখ্যা</p>

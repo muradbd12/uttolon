@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   CalendarDays,
   ClipboardList,
@@ -143,6 +144,14 @@ export default function StudentDashboardContent() {
             </div>
 
             {/* Homework — real */}
+            <Link
+              href="/student/quizzes"
+              className="flex items-center justify-between rounded-sm border border-gold bg-gold-soft/40 px-5 py-4 text-[15px] font-semibold text-ink hover:bg-gold-soft/70"
+            >
+              অনলাইন টেস্ট দাও — স্কোর সাথে সাথে দেখো
+              <span aria-hidden>→</span>
+            </Link>
+
             <StudentHomework className={profile?.className} studentUid={profile?.uid} studentName={profile?.name} />
           </div>
 

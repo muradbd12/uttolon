@@ -91,6 +91,23 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /quizzes/{quizId} {
+      allow read: if request.auth != null
+        && (resource.data.published == true || isAdmin() || isTeacher());
+      allow create, update, delete: if isAdmin() || isTeacher();
+    }
+
+    match /quizKeys/{quizId} {
+      allow read, write: if isAdmin() || isTeacher();
+    }
+
+    match /quizResults/{resultId} {
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+      allow write: if false;
+    }
+
     match /fees/{feeId} {
       allow create, update, delete: if isSuperAdmin();
       allow read: if isAdmin()

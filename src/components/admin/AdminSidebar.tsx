@@ -24,6 +24,7 @@ import {
   BookOpen,
   Layers,
   ClipboardCheck,
+  ListChecks,
   Image as ImageIcon,
   Menu,
   X,
@@ -61,6 +62,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/practical-learning", label: "Practical Learning", icon: FlaskConical },
       { href: "/admin/programs", label: "প্রোগ্রাম ও ফি", icon: Layers },
       { href: "/admin/submissions", label: "জমা পড়া হোমওয়ার্ক", icon: ClipboardCheck },
+      { href: "/admin/quizzes", label: "অনলাইন টেস্ট", icon: ListChecks },
     ],
   },
   {

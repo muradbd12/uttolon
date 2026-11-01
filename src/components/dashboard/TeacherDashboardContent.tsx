@@ -192,6 +192,12 @@ export default function TeacherDashboardContent() {
                   >
                     নতুন হোমওয়ার্ক দিন
                   </Link>
+                  <Link
+                    href="/teacher/quizzes"
+                    className="rounded-sm border border-ink px-3 py-1.5 text-xs font-medium text-ink hover:bg-ink hover:text-paper"
+                  >
+                    অনলাইন MCQ টেস্ট
+                  </Link>
                 </div>
               </div>
               {homework === null ? (

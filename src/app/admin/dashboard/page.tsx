@@ -25,6 +25,7 @@ import { demoManagementAreas } from "@/content/admin-demo";
 import RequireRoleAuth from "@/components/RequireRoleAuth";
 import AdminStats from "@/components/dashboard/AdminStats";
 import AdminCharts from "@/components/dashboard/AdminCharts";
+import AdminCountryStats from "@/components/dashboard/AdminCountryStats";
 import AdminWelcome from "@/components/dashboard/AdminWelcome";
 import { PALETTE, grad } from "@/lib/dashboardColors";
 import AdminPendingActions from "@/components/dashboard/AdminPendingActions";
@@ -139,6 +140,10 @@ export default function AdminDashboardPage() {
         {/* Charts */}
         <div className="mt-8">
           <AdminCharts />
+        </div>
+
+        <div className="mt-6">
+          <AdminCountryStats />
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">

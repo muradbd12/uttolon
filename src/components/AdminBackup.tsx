@@ -16,6 +16,7 @@ const COLLECTIONS: { key: string; label: string }[] = [
   { key: "assessments", label: "মূল্যায়ন" },
   { key: "homework", label: "হোমওয়ার্ক" },
   { key: "homeworkSubmissions", label: "হোমওয়ার্ক জমা" },
+  { key: "quranLogs", label: "কুরআন শিক্ষা রেকর্ড" },
   { key: "quizzes", label: "অনলাইন টেস্ট" },
   { key: "quizKeys", label: "টেস্টের সঠিক উত্তর" },
   { key: "quizResults", label: "টেস্টের ফলাফল" },

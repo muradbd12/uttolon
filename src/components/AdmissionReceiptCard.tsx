@@ -11,6 +11,8 @@ export type ReceiptData = {
   studentIdNumber?: string;
   religion?: string;
   nationality?: string;
+  country?: string;
+  timeZone?: string;
   mobile?: string;
   email?: string;
 
@@ -114,6 +116,9 @@ export default function AdmissionReceiptCard({
         <Item label="ধর্ম / জাতীয়তা" value={`${data.religion || "—"} / ${data.nationality || "—"}`} />
         <Item label="মোবাইল" value={data.mobile} />
         <Item label="ইমেইল" value={data.email} />
+        {data.country && data.country !== "বাংলাদেশ" && (
+          <Item label="বর্তমান দেশ" value={`${data.country}${data.timeZone ? ` (${data.timeZone})` : ""}`} />
+        )}
       </dl>
 
       <SectionBar title="পিতা-মাতা / অভিভাবকের তথ্য" />

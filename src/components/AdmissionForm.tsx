@@ -23,6 +23,22 @@ const genders = ["ছেলে", "মেয়ে", "অন্যান্য"];
 const religions = ["ইসলাম", "হিন্দু", "খ্রিস্টান", "বৌদ্ধ", "অন্যান্য"];
 const nationalities = ["বাংলাদেশী", "অন্যান্য"];
 
+const countries = [
+  "বাংলাদেশ", "সৌদি আরব", "সংযুক্ত আরব আমিরাত", "কুয়েত", "ওমান", "কাতার", "বাহরাইন",
+  "মালয়েশিয়া", "সিঙ্গাপুর", "যুক্তরাজ্য", "যুক্তরাষ্ট্র", "কানাডা", "অস্ট্রেলিয়া", "ইতালি", "অন্যান্য",
+];
+
+const timeZones = [
+  "UTC+3 (সৌদি আরব / কুয়েত / কাতার)",
+  "UTC+4 (আমিরাত / ওমান)",
+  "UTC+8 (মালয়েশিয়া / সিঙ্গাপুর)",
+  "UTC+0/+1 (যুক্তরাজ্য / ইউরোপ)",
+  "UTC-5/-4 (আমেরিকা / কানাডা — পূর্ব)",
+  "UTC-8/-7 (আমেরিকা / কানাডা — পশ্চিম)",
+  "UTC+10/+11 (অস্ট্রেলিয়া)",
+  "অন্য",
+];
+
 const districts = [
   "বাগেরহাট", "বান্দরবান", "বরগুনা", "বরিশাল", "ভোলা", "বগুড়া", "ব্রাহ্মণবাড়িয়া",
   "চাঁদপুর", "চাঁপাইনবাবগঞ্জ", "চট্টগ্রাম", "চুয়াডাঙ্গা", "কুমিল্লা", "কক্সবাজার",
@@ -63,6 +79,8 @@ type AdmissionData = {
   studentIdNumber: string;
   religion: string;
   nationality: string;
+  country?: string;
+  timeZone?: string;
   mobile: string;
   email: string;
 
@@ -133,6 +151,7 @@ export default function AdmissionForm() {
   const [photoUrl, setPhotoUrl] = useState("");
   const [signatureUrl, setSignatureUrl] = useState("");
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [country, setCountry] = useState("বাংলাদেশ");
   const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
 
@@ -154,6 +173,8 @@ export default function AdmissionForm() {
       studentIdNumber: get("studentIdNumber"),
       religion: get("religion"),
       nationality: get("nationality"),
+      country: get("country"),
+      timeZone: get("timeZone"),
       mobile: get("mobile"),
       email: get("email"),
 
@@ -362,6 +383,24 @@ export default function AdmissionForm() {
               {nationalities.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </Field>
+          <Field label="বর্তমানে বসবাসের দেশ">
+            <select
+              name="country"
+              className={inputClass}
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            >
+              {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
+          {country !== "বাংলাদেশ" && (
+            <Field label="আপনার এলাকার সময় (টাইমজোন) — অনলাইন ক্লাসের সময় ঠিক করতে">
+              <select name="timeZone" className={inputClass} defaultValue="">
+                <option value="">— বাছুন —</option>
+                {timeZones.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </Field>
+          )}
           <Field label="মোবাইল নম্বর" required>
             <input required name="mobile" type="tel" className={inputClass} placeholder="01XXXXXXXXX" />
           </Field>

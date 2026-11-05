@@ -198,6 +198,12 @@ export default function TeacherDashboardContent() {
                   >
                     অনলাইন MCQ টেস্ট
                   </Link>
+                  <Link
+                    href="/teacher/quran"
+                    className="rounded-sm border border-line px-3 py-1.5 text-xs text-ink hover:border-ink"
+                  >
+                    কুরআন অগ্রগতি
+                  </Link>
                 </div>
               </div>
               {homework === null ? (

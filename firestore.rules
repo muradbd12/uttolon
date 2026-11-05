@@ -108,6 +108,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /quranLogs/{logId} {
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+      allow create, update, delete: if isAdmin() || isTeacher();
+    }
+
     match /fees/{feeId} {
       allow create, update, delete: if isSuperAdmin();
       allow read: if isAdmin()

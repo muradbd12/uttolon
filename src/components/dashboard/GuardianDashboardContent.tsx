@@ -20,6 +20,7 @@ import FeeSummary from "@/components/dashboard/FeeSummary";
 import AdmissionFeeSummary from "@/components/dashboard/AdmissionFeeSummary";
 import ProgressReport from "@/components/dashboard/ProgressReport";
 import QuranProgressCard from "@/components/dashboard/QuranProgressCard";
+import ProgressTrend from "@/components/dashboard/ProgressTrend";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 import { demoUpcomingExams } from "@/content/guardian-demo";
 
@@ -234,6 +235,10 @@ export default function GuardianDashboardContent() {
 
           <div className="mt-6">
             <QuranProgressCard studentUid={selectedUid} />
+          </div>
+
+          <div className="mt-6">
+            <ProgressTrend studentUid={selectedUid} />
           </div>
 
           <div className="mt-6">

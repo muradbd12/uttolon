@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -12,6 +13,13 @@ const CHROME_FREE_PREFIXES = ["/admin", "/student", "/guardian", "/teacher"];
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "";
+
+  // Registers the tiny "installable app" service worker (it caches nothing). Production only.
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
   const hideChrome = CHROME_FREE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );

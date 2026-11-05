@@ -7,7 +7,7 @@ import {
   query,
   where,
   doc,
-  setDoc,
+  writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
@@ -88,19 +88,38 @@ export default function TeacherAssessmentForm() {
       const authInstance = getFirebaseAuth();
       const db = getFirebaseDb();
       const student = students?.find((s) => s.uid === selectedUid);
-      await setDoc(doc(db, "assessments", `${selectedUid}_${slugify(subject)}`), {
+      const concept = Number(form.get("concept")) || 0;
+      const practice = Number(form.get("practice")) || 0;
+      const assessment = Number(form.get("assessment")) || 0;
+      const recoveryActive = form.get("recoveryActive") === "on";
+      const enteredBy = authInstance.currentUser?.uid || null;
+      const batch = writeBatch(db);
+      batch.set(doc(db, "assessments", `${selectedUid}_${slugify(subject)}`), {
         studentUid: selectedUid,
         studentName: student?.name || null,
         studentClassName: student?.className || null,
         subject,
-        concept: Number(form.get("concept")) || 0,
-        practice: Number(form.get("practice")) || 0,
-        assessment: Number(form.get("assessment")) || 0,
-        recoveryActive: form.get("recoveryActive") === "on",
+        concept,
+        practice,
+        assessment,
+        recoveryActive,
         comment: (form.get("comment") as string)?.trim() || "",
-        enteredBy: authInstance.currentUser?.uid || null,
+        enteredBy,
         updatedAt: serverTimestamp(),
       });
+      // every save also leaves a dated history entry, so progress can be drawn as a graph over time
+      batch.set(doc(collection(db, "assessmentHistory")), {
+        studentUid: selectedUid,
+        subject,
+        concept,
+        practice,
+        assessment,
+        recoveryActive,
+        date: new Date().toISOString().slice(0, 10),
+        enteredBy,
+        createdAt: serverTimestamp(),
+      });
+      await batch.commit();
       (e.target as HTMLFormElement).reset();
       setStatus("saved");
     } catch {

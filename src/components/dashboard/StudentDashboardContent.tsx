@@ -18,6 +18,7 @@ import AdmissionFeeSummary from "@/components/dashboard/AdmissionFeeSummary";
 import ProgressReport from "@/components/dashboard/ProgressReport";
 import StudentHomework from "@/components/dashboard/StudentHomework";
 import QuranProgressCard from "@/components/dashboard/QuranProgressCard";
+import ProgressTrend from "@/components/dashboard/ProgressTrend";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 
 export default function StudentDashboardContent() {
@@ -181,6 +182,10 @@ export default function StudentDashboardContent() {
             <AdmissionFeeSummary studentUid={profile?.uid} />
 
             <RecentNotices />
+          </div>
+
+          <div className="mt-6">
+            <ProgressTrend studentUid={profile?.uid} />
           </div>
 
           <div className="mt-6">

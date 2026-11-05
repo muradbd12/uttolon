@@ -115,6 +115,14 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin() || isTeacher();
     }
 
+    match /assessmentHistory/{entryId} {
+      allow create: if isAdmin() || isTeacher();
+      allow read: if isAdmin() || isTeacher()
+        || (request.auth != null && resource.data.studentUid == request.auth.uid)
+        || isGuardianOf(resource.data.studentUid);
+      allow update, delete: if isAdmin();
+    }
+
     match /fees/{feeId} {
       allow create, update, delete: if isSuperAdmin();
       allow read: if isAdmin()

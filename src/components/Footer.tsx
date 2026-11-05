@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin } from "lucide-react";
+import InstallAppButton from "@/components/InstallAppButton";
 
 const CONTACT = {
   address: "Qatari Tower, College Road, Amishapara, Sonaimuri, Noakhali",
@@ -91,6 +92,7 @@ export default function Footer() {
 
       <div className="border-t border-paper/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-xs text-paper/50 sm:px-8">
+          <InstallAppButton />
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             <Link href="/faq" className="hover:text-gold">FAQ</Link>
             <Link href="/admission-policy" className="hover:text-gold">ভর্তি নীতিমালা</Link>

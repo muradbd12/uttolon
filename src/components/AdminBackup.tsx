@@ -14,6 +14,7 @@ const COLLECTIONS: { key: string; label: string }[] = [
   { key: "fees", label: "মাসিক ফি" },
   { key: "attendance", label: "হাজিরা" },
   { key: "assessments", label: "মূল্যায়ন" },
+  { key: "assessmentHistory", label: "মূল্যায়নের ইতিহাস" },
   { key: "homework", label: "হোমওয়ার্ক" },
   { key: "homeworkSubmissions", label: "হোমওয়ার্ক জমা" },
   { key: "quranLogs", label: "কুরআন শিক্ষা রেকর্ড" },

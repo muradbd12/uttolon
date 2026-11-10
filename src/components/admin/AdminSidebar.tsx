@@ -27,6 +27,7 @@ import {
   ClipboardCheck,
   ListChecks,
   BookOpenCheck,
+  BadgeCheck,
   Image as ImageIcon,
   Menu,
   X,
@@ -67,6 +68,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/submissions", label: "জমা পড়া হোমওয়ার্ক", icon: ClipboardCheck },
       { href: "/admin/quizzes", label: "অনলাইন টেস্ট", icon: ListChecks },
       { href: "/admin/quran", label: "কুরআন অগ্রগতি", icon: BookOpenCheck },
+      { href: "/admin/certificates", label: "সনদ (সার্টিফিকেট)", icon: BadgeCheck },
     ],
   },
   {

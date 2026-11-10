@@ -95,6 +95,7 @@ export default function Footer() {
           <InstallAppButton />
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             <Link href="/faq" className="hover:text-gold">FAQ</Link>
+            <Link href="/verify" className="hover:text-gold">সনদ যাচাই</Link>
             <Link href="/admission-policy" className="hover:text-gold">ভর্তি নীতিমালা</Link>
             <Link href="/refund-policy" className="hover:text-gold">রিফান্ড পলিসি</Link>
             <Link href="/terms" className="hover:text-gold">শর্তাবলী</Link>

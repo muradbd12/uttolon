@@ -11,7 +11,7 @@
  *    window `focus`: some browsers fire `focus` just as the print dialog opens,
  *    which removed the isolation early and printed the whole page.
  */
-export async function printIsolated(elementId: string) {
+export async function printIsolated(elementId: string, opts?: { landscape?: boolean }) {
   if (typeof document === "undefined") return;
 
   if ("fonts" in document) {
@@ -40,10 +40,20 @@ export async function printIsolated(elementId: string) {
   document.body.appendChild(isolatedRoot);
   document.body.classList.add("printing-isolated");
 
+  // certificates print on a landscape A4 page; everything else keeps the normal page
+  let pageStyle: HTMLStyleElement | null = null;
+  if (opts?.landscape) {
+    pageStyle = document.createElement("style");
+    pageStyle.id = "print-page-style";
+    pageStyle.textContent = "@page { size: A4 landscape; margin: 10mm; }";
+    document.head.appendChild(pageStyle);
+  }
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   const cleanup = () => {
     if (timer) clearTimeout(timer);
     document.body.classList.remove("printing-isolated");
+    if (pageStyle) pageStyle.remove();
     const el = document.getElementById("print-isolated-root");
     if (el) el.remove();
     window.removeEventListener("afterprint", cleanup);

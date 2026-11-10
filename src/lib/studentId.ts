@@ -13,3 +13,15 @@ export async function allocateStudentId(db: Firestore, year: number = new Date()
   });
   return `UTL-${String(year).slice(-2)}-${String(n).padStart(4, "0")}`;
 }
+
+// Certificate numbers like UTL-C-26-0001, one running number per year.
+export async function allocateCertificateNo(db: Firestore, year: number = new Date().getFullYear()): Promise<string> {
+  const ref = db.collection("counters").doc(`certificate-${year}`);
+  const n = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const next = (snap.exists ? Number(snap.data()?.next) || 0 : 0) + 1;
+    tx.set(ref, { next }, { merge: true });
+    return next;
+  });
+  return `UTL-C-${String(year).slice(-2)}-${String(n).padStart(4, "0")}`;
+}

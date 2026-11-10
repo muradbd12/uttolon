@@ -178,7 +178,7 @@ export default function StudentDashboardContent() {
               )}
             </div>
 
-            <FeeSummary studentUid={profile?.uid} />
+            <FeeSummary studentUid={profile?.uid} studentName={profile?.name} className={profile?.className} studentId={profile?.studentId} />
             <AdmissionFeeSummary studentUid={profile?.uid} />
 
             <RecentNotices />

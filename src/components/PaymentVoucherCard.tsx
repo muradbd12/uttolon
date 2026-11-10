@@ -1,5 +1,7 @@
 export type VoucherData = {
   idLabel?: string;
+  title?: string; // e.g. "মাসিক ফি রশিদ"; defaults to "মানি রিসিট"
+  breakdown?: { label: string; amount: number }[]; // optional itemised lines (monthly fee)
   studentNameBn?: string;
   studentNameEn?: string;
   applicationId?: string;
@@ -56,7 +58,7 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
         </div>
         <div className="text-right">
           <span className="inline-block rounded-full bg-gold-soft px-2 py-0.5 text-[10.5px] font-bold uppercase text-gold-deep">
-            মানি রিসিট — অফিস কপি (Office Copy)
+            {data.title || "মানি রিসিট"} — অফিস কপি (Office Copy)
           </span>
           <p className="mt-0.5 font-display-en text-[12.5px] text-ink">
             ভাউচার: {data.voucherId} · তারিখ: {data.paymentDate}
@@ -75,6 +77,23 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
         <Item label="পদ্ধতি" value={data.method} />
         <Item label="উদ্দেশ্য / মাস" value={data.monthOrPurpose} />
       </dl>
+
+      {data.breakdown && data.breakdown.length > 0 && (
+        <div className="mt-2 rounded-sm border border-line px-3 py-1.5 print:break-inside-avoid">
+          {data.breakdown.map((b) => (
+            <div
+              key={b.label}
+              className="flex items-center justify-between border-b border-dashed border-line py-0.5 text-[12.5px] last:border-b-0"
+            >
+              <span className="text-ink-soft">{b.label}</span>
+              <span className="font-semibold text-ink">
+                {b.amount < 0 ? "− " : ""}
+                {fmtTaka(Math.abs(b.amount))}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mt-2 rounded-sm border-2 border-ink p-2 print:break-inside-avoid">
         <div className="flex items-center justify-between">
@@ -133,7 +152,7 @@ export default function PaymentVoucherCard({ data, id = "printable-voucher" }: {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/uttolon-logo.png" alt="উত্তোলন" className="h-7 w-7 object-contain" />
           <div>
-            <p className="font-display-bn text-[13px] leading-none text-ink">উত্তোলন — মানি রিসিট (Student Copy)</p>
+            <p className="font-display-bn text-[13px] leading-none text-ink">উত্তোলন — {data.title || "মানি রিসিট"} (Student Copy)</p>
             <p className="mt-0.5 text-[10.5px] text-ink-soft/60">
               ভাউচার: {data.voucherId} · তারিখ: {data.paymentDate}
             </p>

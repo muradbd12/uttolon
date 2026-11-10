@@ -227,7 +227,7 @@ export default function GuardianDashboardContent() {
             </div>
 
             {/* Fees — real */}
-            <FeeSummary studentUid={selectedUid} />
+            <FeeSummary studentUid={selectedUid} studentName={selectedChild?.name} className={selectedChild?.className} studentId={selectedChild?.studentId} />
             <AdmissionFeeSummary studentUid={selectedUid} />
 
             <RecentNotices />

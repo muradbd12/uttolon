@@ -13,7 +13,8 @@ import {
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { toEnglishDigits } from "@/lib/numberInput";
 import { CheckCircle2, AlertCircle, Loader2, Printer, X, Receipt } from "lucide-react";
-import PaymentVoucherCard, { type VoucherData } from "@/components/PaymentVoucherCard";
+import PaymentVoucherCard from "@/components/PaymentVoucherCard";
+import { buildMonthlyReceipt } from "@/lib/monthlyReceipt";
 import { printIsolated } from "@/lib/printReceipt";
 
 type StudentOption = {
@@ -58,36 +59,6 @@ const statusClass: Record<FeeEntry["status"], string> = {
   partial: "bg-gold-soft text-gold-deep",
   due: "bg-clay-soft text-clay",
 };
-
-function todayBn() {
-  return new Date().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" });
-}
-
-function buildMonthlyReceipt(en: FeeEntry, student?: StudentOption): VoucherData {
-  const payable = Math.max((en.amountDue || 0) - (en.discount || 0) + (en.fine || 0), 0);
-  const paidOn = en.updatedAt?.toDate
-    ? en.updatedAt.toDate().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })
-    : todayBn();
-  const method = en.paymentMethod || "—";
-  return {
-    idLabel: student?.studentId ? "স্টুডেন্ট আইডি" : "লগইন আইডি",
-    studentNameBn: student?.name || "",
-    studentNameEn: "",
-    applicationId: student?.studentId || student?.identifier || "",
-    className: student?.className || "",
-    group: "",
-    program: "",
-    mobile: "",
-    voucherId: `${student?.studentId || (student?.uid || "FEE").slice(0, 6).toUpperCase()}-${en.month}`,
-    paymentDate: paidOn,
-    amountPaidNow: en.amountPaid || 0,
-    method: en.transactionNumber ? `${method} (${en.transactionNumber})` : method,
-    monthOrPurpose: `মাসিক ফি — ${en.month}`,
-    totalFee: payable,
-    totalPaid: en.amountPaid || 0,
-    due: Math.max(payable - (en.amountPaid || 0), 0),
-  };
-}
 
 export default function AdminFeeForm() {
   const [students, setStudents] = useState<StudentOption[] | null>(null);

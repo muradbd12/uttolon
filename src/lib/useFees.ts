@@ -5,6 +5,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
 
 export type FeeEntry = {
+  updatedAt?: { toDate?: () => Date };
   month: string;
   amountDue: number;
   discount: number;

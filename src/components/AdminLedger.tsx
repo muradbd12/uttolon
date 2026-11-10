@@ -17,6 +17,8 @@ type Row = {
   ref: string;
   amount: number;
   receipt: {
+    title?: string;
+    breakdown?: { label: string; amount: number }[];
     idLabel: string;
     applicationId: string;
     className: string;
@@ -57,6 +59,8 @@ function csvCell(v: string | number) {
 
 function buildVoucher(r: Row): VoucherData {
   return {
+    title: r.receipt.title,
+    breakdown: r.receipt.breakdown,
     idLabel: r.receipt.idLabel,
     studentNameBn: r.student,
     studentNameEn: r.receipt.nameEn,

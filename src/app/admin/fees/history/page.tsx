@@ -21,6 +21,9 @@ export default function AdminLedgerPage() {
           <p className="mt-2 text-sm text-ink-soft">
             কে কবে কত টাকা দিয়েছে — ভর্তি ফি ও মাসিক ফি মিলিয়ে সব লেনদেনের তালিকা।
           </p>
+          <Link href="/admin/fees/report" className="mt-3 inline-block text-sm font-medium text-ink underline decoration-line underline-offset-4 hover:decoration-ink">
+            আয় রিপোর্ট দেখুন (দিন/মাস/প্রোগ্রাম অনুযায়ী) →
+          </Link>
           <div className="mt-8">
             <AdminLedger />
           </div>

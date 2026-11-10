@@ -8,6 +8,8 @@ import type { Firestore } from "firebase-admin/firestore";
 const MAX_ROWS = 500;
 
 type Receipt = {
+  title?: string;
+  breakdown?: { label: string; amount: number }[];
   idLabel: string;
   applicationId: string;
   className: string;
@@ -181,6 +183,13 @@ export async function GET(req: NextRequest) {
         ref: trx,
         amount: paid,
         receipt: {
+          title: "মাসিক ফি রশিদ",
+          breakdown: [
+            { label: "মাসিক ফি", amount: Number(data.amountDue) || 0 },
+            ...(Number(data.discount) ? [{ label: "ছাড়", amount: -(Number(data.discount) || 0) }] : []),
+            ...(Number(data.fine) ? [{ label: "জরিমানা", amount: Number(data.fine) || 0 }] : []),
+            { label: "মোট প্রদেয়", amount: payable },
+          ],
           idLabel: st?.studentId ? "স্টুডেন্ট আইডি" : "লগইন আইডি",
           applicationId: st?.studentId || st?.identifier || "",
           className: st?.className || "",

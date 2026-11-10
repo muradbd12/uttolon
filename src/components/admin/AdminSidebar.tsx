@@ -9,6 +9,7 @@ import {
   Wallet,
   PieChart,
   Receipt,
+  BarChart3,
   UserPlus,
   GraduationCap,
   CalendarClock,
@@ -47,6 +48,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/fees", label: "ফি ব্যবস্থাপনা", icon: Wallet },
       { href: "/admin/fees/overview", label: "সবার বকেয়া", icon: PieChart },
       { href: "/admin/fees/history", label: "পেমেন্ট ইতিহাস", icon: Receipt },
+      { href: "/admin/fees/report", label: "আয় রিপোর্ট", icon: BarChart3 },
     ],
   },
   {

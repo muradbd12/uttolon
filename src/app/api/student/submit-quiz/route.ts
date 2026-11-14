@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       title?: string;
       className?: string;
       published?: boolean;
+      durationMin?: number | null;
       questions?: unknown[];
     };
     if (!quiz.published) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -64,9 +65,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid_answers" }, { status: 400 });
     }
 
-    const clean = answers.map((a) => (Number.isInteger(a) ? (a as number) : -1));
+    // Timed tests: the start time was written on the server by /api/student/start-quiz, so
+    // refreshing the page can't restart the clock. A submission arriving after the time limit
+    // (plus a short grace for slow networks) is recorded as timed out with score 0.
+    const durationMin = quiz.durationMin && quiz.durationMin > 0 ? Number(quiz.durationMin) : null;
+    let timedOut = false;
+    if (durationMin) {
+      const attemptSnap = await db.collection("quizAttempts").doc(`${quizId}_${decoded.uid}`).get();
+      if (!attemptSnap.exists) return NextResponse.json({ error: "not_started" }, { status: 400 });
+      const startedAtMs = Number(attemptSnap.data()?.startedAtMs) || 0;
+      timedOut = Date.now() > startedAtMs + durationMin * 60000 + 90000;
+    }
+
+    const clean = timedOut ? answers.map(() => -1) : answers.map((a) => (Number.isInteger(a) ? (a as number) : -1));
     const correct = clean.map((a, i) => a === key[i]);
-    const score = correct.filter(Boolean).length;
+    const score = timedOut ? 0 : correct.filter(Boolean).length;
 
     const resultRef = db.collection("quizResults").doc(`${quizId}_${decoded.uid}`);
     try {
@@ -82,6 +95,7 @@ export async function POST(req: NextRequest) {
           score,
           total,
           answers: clean,
+          timedOut,
           submittedAt: FieldValue.serverTimestamp(),
         });
       });
@@ -92,6 +106,7 @@ export async function POST(req: NextRequest) {
       throw err;
     }
 
+    if (timedOut) return NextResponse.json({ timedOut: true, score: 0, total });
     return NextResponse.json({ score, total, correct, key });
   } catch (err) {
     console.error("[submit-quiz] unexpected error:", err);

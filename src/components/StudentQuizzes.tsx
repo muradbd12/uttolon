@@ -5,7 +5,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { useUserProfile } from "@/lib/useUserProfile";
 import { withTimeout } from "@/lib/withTimeout";
-import { Loader2, AlertCircle, Clock, CheckCircle2, XCircle, PlayCircle, ListChecks } from "lucide-react";
+import { Loader2, AlertCircle, Clock, CheckCircle2, XCircle, PlayCircle, ListChecks, TimerOff } from "lucide-react";
 
 type Question = { q: string; options: string[] };
 type Quiz = {
@@ -17,16 +17,25 @@ type Quiz = {
   questions: Question[];
 };
 type Result = { quizId: string; score: number; total: number };
-type Review = { score: number; total: number; correct: boolean[]; key: number[]; answers: number[] };
+type Review = { score: number; total: number; correct: boolean[]; key: number[]; answers: number[]; timedOut?: boolean };
+type Timing = { deadlineMs: number | null; offsetMs: number };
 
 const bn = (n: number) => n.toLocaleString("bn-BD");
 const LETTERS = ["ক", "খ", "গ", "ঘ", "ঙ"];
 
-function Taker({ quiz, onDone, onCancel }: { quiz: Quiz; onDone: (r: Review) => void; onCancel: () => void }) {
+async function authHeader() {
+  const token = await getFirebaseAuth().currentUser?.getIdToken();
+  if (!token) throw new Error("unauthorized");
+  return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+}
+
+function Taker({ quiz, timing, onDone, onCancel }: { quiz: Quiz; timing: Timing; onDone: (r: Review) => void; onCancel: () => void }) {
   const [answers, setAnswers] = useState<number[]>(() => quiz.questions.map(() => -1));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [left, setLeft] = useState<number | null>(quiz.durationMin ? quiz.durationMin * 60 : null);
+  const computeLeft = () =>
+    timing.deadlineMs === null ? null : Math.max(0, Math.round((timing.deadlineMs - (Date.now() + timing.offsetMs)) / 1000));
+  const [left, setLeft] = useState<number | null>(computeLeft);
   const submittedRef = useRef(false);
   const answersRef = useRef(answers);
   answersRef.current = answers;
@@ -39,12 +48,10 @@ function Taker({ quiz, onDone, onCancel }: { quiz: Quiz; onDone: (r: Review) => 
     setBusy(true);
     setError(null);
     try {
-      const token = await getFirebaseAuth().currentUser?.getIdToken();
-      if (!token) throw new Error("unauthorized");
       const res = await withTimeout(
         fetch("/api/student/submit-quiz", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: await authHeader(),
           body: JSON.stringify({ quizId: quiz.id, answers: answersRef.current }),
         })
       );
@@ -53,7 +60,16 @@ function Taker({ quiz, onDone, onCancel }: { quiz: Quiz; onDone: (r: Review) => 
         setError("এই টেস্ট তুমি আগেই জমা দিয়েছ।");
         return;
       }
+      if (res.status === 400 && data?.error === "not_started") {
+        setError("টেস্ট শুরু হয়নি — আগের পাতায় ফিরে আবার \"টেস্ট শুরু করো\" চাপো।");
+        submittedRef.current = false;
+        return;
+      }
       if (!res.ok) throw new Error("failed");
+      if (data.timedOut) {
+        onDone({ score: 0, total: data.total, correct: [], key: [], answers: [], timedOut: true });
+        return;
+      }
       onDone({ ...(data as Omit<Review, "answers">), answers: answersRef.current });
     } catch {
       submittedRef.current = false;
@@ -69,7 +85,7 @@ function Taker({ quiz, onDone, onCancel }: { quiz: Quiz; onDone: (r: Review) => 
       void submit(true);
       return;
     }
-    const t = setTimeout(() => setLeft((v) => (v === null ? v : v - 1)), 1000);
+    const t = setTimeout(() => setLeft(computeLeft()), 1000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left]);
@@ -132,16 +148,30 @@ function Taker({ quiz, onDone, onCancel }: { quiz: Quiz; onDone: (r: Review) => 
         >
           {busy && <Loader2 size={14} className="animate-spin" />} জমা দাও
         </button>
-        <button type="button" onClick={onCancel} disabled={busy} className="text-sm text-ink-soft underline">
-          এখন না
-        </button>
-        <span className="text-xs text-ink-soft/60">একবার জমা দিলে আর দ্বিতীয়বার দেওয়া যাবে না।</span>
+        {timing.deadlineMs === null && (
+          <button type="button" onClick={onCancel} disabled={busy} className="text-sm text-ink-soft underline">
+            এখন না
+          </button>
+        )}
+        <span className="text-xs text-ink-soft/60">
+          {timing.deadlineMs === null
+            ? "একবার জমা দিলে আর দ্বিতীয়বার দেওয়া যাবে না।"
+            : "সময় একবার শুরু হলে থামে না — পেজ রিফ্রেশ করলেও চলতে থাকে। একবার জমা দিলে আর দ্বিতীয়বার দেওয়া যাবে না।"}
+        </span>
       </div>
     </div>
   );
 }
 
 function ReviewView({ quiz, r }: { quiz: Quiz; r: Review }) {
+  if (r.timedOut) {
+    return (
+      <p className="mt-4 flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-4 py-3 text-sm text-clay">
+        <TimerOff size={16} className="mt-0.5 shrink-0" />
+        সময় শেষ হয়ে যাওয়ার পরে জমা হয়েছে, তাই এই টেস্টের স্কোর ০ ধরা হয়েছে। প্রয়োজন মনে করলে শিক্ষককে জানাও।
+      </p>
+    );
+  }
   const pct = r.total ? Math.round((r.score / r.total) * 100) : 0;
   return (
     <div className="mt-4 border-t border-line pt-4">
@@ -182,6 +212,9 @@ export default function StudentQuizzes() {
   const [results, setResults] = useState<Record<string, Result>>({});
   const [error, setError] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  const [timing, setTiming] = useState<Timing>({ deadlineMs: null, offsetMs: 0 });
+  const [starting, setStarting] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
   const [review, setReview] = useState<Record<string, Review>>({});
 
   useEffect(() => {
@@ -224,6 +257,31 @@ export default function StudentQuizzes() {
     };
   }, [profile?.uid, profile?.className]);
 
+  async function start(q: Quiz) {
+    setStartError(null);
+    setStarting(q.id);
+    try {
+      const res = await withTimeout(
+        fetch("/api/student/start-quiz", { method: "POST", headers: await authHeader(), body: JSON.stringify({ quizId: q.id }) })
+      );
+      if (res.status === 409) {
+        setStartError("এই টেস্ট তুমি আগেই দিয়েছ — পেজ রিফ্রেশ করে স্কোর দেখো।");
+        return;
+      }
+      if (!res.ok) throw new Error("failed");
+      const d = (await res.json()) as { durationMin: number | null; startedAtMs: number | null; serverNowMs: number };
+      setTiming({
+        deadlineMs: d.durationMin && d.startedAtMs ? d.startedAtMs + d.durationMin * 60000 : null,
+        offsetMs: d.serverNowMs - Date.now(),
+      });
+      setActive(q.id);
+    } catch {
+      setStartError("টেস্ট শুরু করা যায়নি — ইন্টারনেট দেখে আবার চেষ্টা করো।");
+    } finally {
+      setStarting(null);
+    }
+  }
+
   if (error)
     return (
       <p className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-4 py-3 text-sm text-clay">
@@ -245,6 +303,11 @@ export default function StudentQuizzes() {
 
   return (
     <div className="space-y-4">
+      {startError && (
+        <p className="flex items-start gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
+          <AlertCircle size={15} className="mt-0.5 shrink-0" /> {startError}
+        </p>
+      )}
       {quizzes.map((q) => {
         const done = results[q.id];
         const rv = review[q.id];
@@ -267,16 +330,23 @@ export default function StudentQuizzes() {
               ) : active === q.id ? null : (
                 <button
                   type="button"
-                  onClick={() => setActive(q.id)}
-                  className="flex items-center gap-1.5 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep"
+                  onClick={() => void start(q)}
+                  disabled={starting === q.id}
+                  className="flex items-center gap-1.5 rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60"
                 >
-                  <PlayCircle size={15} /> টেস্ট শুরু করো
+                  {starting === q.id ? <Loader2 size={15} className="animate-spin" /> : <PlayCircle size={15} />} টেস্ট শুরু করো
                 </button>
               )}
             </div>
+            {!done && !active && q.durationMin && (
+              <p className="mt-2 text-xs text-ink-soft/70">
+                "শুরু করো" চাপার সাথে সাথে {bn(q.durationMin)} মিনিটের সময় চলতে শুরু করে — মাঝপথে থামানো বা রিফ্রেশ করে আবার শুরু করা যায় না।
+              </p>
+            )}
             {active === q.id && !done && (
               <Taker
                 quiz={q}
+                timing={timing}
                 onCancel={() => setActive(null)}
                 onDone={(r) => {
                   setReview((prev) => ({ ...prev, [q.id]: r }));

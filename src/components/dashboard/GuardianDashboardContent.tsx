@@ -21,6 +21,7 @@ import AdmissionFeeSummary from "@/components/dashboard/AdmissionFeeSummary";
 import ProgressReport from "@/components/dashboard/ProgressReport";
 import QuranProgressCard from "@/components/dashboard/QuranProgressCard";
 import CertificatesCard from "@/components/dashboard/CertificatesCard";
+import GuardianChildActivity from "@/components/dashboard/GuardianChildActivity";
 import ProgressTrend from "@/components/dashboard/ProgressTrend";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 import { demoUpcomingExams } from "@/content/guardian-demo";
@@ -232,6 +233,10 @@ export default function GuardianDashboardContent() {
             <AdmissionFeeSummary studentUid={selectedUid} />
 
             <RecentNotices />
+          </div>
+
+          <div className="mt-6">
+            <GuardianChildActivity studentUid={selectedUid} className={selectedChild?.className} childName={selectedChild?.name} />
           </div>
 
           <div className="mt-6">

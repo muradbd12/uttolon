@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, deleteDoc, doc, getDocs, query, updateDoc, where, writeBatch, serverTimestamp } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, limit, query, updateDoc, where, writeBatch, serverTimestamp } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { SCHOOL_LEVELS } from "@/lib/books";
 import { toEnglishDigits } from "@/lib/numberInput";
-import { Plus, Trash2, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, BarChart3 } from "lucide-react";
+import { Plus, Trash2, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, BarChart3, Pencil, RotateCcw } from "lucide-react";
 
 type QuizRow = {
   id: string;
@@ -16,7 +16,7 @@ type QuizRow = {
   questionCount: number;
   published: boolean;
 };
-type ResultRow = { id: string; studentName: string; className: string; score: number; total: number; ms: number };
+type ResultRow = { id: string; studentName: string; className: string; score: number; total: number; ms: number; timedOut: boolean };
 type Draft = { q: string; options: string[]; correct: number };
 
 const bn = (n: number) => n.toLocaleString("bn-BD");
@@ -46,6 +46,7 @@ function Results({ quizId }: { quizId: string }) {
                 score: Number(x.score) || 0,
                 total: Number(x.total) || 0,
                 ms: x.submittedAt?.toMillis ? (x.submittedAt.toMillis() as number) : 0,
+                timedOut: !!x.timedOut,
               };
             })
             .sort((a, b) => b.score - a.score || a.ms - b.ms)
@@ -58,6 +59,18 @@ function Results({ quizId }: { quizId: string }) {
       cancelled = true;
     };
   }, [quizId]);
+
+  async function resetAttempt(r: ResultRow) {
+    if (!window.confirm(`${r.studentName}-এর ফলাফল মুছে তাকে টেস্টটা আবার দিতে দেবেন? (আগের স্কোর বাতিল হয়ে যাবে)`)) return;
+    try {
+      const db = getFirebaseDb();
+      await deleteDoc(doc(db, "quizResults", r.id));
+      await deleteDoc(doc(db, "quizAttempts", r.id)).catch(() => {});
+      setRows((prev) => (prev ? prev.filter((x) => x.id !== r.id) : prev));
+    } catch {
+      window.alert("মোছা যায়নি — Firestore Rules Publish করা আছে কিনা দেখুন।");
+    }
+  }
 
   if (error) return <p className="mt-3 text-sm text-clay">ফলাফল আনা যায়নি।</p>;
   if (!rows) return <p className="mt-3 flex items-center gap-2 text-sm text-ink-soft"><Loader2 size={14} className="animate-spin" /> লোড হচ্ছে...</p>;
@@ -75,18 +88,27 @@ function Results({ quizId }: { quizId: string }) {
             <th className="py-1.5 pr-3">শিক্ষার্থী</th>
             <th className="py-1.5 pr-3">ক্লাস</th>
             <th className="py-1.5 pr-3">স্কোর</th>
-            <th className="py-1.5">শতাংশ</th>
+            <th className="py-1.5 pr-3">শতাংশ</th>
+            <th className="py-1.5"></th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.id} className="border-b border-line/60">
-              <td className="py-1.5 pr-3 text-ink">{r.studentName}</td>
+              <td className="py-1.5 pr-3 text-ink">
+                {r.studentName}
+                {r.timedOut && <span className="ml-1.5 rounded-full bg-clay-soft px-2 py-0.5 text-[10px] font-semibold text-clay">সময় শেষ</span>}
+              </td>
               <td className="py-1.5 pr-3 text-ink-soft">{r.className || "—"}</td>
               <td className="py-1.5 pr-3 font-semibold text-ink">
                 {bn(r.score)}/{bn(r.total)}
               </td>
-              <td className="py-1.5 text-ink-soft">{bn(r.total ? Math.round((r.score / r.total) * 100) : 0)}%</td>
+              <td className="py-1.5 pr-3 text-ink-soft">{bn(r.total ? Math.round((r.score / r.total) * 100) : 0)}%</td>
+              <td className="py-1.5">
+                <button type="button" onClick={() => resetAttempt(r)} className="flex items-center gap-1 rounded-sm border border-line px-2 py-0.5 text-[11px] text-ink-soft hover:border-ink hover:text-ink">
+                  <RotateCcw size={11} /> আবার দিতে দিন
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -109,6 +131,8 @@ export default function QuizManager() {
   const [publishNow, setPublishNow] = useState(true);
   const [questions, setQuestions] = useState<Draft[]>([blankQ()]);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLocked, setEditLocked] = useState(false);
 
   async function load() {
     try {
@@ -149,6 +173,110 @@ export default function QuizManager() {
   }
   function setOpt(i: number, oi: number, v: string) {
     setQuestions((prev) => prev.map((q, idx) => (idx === i ? { ...q, options: q.options.map((o, k) => (k === oi ? v : o)) } : q)));
+  }
+
+  function resetForm() {
+    setTitle("");
+    setSubject("");
+    setDuration("");
+    setClassName("");
+    setQuestions([blankQ()]);
+    setPublishNow(true);
+    setEditingId(null);
+    setEditLocked(false);
+  }
+
+  function buildCleaned(): { q: string; options: string[]; answer: number }[] | null {
+    const cleaned: { q: string; options: string[]; answer: number }[] = [];
+    for (let i = 0; i < questions.length; i++) {
+      const d = questions[i];
+      if (!d.q.trim()) {
+        setMsg({ ok: false, text: `প্রশ্ন ${bn(i + 1)}-এর লেখা ফাঁকা।` });
+        return null;
+      }
+      const filled = d.options.map((o, idx) => ({ o: o.trim(), idx })).filter((x) => x.o);
+      if (filled.length < 2) {
+        setMsg({ ok: false, text: `প্রশ্ন ${bn(i + 1)}-এ অন্তত ২টা অপশন দিন।` });
+        return null;
+      }
+      const pos = filled.findIndex((x) => x.idx === d.correct);
+      if (pos < 0) {
+        setMsg({ ok: false, text: `প্রশ্ন ${bn(i + 1)}-এর সঠিক উত্তরের অপশনটা ফাঁকা — ফাঁকা অপশনকে সঠিক চিহ্নিত করা যায় না।` });
+        return null;
+      }
+      cleaned.push({ q: d.q.trim(), options: filled.map((x) => x.o), answer: pos });
+    }
+    return cleaned;
+  }
+
+  async function startEdit(q: QuizRow) {
+    setMsg(null);
+    setBusyId(q.id);
+    try {
+      const db = getFirebaseDb();
+      const [quizSnap, keySnap, anyResult] = await Promise.all([
+        getDoc(doc(db, "quizzes", q.id)),
+        getDoc(doc(db, "quizKeys", q.id)),
+        getDocs(query(collection(db, "quizResults"), where("quizId", "==", q.id), limit(1))),
+      ]);
+      if (!quizSnap.exists()) throw new Error("missing");
+      const x = quizSnap.data();
+      const answers = ((keySnap.data()?.answers as number[]) || []);
+      const qs = ((x.questions as { q: string; options: string[] }[]) || []).map((item, i) => ({
+        q: item.q,
+        options: [...item.options, "", "", "", ""].slice(0, Math.max(4, item.options.length)),
+        correct: Number.isInteger(answers[i]) ? answers[i] : 0,
+      }));
+      setTitle((x.title as string) || "");
+      setClassName((x.className as string) || "");
+      setSubject((x.subject as string) || "");
+      setDuration(x.durationMin ? String(x.durationMin) : "");
+      setPublishNow(!!x.published);
+      setQuestions(qs.length ? qs : [blankQ()]);
+      setEditLocked(!anyResult.empty);
+      setEditingId(q.id);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setMsg({ ok: false, text: "টেস্টটা সম্পাদনার জন্য খোলা যায়নি।" });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function saveEdit() {
+    setMsg(null);
+    if (!editingId) return;
+    if (!title.trim()) return setMsg({ ok: false, text: "টেস্টের নাম দিন।" });
+    const db = getFirebaseDb();
+    const dur = Number(toEnglishDigits(duration)) || 0;
+    const meta = { title: title.trim(), className, subject: subject.trim(), durationMin: dur > 0 ? dur : null, published: publishNow };
+    let cleaned: { q: string; options: string[]; answer: number }[] | null = null;
+    if (!editLocked) {
+      cleaned = buildCleaned();
+      if (!cleaned) return;
+    }
+    setSaving(true);
+    try {
+      if (cleaned) {
+        const batch = writeBatch(db);
+        batch.update(doc(db, "quizzes", editingId), {
+          ...meta,
+          questions: cleaned.map(({ q, options }) => ({ q, options })),
+          questionCount: cleaned.length,
+        });
+        batch.set(doc(db, "quizKeys", editingId), { answers: cleaned.map((c) => c.answer) });
+        await batch.commit();
+      } else {
+        await updateDoc(doc(db, "quizzes", editingId), meta);
+      }
+      resetForm();
+      setMsg({ ok: true, text: "টেস্ট আপডেট হয়েছে।" });
+      await load();
+    } catch {
+      setMsg({ ok: false, text: "আপডেট হয়নি — Firestore Rules Publish করা আছে কিনা ও ইন্টারনেট দেখুন।" });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function save() {
@@ -239,7 +367,7 @@ export default function QuizManager() {
       )}
 
       <details className="rounded-sm border border-line bg-paper p-5" open>
-        <summary className="cursor-pointer text-[15px] font-semibold text-ink">+ নতুন MCQ টেস্ট বানান</summary>
+        <summary className="cursor-pointer text-[15px] font-semibold text-ink">{editingId ? "✎ টেস্ট সম্পাদনা করুন" : "+ নতুন MCQ টেস্ট বানান"}</summary>
         <div className="mt-4 space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="টেস্টের নাম (যেমন: গণিত — অধ্যায় ৩ টেস্ট)" className={`${inputCls} sm:col-span-2`} />
@@ -259,7 +387,14 @@ export default function QuizManager() {
             />
           </div>
 
-          {questions.map((d, i) => (
+          {editingId && editLocked && (
+            <p className="rounded-sm border border-gold/40 bg-gold-soft/40 p-3 text-sm text-ink">
+              এই টেস্ট কেউ আগেই দিয়ে ফেলেছে, তাই প্রশ্ন ও সঠিক উত্তর বদলানো যাবে না (পুরনো স্কোর ঠিক রাখার জন্য)। শুধু নাম, ক্লাস, বিষয়,
+              সময় ও প্রকাশের অবস্থা বদলানো যাবে। প্রশ্ন বদলাতে চাইলে নতুন টেস্ট বানান।
+            </p>
+          )}
+
+          {!(editingId && editLocked) && questions.map((d, i) => (
             <div key={i} className="rounded-sm border border-line p-3">
               <div className="flex items-start gap-2">
                 <span className="mt-2 text-sm font-bold text-ink">{bn(i + 1)}.</span>
@@ -284,7 +419,7 @@ export default function QuizManager() {
           ))}
 
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" onClick={() => setQuestions((p) => [...p, blankQ()])} className="flex items-center gap-1.5 rounded-sm border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-ink hover:text-paper">
+            <button type="button" hidden={!!(editingId && editLocked)} onClick={() => setQuestions((p) => [...p, blankQ()])} className="flex items-center gap-1.5 rounded-sm border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-ink hover:text-paper">
               <Plus size={14} /> আরেকটা প্রশ্ন
             </button>
             <label className="flex items-center gap-2 text-sm text-ink">
@@ -292,12 +427,19 @@ export default function QuizManager() {
               সাথে সাথে স্টুডেন্টদের জন্য প্রকাশ করুন
             </label>
           </div>
-          <button type="button" onClick={save} disabled={saving} className="flex items-center gap-2 rounded-sm bg-ink px-6 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60">
-            {saving && <Loader2 size={14} className="animate-spin" />} টেস্ট সেভ করুন
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" onClick={editingId ? saveEdit : save} disabled={saving} className="flex items-center gap-2 rounded-sm bg-ink px-6 py-2.5 text-sm font-medium text-paper hover:bg-gold-deep disabled:opacity-60">
+              {saving && <Loader2 size={14} className="animate-spin" />} {editingId ? "পরিবর্তন সেভ করুন" : "টেস্ট সেভ করুন"}
+            </button>
+            {editingId && (
+              <button type="button" onClick={resetForm} disabled={saving} className="text-sm text-ink-soft underline">
+                সম্পাদনা বাতিল
+              </button>
+            )}
+          </div>
           <p className="text-xs text-ink-soft/60">
             সঠিক উত্তরগুলো আলাদা, শুধু শিক্ষক/অ্যাডমিনের দেখার মতো জায়গায় থাকে — স্টুডেন্টরা কোনোভাবেই আগে দেখতে পারে না।
-            টেস্ট সেভ করার পর প্রশ্ন বদলানো যায় না; ভুল হলে মুছে নতুন করে বানান।
+            সেভ করা টেস্টের ডানে সম্পাদনা বাটন আছে — কেউ টেস্টটা দেওয়ার আগ পর্যন্ত প্রশ্নও বদলানো যায়।
           </p>
         </div>
       </details>
@@ -325,6 +467,9 @@ export default function QuizManager() {
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" disabled={busyId === q.id} onClick={() => startEdit(q)} className="flex items-center gap-1.5 rounded-sm border border-ink px-3 py-1.5 text-xs font-medium text-ink hover:bg-ink hover:text-paper disabled:opacity-50">
+                    <Pencil size={13} /> সম্পাদনা
+                  </button>
                   <button type="button" onClick={() => setOpenResults(openResults === q.id ? null : q.id)} className="flex items-center gap-1.5 rounded-sm border border-ink px-3 py-1.5 text-xs font-medium text-ink hover:bg-ink hover:text-paper">
                     <BarChart3 size={13} /> ফলাফল
                   </button>

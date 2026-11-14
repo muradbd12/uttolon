@@ -105,7 +105,8 @@ service cloud.firestore {
       allow read: if isAdmin() || isTeacher()
         || (request.auth != null && resource.data.studentUid == request.auth.uid)
         || isGuardianOf(resource.data.studentUid);
-      allow write: if false;
+      allow create, update: if false;
+      allow delete: if isAdmin() || isTeacher();
     }
 
     match /quranLogs/{logId} {
@@ -129,6 +130,11 @@ service cloud.firestore {
         || isGuardianOf(resource.data.studentUid);
       allow create, update: if false;
       allow delete: if isAdmin();
+    }
+
+    match /quizAttempts/{attemptId} {
+      allow read, create, update: if false;
+      allow delete: if isAdmin() || isTeacher();
     }
 
     match /fees/{feeId} {

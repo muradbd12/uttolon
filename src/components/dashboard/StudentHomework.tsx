@@ -230,7 +230,7 @@ export default function StudentHomework({
   }, [studentUid]);
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #6366f1" }}>
       <div className="flex items-center gap-2">
         <CheckCircle2 size={17} className="text-gold-deep" />
         <h2 className="font-display-bn text-lg text-ink">হোমওয়ার্ক</h2>

@@ -43,7 +43,7 @@ export default function QuranProgressCard({ studentUid }: { studentUid: string |
   const last = logs[0];
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #06b6d4" }}>
       <div className="flex items-center gap-2">
         <BookOpenCheck size={17} className="text-teal-deep" />
         <h2 className="font-display-bn text-lg text-ink">কুরআন শিক্ষা — অগ্রগতি</h2>

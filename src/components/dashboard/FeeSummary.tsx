@@ -47,7 +47,7 @@ export default function FeeSummary({
     ) : null;
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #10b981" }}>
       <div className="flex items-center gap-2">
         <Wallet size={17} className="text-gold-deep" />
         <h2 className="font-display-bn text-lg text-ink">ফি</h2>

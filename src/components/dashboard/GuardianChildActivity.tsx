@@ -120,7 +120,7 @@ export default function GuardianChildActivity({
   const avg = results.length ? Math.round(results.reduce((s, r) => s + (r.total ? (r.score / r.total) * 100 : 0), 0) / results.length) : null;
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #8b5cf6" }}>
       <h2 className="font-display-bn text-lg text-ink">
         হোমওয়ার্ক ও অনলাইন টেস্ট{childName ? ` — ${childName}` : ""}
       </h2>

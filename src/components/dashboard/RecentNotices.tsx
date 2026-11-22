@@ -25,7 +25,7 @@ export default function RecentNotices() {
   }, []);
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #f59e0b" }}>
       <div className="flex items-center gap-2">
         <Bell size={17} className="text-gold-deep" />
         <h2 className="font-display-bn text-lg text-ink">নোটিশ</h2>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import RoleWelcome from "@/components/dashboard/RoleWelcome";
 import Link from "next/link";
 import {
   collection,
@@ -12,8 +13,6 @@ import {
 import {
   CalendarDays,
   ClipboardList,
-  UserRound,
-  Sparkles,
   CheckSquare,
   AlertTriangle,
 } from "lucide-react";
@@ -63,39 +62,20 @@ export default function TeacherDashboardContent() {
   }, []);
 
   return (
-    <section className="bg-paper-raised">
+    <section style={{ background: "linear-gradient(180deg, #eaf3f6 0%, #f4f7fb 38%, #fbfbf7 100%)" }}>
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        {/* Preview notice — this is not a live feature yet */}
-        <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
-          <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
-          <p className="text-sm leading-relaxed text-ink">
-            লগইন, প্রোফাইল, উপস্থিতি, Assessment, Recovery তালিকা, হোমওয়ার্ক ও
-            আজকের ক্লাস — সব এখন <span className="font-medium">real</span>।
-          </p>
-        </div>
-
-        {/* Welcome header */}
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
-          <div>
-            <p className="font-label text-xs uppercase tracking-[0.2em] text-gold-deep">
-              Teacher Dashboard
-            </p>
-            <h1 className="mt-2 font-display-bn text-2xl text-ink sm:text-3xl">
-              স্বাগতম, {profile?.name || "..."}
-            </h1>
-            <p className="mt-1 text-sm text-ink-soft">{profile?.subject || "বিষয় যুক্ত হয়নি"}</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-sm border border-line bg-paper px-4 py-2 text-sm text-ink-soft">
-            <UserRound size={15} className="text-gold-deep" />
-            Teacher
-          </div>
-        </div>
+        <RoleWelcome
+          role="teacher"
+          name={profile?.name}
+          line={profile?.subject || "বিষয় যুক্ত হয়নি"}
+          chip={"Teacher"}
+        />
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left column */}
           <div className="space-y-6 lg:col-span-2">
             {/* Today's classes — real */}
-            <div className="rounded-sm border border-line bg-paper p-6">
+            <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #3b82f6" }}>
               <div className="flex items-center gap-2">
                 <CalendarDays size={17} className="text-gold-deep" />
                 <h2 className="font-display-bn text-lg text-ink">আজকের ক্লাস</h2>
@@ -141,7 +121,7 @@ export default function TeacherDashboardContent() {
             </div>
 
             {/* Students needing recovery attention — real */}
-            <div className="rounded-sm border border-line bg-paper p-6">
+            <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #f43f5e" }}>
               <div className="flex items-center gap-2">
                 <AlertTriangle size={17} className="text-clay" />
                 <h2 className="font-display-bn text-lg text-ink">Recovery প্রয়োজন এমন শিক্ষার্থী</h2>
@@ -173,7 +153,7 @@ export default function TeacherDashboardContent() {
             </div>
 
             {/* Homework assigned — real */}
-            <div className="rounded-sm border border-line bg-paper p-6">
+            <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #10b981" }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ClipboardList size={17} className="text-gold-deep" />

@@ -69,7 +69,7 @@ export default function AdmissionFeeSummary({ studentUid }: { studentUid: string
 
   if (payStatus === "done" && voucher) {
     return (
-      <div className="rounded-sm border border-line bg-paper p-6">
+      <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #f43f5e" }}>
         <div className="text-center print:hidden">
           <button
             type="button"
@@ -87,7 +87,7 @@ export default function AdmissionFeeSummary({ studentUid }: { studentUid: string
   }
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #f43f5e" }}>
       <div className="flex items-center gap-2">
         <GraduationCap size={17} className="text-gold-deep" />
         <h2 className="font-display-bn text-lg text-ink">ভর্তি ফি</h2>

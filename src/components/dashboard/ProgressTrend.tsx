@@ -76,7 +76,7 @@ export default function ProgressTrend({ studentUid }: { studentUid: string | nul
   const diff = last - first;
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #3b82f6" }}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-display-bn text-lg text-ink">
           <TrendingUp size={17} style={{ color: "#2563eb" }} /> উন্নতির গ্রাফ

@@ -38,7 +38,7 @@ export default function CertificatesCard({ studentUid }: { studentUid: string | 
   if (!certs || certs.length === 0) return null;
 
   return (
-    <div className="rounded-sm border border-line bg-paper p-6">
+    <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #c9932e" }}>
       <div className="flex items-center gap-2">
         <BadgeCheck size={17} style={{ color: "#c9932e" }} />
         <h2 className="font-display-bn text-lg text-ink">সনদপত্র</h2>

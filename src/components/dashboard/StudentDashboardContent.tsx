@@ -4,8 +4,6 @@ import Link from "next/link";
 import {
   CalendarDays,
   ClipboardList,
-  UserRound,
-  Sparkles,
 } from "lucide-react";
 import ProgressRow from "@/components/ProgressRow";
 import { useUserProfile } from "@/lib/useUserProfile";
@@ -20,6 +18,7 @@ import StudentHomework from "@/components/dashboard/StudentHomework";
 import QuranProgressCard from "@/components/dashboard/QuranProgressCard";
 import CertificatesCard from "@/components/dashboard/CertificatesCard";
 import ProgressTrend from "@/components/dashboard/ProgressTrend";
+import RoleWelcome from "@/components/dashboard/RoleWelcome";
 import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 
 export default function StudentDashboardContent() {
@@ -29,33 +28,14 @@ export default function StudentDashboardContent() {
   const todaySchedule = useTodaySchedule({ field: "className", value: profile?.className });
 
   return (
-    <section className="bg-paper-raised">
+    <section style={{ background: "linear-gradient(180deg, #eaf3f6 0%, #f4f7fb 38%, #fbfbf7 100%)" }}>
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        {/* Preview notice — this is not a live feature yet */}
-        <div className="flex items-start gap-3 rounded-sm border border-gold/30 bg-gold-soft/40 p-4">
-          <Sparkles size={18} className="mt-0.5 shrink-0 text-gold-deep" />
-          <p className="text-sm leading-relaxed text-ink">
-            লগইন, প্রোফাইল, উপস্থিতি, Assessment, হোমওয়ার্ক, ফি ও আজকের
-            ক্লাস — সব এখন <span className="font-medium">real</span>।
-          </p>
-        </div>
-
-        {/* Welcome header */}
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
-          <div>
-            <p className="font-label text-xs uppercase tracking-[0.2em] text-gold-deep">
-              Student Dashboard
-            </p>
-            <h1 className="mt-2 font-display-bn text-2xl text-ink sm:text-3xl">
-              স্বাগতম, {profile?.name || "..."}
-            </h1>
-            <p className="mt-1 text-sm text-ink-soft">{profile?.className || "ক্লাস যুক্ত হয়নি"}{profile?.studentId ? ` · ID: ${profile.studentId}` : ""}</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-sm border border-line bg-paper px-4 py-2 text-sm text-ink-soft">
-            <UserRound size={15} className="text-gold-deep" />
-            {profile?.identifier || "Student"}
-          </div>
-        </div>
+        <RoleWelcome
+          role="student"
+          name={profile?.name}
+          line={profile?.className ? `${profile.className}${profile.studentId ? ` · ID: ${profile.studentId}` : ""}` : "ক্লাস যুক্ত হয়নি"}
+          chip={profile?.identifier || "Student"}
+        />
 
         {/* সতর্কতা — অনুপস্থিতি ও ফি বাকি থাকলে */}
         <div className="mt-6">
@@ -66,7 +46,7 @@ export default function StudentDashboardContent() {
           {/* Left column */}
           <div className="space-y-6 lg:col-span-2">
             {/* Today's classes — real */}
-            <div className="rounded-sm border border-line bg-paper p-6">
+            <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #3b82f6" }}>
               <div className="flex items-center gap-2">
                 <CalendarDays size={17} className="text-gold-deep" />
                 <h2 className="font-display-bn text-lg text-ink">আজকের ক্লাস</h2>
@@ -110,7 +90,7 @@ export default function StudentDashboardContent() {
             </div>
 
             {/* Assessment & Recovery — real */}
-            <div className="rounded-sm border border-line bg-paper p-6">
+            <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #10b981" }}>
               <div className="flex items-center gap-2">
                 <ClipboardList size={17} className="text-gold-deep" />
                 <h2 className="font-display-bn text-lg text-ink">Assessment &amp; Recovery</h2>
@@ -165,7 +145,7 @@ export default function StudentDashboardContent() {
           {/* Right column */}
           <div className="space-y-6">
             {/* Attendance — real */}
-            <div className="rounded-sm border border-line bg-paper p-6">
+            <div className="rounded-xl border border-line bg-white p-6 shadow-sm" style={{ borderTop: "4px solid #f59e0b" }}>
               <h2 className="font-display-bn text-lg text-ink">উপস্থিতি</h2>
               {attendance === null ? (
                 <p className="mt-4 text-sm text-ink-soft/60">লোড হচ্ছে...</p>

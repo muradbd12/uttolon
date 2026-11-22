@@ -33,6 +33,8 @@ const COLLECTIONS: { key: string; label: string }[] = [
   { key: "teacherProfiles", label: "শিক্ষক প্রোফাইল" },
   { key: "programs", label: "প্রোগ্রাম ও ফি" },
   { key: "books", label: "বই" },
+  { key: "bookBundles", label: "বুক সেট" },
+  { key: "bookOrders", label: "বইয়ের অর্ডার" },
   { key: "gallery", label: "গ্যালারি" },
 ];
 

@@ -142,7 +142,7 @@ export default function AdminBooksManager() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-ink">দাম (৳) *</span>
+              <span className="text-sm font-medium text-ink">দাম (টাকা) *</span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -235,7 +235,7 @@ export default function AdminBooksManager() {
               </span>
               <div>
                 <p className="text-sm font-medium text-ink">{b.title}</p>
-                <p className="text-xs text-ink-soft/60">{b.level} · {b.subject} · ৳{b.price}</p>
+                <p className="text-xs text-ink-soft/60">{b.level} · {b.subject} · {b.price} টাকা</p>
               </div>
             </div>
             <div className="flex shrink-0 gap-2">

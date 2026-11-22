@@ -6,6 +6,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import { ArrowLeft, BookOpen, MessageCircle } from "lucide-react";
 import { type Book, whatsappOrderLink } from "@/lib/books";
+import AddToCartButton from "@/components/AddToCartButton";
+import CartFloatingButton from "@/components/CartFloatingButton";
 
 export default function BookDetail({ id }: { id: string }) {
   const [book, setBook] = useState<Book | null | undefined>(undefined);
@@ -39,6 +41,7 @@ export default function BookDetail({ id }: { id: string }) {
 
   return (
     <div>
+      <CartFloatingButton />
       <Link href="/books" className="flex w-fit items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
         <ArrowLeft size={14} /> বই সংগ্রহে ফিরুন
       </Link>
@@ -58,7 +61,7 @@ export default function BookDetail({ id }: { id: string }) {
           {book.author && <p className="mt-1.5 text-sm text-ink-soft">লেখক/প্রকাশনা: {book.author}</p>}
           <p className="mt-2 text-sm text-ink-soft">{book.level} · {book.subject}</p>
           <p className="mt-4 font-display-en text-2xl font-semibold text-gold-deep">
-            ৳{book.price.toLocaleString("bn-BD")}
+            {book.price.toLocaleString("bn-BD")} টাকা
           </p>
 
           {book.description && (
@@ -66,14 +69,17 @@ export default function BookDetail({ id }: { id: string }) {
           )}
 
           {book.inStock ? (
-            <a
-              href={whatsappOrderLink(book)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-7 inline-flex items-center gap-2 rounded-sm bg-teal-deep px-6 py-3 text-sm font-medium text-paper hover:opacity-90"
-            >
-              <MessageCircle size={16} /> WhatsApp-এ অর্ডার করুন
-            </a>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <AddToCartButton type="book" id={book.id} large />
+              <a
+                href={whatsappOrderLink(book)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-sm border border-teal-deep px-5 py-3 text-sm font-medium text-teal-deep hover:bg-teal-soft"
+              >
+                <MessageCircle size={16} /> শুধু এই বইটা WhatsApp-এ অর্ডার
+              </a>
+            </div>
           ) : (
             <p className="mt-7 inline-block rounded-sm bg-clay-soft px-4 py-2 text-sm text-clay">
               এই মুহূর্তে স্টকে নেই

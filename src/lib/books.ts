@@ -33,9 +33,43 @@ export const SUBJECTS = [
 // সিস্টেম না বানিয়ে, প্রতিষ্ঠানের নিজস্ব WhatsApp নম্বরে সরাসরি
 // অর্ডার বার্তা পাঠানোর ব্যবস্থা — এটা সম্পূর্ণ ফ্রি, কোনো পেমেন্ট
 // গেটওয়ে লাগে না।
-const WHATSAPP_NUMBER = "8801824020933";
+export const WHATSAPP_NUMBER = "8801824020933";
 
 export function whatsappOrderLink(book: Pick<Book, "title" | "price">) {
-  const message = `আসসালামু আলাইকুম, আমি "${book.title}" (৳${book.price}) বইটি অর্ডার করতে চাই।`;
+  const message = `আসসালামু আলাইকুম, আমি "${book.title}" (${book.price.toLocaleString("bn-BD")} টাকা) বইটি অর্ডার করতে চাই।`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+// The WhatsApp text for a whole cart order that was already saved on the server (so it carries
+// the order number and the server-calculated prices).
+export function whatsappCartLink(o: {
+  orderNo: string;
+  total: number;
+  lines: { type: "book" | "bundle"; title: string; price: number; qty: number; items?: string[] }[];
+  name: string;
+  mobile: string;
+  address: string;
+  note?: string;
+}) {
+  const bn = (n: number) => n.toLocaleString("bn-BD");
+  const rows = o.lines
+    .map((l, i) => {
+      const head = `${bn(i + 1)}) ${l.type === "bundle" ? "[সেট] " : ""}${l.title} × ${bn(l.qty)} = ${bn(l.price * l.qty)} টাকা`;
+      return l.type === "bundle" && l.items && l.items.length ? `${head}\n   (সেটে আছে: ${l.items.join(", ")})` : head;
+    })
+    .join("\n");
+  const message = [
+    "আসসালামু আলাইকুম, উত্তোলন থেকে বই অর্ডার করেছি।",
+    `অর্ডার নং: ${o.orderNo}`,
+    "",
+    rows,
+    "",
+    `মোট: ${bn(o.total)} টাকা`,
+    "",
+    `নাম: ${o.name}`,
+    `মোবাইল: ${o.mobile}`,
+    `ঠিকানা: ${o.address}`,
+    ...(o.note ? [`মন্তব্য: ${o.note}`] : []),
+  ].join("\n");
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }

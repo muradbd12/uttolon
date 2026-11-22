@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import { CheckCircle2, AlertCircle, Loader2, Printer, Check } from "lucide-react";
@@ -152,6 +152,13 @@ export default function AdmissionForm() {
   const [signatureUrl, setSignatureUrl] = useState("");
   const [uploadBusy, setUploadBusy] = useState(false);
   const [country, setCountry] = useState("বাংলাদেশ");
+  const [programChoice, setProgramChoice] = useState("");
+
+  // arriving from a program page (/admission?program=...) pre-selects that program
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("program");
+    if (wanted) setProgramChoice(wanted);
+  }, []);
   const [payMethod, setPayMethod] = useState("ক্যাশ (হাতে হাতে)");
   const [voucher, setVoucher] = useState<VoucherData | null>(null);
 
@@ -488,7 +495,7 @@ export default function AdmissionForm() {
         <fieldset className="space-y-5">
           <SectionHeader number="০৫" title="প্রোগ্রাম ও ব্যাচ নির্বাচন" />
           <Field label="প্রোগ্রাম" required>
-            <select required name="program" className={inputClass} defaultValue="">
+            <select required name="program" className={inputClass} value={programChoice} onChange={(e) => setProgramChoice(e.target.value)}>
               <option value="" disabled>নির্বাচন করুন</option>
               {programOptions.map((p) => <option key={p.title} value={p.title}>{p.title}</option>)}
             </select>

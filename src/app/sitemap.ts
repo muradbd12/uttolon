@@ -1,8 +1,13 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { blogPosts } from "@/content/blog";
+import { getProgramsServer } from "@/lib/programsServer";
+import { programSlug } from "@/lib/programs";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// read on every request so newly added programs show up without a redeploy
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "",
     "/about",
@@ -37,5 +42,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...blogRoutes];
+  const programs = await getProgramsServer();
+  const programRoutes = programs.map((p) => ({
+    url: `${SITE_URL}/programs/${programSlug(p)}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...programRoutes, ...blogRoutes];
 }

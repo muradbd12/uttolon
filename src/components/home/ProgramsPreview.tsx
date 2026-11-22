@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { usePrograms } from "@/lib/usePrograms";
+import { programSlug } from "@/lib/programs";
 
 export default function ProgramsPreview() {
   const programs = usePrograms();
@@ -43,6 +44,12 @@ export default function ProgramsPreview() {
               <p className={`mt-3 text-sm leading-relaxed ${p.highlight ? "text-paper/75" : "text-ink-soft"}`}>
                 {p.desc}
               </p>
+              <Link
+                href={`/programs/${programSlug(p)}`}
+                className={`mt-4 inline-flex items-center gap-1 text-sm font-medium ${p.highlight ? "text-gold hover:text-paper" : "text-ink hover:text-gold-deep"}`}
+              >
+                বিস্তারিত দেখুন <ArrowUpRight size={14} />
+              </Link>
             </div>
           ))}
         </div>

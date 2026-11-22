@@ -13,7 +13,23 @@ export type Program = {
   highlight?: boolean;
   active?: boolean; // false = hidden from the site and the admission form
   order?: number;
+  // optional details for the program's own page (/programs/<slug>) — only shown when filled in
+  slug?: string;
+  duration?: string; // e.g. "৬ মাস"
+  schedule?: string; // e.g. "শনি–বৃহস্পতি, বিকেল ৪–৬টা"
+  seats?: string; // e.g. "২৫ জন"
+  audience?: string; // who it is for
+  outline?: string; // one bullet per line (syllabus / what is included)
+  showFee?: boolean; // show the admission fee publicly on the program page
 };
+
+export function slugify(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+export function programSlug(p: Pick<Program, "title" | "slug" | "id">) {
+  return p.slug || slugify(p.title) || p.id;
+}
 
 type Base = { title: string; bn: string; desc: string; longDesc: string; highlight?: boolean };
 
@@ -105,6 +121,7 @@ const BASE: Base[] = [
 
 export const DEFAULT_PROGRAMS: Program[] = BASE.map((p, i) => ({
   id: `default-${i}`,
+  slug: slugify(p.title),
   active: true,
   order: i + 1,
   fee: PROGRAM_FEES[p.title] ?? 0,

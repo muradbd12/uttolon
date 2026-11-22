@@ -11,7 +11,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import { DEFAULT_PROGRAMS, type Program } from "@/lib/programs";
+import { DEFAULT_PROGRAMS, programSlug, slugify, type Program } from "@/lib/programs";
 import { clearProgramsCache } from "@/lib/usePrograms";
 import { toEnglishDigits } from "@/lib/numberInput";
 import { Plus, Save, Trash2, Loader2, AlertCircle, CheckCircle2, Layers, Info } from "lucide-react";
@@ -25,9 +25,30 @@ type Draft = {
   order: string;
   highlight: boolean;
   active: boolean;
+  duration: string;
+  schedule: string;
+  seats: string;
+  audience: string;
+  outline: string;
+  showFee: boolean;
 };
 
-const EMPTY: Draft = { title: "", bn: "", desc: "", longDesc: "", fee: "", order: "", highlight: false, active: true };
+const EMPTY: Draft = {
+  title: "",
+  bn: "",
+  desc: "",
+  longDesc: "",
+  fee: "",
+  order: "",
+  highlight: false,
+  active: true,
+  duration: "",
+  schedule: "",
+  seats: "",
+  audience: "",
+  outline: "",
+  showFee: false,
+};
 
 function toDraft(p: Program): Draft {
   return {
@@ -39,11 +60,24 @@ function toDraft(p: Program): Draft {
     order: p.order != null ? String(p.order) : "",
     highlight: !!p.highlight,
     active: p.active !== false,
+    duration: p.duration || "",
+    schedule: p.schedule || "",
+    seats: p.seats || "",
+    audience: p.audience || "",
+    outline: p.outline || "",
+    showFee: !!p.showFee,
   };
 }
 
-function toPayload(d: Draft) {
+function toPayload(d: Draft, keepSlug?: string) {
   return {
+    slug: keepSlug || slugify(d.title),
+    duration: d.duration.trim(),
+    schedule: d.schedule.trim(),
+    seats: d.seats.trim(),
+    audience: d.audience.trim(),
+    outline: d.outline.trim(),
+    showFee: d.showFee,
     title: d.title.trim(),
     bn: d.bn.trim(),
     desc: d.desc.trim(),
@@ -119,6 +153,37 @@ function Editor({
           placeholder="যেমন: ৫"
         />
       </label>
+      <details className="rounded-sm border border-line px-3 py-2 sm:col-span-2">
+        <summary className="cursor-pointer text-xs font-semibold text-ink">
+          প্রোগ্রামের নিজস্ব পেজের তথ্য (ঐচ্ছিক — যেটা দেবেন শুধু সেটাই পেজে দেখাবে)
+        </summary>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="block text-xs text-ink-soft">
+            সময়কাল
+            <input value={d.duration} onChange={(e) => set("duration", e.target.value)} className={inputCls} placeholder="যেমন: ৬ মাস" />
+          </label>
+          <label className="block text-xs text-ink-soft">
+            আসন সংখ্যা
+            <input value={d.seats} onChange={(e) => set("seats", e.target.value)} className={inputCls} placeholder="যেমন: ২৫ জন" />
+          </label>
+          <label className="block text-xs text-ink-soft sm:col-span-2">
+            ক্লাসের সময়সূচি
+            <input value={d.schedule} onChange={(e) => set("schedule", e.target.value)} className={inputCls} placeholder="যেমন: শনি–বৃহস্পতি, বিকেল ৪টা–৬টা" />
+          </label>
+          <label className="block text-xs text-ink-soft sm:col-span-2">
+            কাদের জন্য
+            <input value={d.audience} onChange={(e) => set("audience", e.target.value)} className={inputCls} placeholder="যেমন: SSC পরীক্ষার্থী ও যারা গণিতে দুর্বল" />
+          </label>
+          <label className="block text-xs text-ink-soft sm:col-span-2">
+            যা যা থাকছে / সিলেবাস (প্রতি লাইনে একটা করে)
+            <textarea value={d.outline} onChange={(e) => set("outline", e.target.value)} rows={4} className={inputCls} placeholder={"সাপ্তাহিক মডেল টেস্ট\nদুর্বল অধ্যায়ের Recovery ক্লাস"} />
+          </label>
+          <label className="flex items-center gap-2 text-xs text-ink sm:col-span-2">
+            <input type="checkbox" checked={d.showFee} onChange={(e) => set("showFee", e.target.checked)} />
+            ভর্তি ফি এই পেজে সবার সামনে দেখান
+          </label>
+        </div>
+      </details>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:col-span-2">
         <label className="flex items-center gap-2 text-xs text-ink">
           <input type="checkbox" checked={d.active} onChange={(e) => set("active", e.target.checked)} />
@@ -298,6 +363,9 @@ export default function AdminProgramsManager() {
               <div className="mb-3 flex items-center gap-2">
                 <span className="font-display-bn text-base text-ink">{p.bn || p.title}</span>
                 <span className="text-xs text-ink-soft/60">{p.title}</span>
+                <a href={`/programs/${programSlug(p)}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-xs text-ink underline decoration-line underline-offset-4 hover:decoration-ink">
+                  পেজ দেখুন ↗
+                </a>
                 {p.active === false && (
                   <span className="rounded-full bg-clay-soft px-2 py-0.5 text-[11px] text-clay">লুকানো</span>
                 )}
@@ -314,7 +382,7 @@ export default function AdminProgramsManager() {
                   void run(
                     p.id,
                     async () => {
-                      await updateDoc(doc(getFirebaseDb(), "programs", p.id), toPayload(d));
+                      await updateDoc(doc(getFirebaseDb(), "programs", p.id), toPayload(d, p.slug));
                     },
                     "সেভ হয়েছে।"
                   );

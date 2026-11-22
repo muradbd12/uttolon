@@ -33,7 +33,7 @@ type Profile = {
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_PHOTO_BYTES = 30 * 1024 * 1024; // photos are shrunk automatically before upload (see lib/cloudinary.ts)
 
 export default function AdminTeacherProfileForm() {
   const [teachers, setTeachers] = useState<TeacherOption[] | null>(null);
@@ -107,7 +107,7 @@ export default function AdminTeacherProfileForm() {
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setErrorMsg("ছবির সাইজ ৫ MB-এর বেশি হতে পারবে না।");
+      setErrorMsg("ছবির সাইজ ৩০ MB-এর বেশি হতে পারবে না।");
       setStatus("error");
       return;
     }
@@ -228,7 +228,7 @@ export default function AdminTeacherProfileForm() {
               )}
             </span>
             <label className="block">
-              <span className="text-sm font-medium text-ink">ছবি (সর্বোচ্চ ৫ MB)</span>
+              <span className="text-sm font-medium text-ink">ছবি (সর্বোচ্চ ৩০ MB — বড় ছবি নিজে থেকে ছোট হয়ে যায়)</span>
               <input
                 type="file"
                 accept="image/*"

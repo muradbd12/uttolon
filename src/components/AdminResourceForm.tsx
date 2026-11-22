@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import UploadField from "@/components/UploadField";
 import {
   collection,
   getDocs,
@@ -33,6 +34,8 @@ const inputClass =
 export default function AdminResourceForm() {
   const [resources, setResources] = useState<Resource[] | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [fileUrl, setFileUrl] = useState("");
+  const [fileMissing, setFileMissing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -53,12 +56,22 @@ export default function AdminResourceForm() {
 
   const editingResource = editingId ? resources?.find((r) => r.id === editingId) || null : null;
 
+  useEffect(() => {
+    setFileUrl(editingResource?.link || "");
+    setFileMissing(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingResource?.id, editingResource?.link]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("saving");
     const form = new FormData(e.currentTarget);
     const title = (form.get("title") as string)?.trim();
     const link = (form.get("link") as string)?.trim();
+    if (!link) {
+      setFileMissing(true);
+      return;
+    }
     const className = (form.get("className") as string)?.trim();
     const subject = (form.get("subject") as string)?.trim();
     const resourceType = form.get("resourceType") as string;
@@ -116,9 +129,8 @@ export default function AdminResourceForm() {
       <div className="flex items-start gap-2 rounded-sm border border-gold/30 bg-gold-soft/40 p-3 text-sm text-ink">
         <Info size={15} className="mt-0.5 shrink-0 text-gold-deep" />
         <p>
-          ফাইল সরাসরি এখানে আপলোড করার সুযোগ নেই — এর বদলে ফাইলটা Google Drive-এ
-          আপলোড করে &quot;Anyone with the link can view&quot; করে সেই লিংকটা এখানে
-          বসান। এতে কোনো বাড়তি খরচ বা সেটআপ ছাড়াই কাজ হয়ে যায়।
+          ফাইল সরাসরি আপলোড করুন — লিংক বসানোর দরকার নেই। PDF/ছবি/ডকুমেন্ট সর্বোচ্চ ১০ MB, ভিডিও সর্বোচ্চ ১০০ MB। PDF
+          খুলতে সমস্যা হলে Cloudinary → Settings → Security-তে "PDF and ZIP files delivery" চালু করুন (একবারের কাজ)।
         </p>
       </div>
 
@@ -144,7 +156,7 @@ export default function AdminResourceForm() {
 
         {status === "error" && (
           <div className="flex items-center gap-2 rounded-sm border border-clay/30 bg-clay-soft px-3 py-2 text-sm text-clay">
-            <AlertCircle size={14} /> শিরোনাম, লিংক, ক্লাস, বিষয় ও ধরন — সবগুলো দিন।
+            <AlertCircle size={14} /> শিরোনাম, ফাইল, ক্লাস, বিষয় ও ধরন — সবগুলো দিন।
           </div>
         )}
 
@@ -156,14 +168,19 @@ export default function AdminResourceForm() {
           defaultValue={editingResource?.title}
           className={inputClass}
         />
-        <input
-          required
-          name="link"
-          type="url"
-          placeholder="লিংক (Google Drive বা অন্য কোনো)"
-          defaultValue={editingResource?.link}
-          className={inputClass}
-        />
+        <div>
+          <UploadField
+            kind="file"
+            name="link"
+            label="ফাইল (PDF / ছবি / ডকুমেন্ট / ভিডিও)"
+            value={fileUrl}
+            onChange={(url) => {
+              setFileUrl(url);
+              setFileMissing(false);
+            }}
+          />
+          {fileMissing && <p className="mt-1.5 text-xs text-clay">আগে ফাইলটা আপলোড করুন।</p>}
+        </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <input

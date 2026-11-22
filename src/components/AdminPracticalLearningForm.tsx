@@ -30,7 +30,7 @@ const categories = ["Physics Experiment", "Chemistry Experiment", "Biology Obser
 const inputClass =
   "w-full rounded-sm border border-line bg-paper-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 30 * 1024 * 1024; // photos are shrunk automatically before upload (see lib/cloudinary.ts)
 
 export default function AdminPracticalLearningForm() {
   const [entries, setEntries] = useState<Entry[] | null>(null);
@@ -81,7 +81,7 @@ export default function AdminPracticalLearningForm() {
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setErrorMsg("ছবির সাইজ ৫ MB-এর বেশি হতে পারবে না।");
+      setErrorMsg("ছবির সাইজ ৩০ MB-এর বেশি হতে পারবে না।");
       setStatus("error");
       return;
     }
@@ -235,7 +235,7 @@ export default function AdminPracticalLearningForm() {
           </span>
           <label className="block">
             <span className="text-sm font-medium text-ink">
-              ছবি (ঐচ্ছিক, সর্বোচ্চ ৫ MB){editingEntry ? " — না বদলালে আগেরটাই থাকবে" : ""}
+              ছবি (ঐচ্ছিক, সর্বোচ্চ ৩০ MB — বড় ছবি নিজে থেকে ছোট হয়ে যায়){editingEntry ? " — না বদলালে আগেরটাই থাকবে" : ""}
             </span>
             <input type="file" accept="image/*" onChange={handlePhotoChange} className="mt-1.5 block text-sm text-ink-soft" />
           </label>

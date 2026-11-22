@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import UploadField from "@/components/UploadField";
 import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
 } from "firebase/firestore";
@@ -189,15 +190,13 @@ export default function AdminBooksManager() {
               />
               <span className="text-sm text-ink">স্টকে আছে</span>
             </label>
-            <label className="block sm:col-span-2">
-              <span className="text-sm font-medium text-ink">কভার ছবির লিংক (URL)</span>
-              <input
-                value={form.coverImageUrl}
-                onChange={(e) => setForm((f) => ({ ...f, coverImageUrl: e.target.value }))}
-                placeholder="https://..."
-                className="mt-1.5 w-full rounded-sm border border-line bg-paper-raised px-3 py-2 text-sm text-ink outline-none focus:border-ink"
-              />
-            </label>
+            <div className="sm:col-span-2">
+            <UploadField
+              label="বইয়ের কভার ছবি"
+              value={form.coverImageUrl}
+              onChange={(url) => setForm((f) => ({ ...f, coverImageUrl: url }))}
+            />
+          </div>
             <label className="block sm:col-span-2">
               <span className="text-sm font-medium text-ink">বিবরণ</span>
               <textarea

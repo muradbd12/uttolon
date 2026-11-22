@@ -13,6 +13,8 @@ export async function resizeImageFile(file: File, maxSide = 700, quality = 0.85)
     canvas.height = h;
     const ctx = canvas.getContext("2d");
     if (!ctx) return file;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, h);
     ctx.drawImage(bitmap, 0, 0, w, h);
     const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
     if (!blob) return file;
